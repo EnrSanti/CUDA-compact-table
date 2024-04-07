@@ -15,29 +15,16 @@ typedef struct RSBitSet{
 } bitSet;
 
 
-// Function to print the bit representation of a long value
-/*
-void printLongBits(unsigned long num) {
-  
-    // Extracting each bit of the double and printing it
-    for (int i = 63; i >= 0; i--) {
-        long bit = (num >> i) & 1;
-        printf("%lu", bit);
-    }
-    printf("\n");
-}
-*/
-
 //---------------------------------------------
 //------- CREATE AND DESTROY FUNCTIONS --------
 //---------------------------------------------
-
+int bitsPerWord;
 //TODO: see variadic macro to use default offset to 0
 //function to create the bitset with the specified domain and offset
 bitSet createBitSet(int domainSize, int offset){
 
 	//calculate the number of words needed to store the domain
-	int bitsPerWord=(sizeof(unsigned long)*8);
+	bitsPerWord=(sizeof(unsigned long)*8);
 	int wordsNo=ceil(((double)domainSize/bitsPerWord));
 	bitSet b;
 
@@ -46,7 +33,6 @@ bitSet createBitSet(int domainSize, int offset){
 	b.mask = (unsigned long*)malloc(wordsNo*sizeof(unsigned long));
 	b.index = (unsigned int*)malloc(wordsNo*sizeof(unsigned int));
 	b.limit = wordsNo;
-
 	for (int i = 0; i < wordsNo-1; i++){
 		b.index[i]=i;
 		b.mask[i]=0;
@@ -57,7 +43,7 @@ bitSet createBitSet(int domainSize, int offset){
 	b.mask[wordsNo-1]=0;
 
 	//we calculate the bits to set to 1 in the last word
-	b.words[wordsNo-1]=(unsigned long)ULONG_MAX<<(bitsPerWord-domainSize%bitsPerWord);
+	b.words[wordsNo-1]=(unsigned long)ULONG_MAX<<(-domainSize%bitsPerWord);
 
 	
 	return b;
@@ -74,6 +60,7 @@ void freeBitSet(bitSet* b){
 //---------------------------------------------
 //------- BITSET MANIPULATION FUCNTIONS -------
 //---------------------------------------------
+
 int isEmpty(bitSet* b){
 	return (b->limit==-1);
 }
@@ -104,9 +91,11 @@ void addToMask(bitSet* b,unsigned long toAdd[]){
 void intersectWithMask(bitSet* b){
 	int offset;
 	unsigned long w;
-	for (int i = (b->limit)-1; i >= 0; i++){
+	for (int i = (b->limit)-1; i >= 0; i--){
 		offset=b->index[i];
-		w=b->words[offset] & b->mask[offset];
+		b->words[offset]=b->words[offset] & b->mask[offset];
+		//w=b->words[offset] & b->mask[offset];
+		/* TODO FIX
 		if(w!=b->words[offset]){
 			b->words[offset]=w;
 			if(w==0){
@@ -114,7 +103,7 @@ void intersectWithMask(bitSet* b){
 				b->index[b->limit-1]=offset;
 				(b->limit)--;
 			}
-		}
+		}*/
 	}
 }
 
@@ -127,4 +116,50 @@ int intersectIndex(bitSet* b,unsigned long toIntersect[]){
 		}
 	}
 	return -1;
+}
+
+
+//---------------------------------------------
+//----------- AUX. PRINT FUNCTIONS ------------
+//---------------------------------------------
+// Function to print the bit representation of a long value
+void printLongBits(unsigned long num) {
+  
+    // Extracting each bit of the double and printing it
+    for (int i = 63; i >= 0; i--) {
+        long bit = (num >> i) & 1;
+        printf("%lu", bit);
+    }
+    printf("\n");
+}
+//main print method for the structure
+
+void printBitSet(const bitSet bs) {
+    printf("Words:\n");
+    for (int i = 0; i < bs.limit; i++) {
+        printf("[%d] ", i);
+        printLongBits(bs.words[i]);
+        printf("\n");
+    }
+
+    printf("Mask:\n");
+    for (int i = 0; i < bs.limit; i++) {
+        printf("[%d] ", i);
+        printLongBits(bs.mask[i]);
+        printf("\n");
+    }
+}
+
+//---------------------------------------------
+//-------------- AUX. FUNCTIONS ---------------
+//---------------------------------------------
+
+void addToMaskInt(bitSet* b,int value){
+
+	int offset;
+	unsigned long wordToOr=(unsigned long) 1<<(bitsPerWord-(value%bitsPerWord));
+	int wordIndex=floor(value/bitsPerWord);
+	offset=b->index[wordIndex];
+	b->mask[offset]=b->mask[offset] | wordToOr;
+	
 }
