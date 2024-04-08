@@ -83,10 +83,9 @@ CT readFile(const char* str) {
     skipSupportVar[0]=0;
     for (int i = 1; i < noVars; i++){
         skipSupportVar[i]=skipSupportVar[i-1]+data.lastSizes[i-1];
-        printf("%d ",skipSupportVar[i]);
     }
 
-    printf("the supports will have size of: %d \n",supportSize );
+    printf("the supports will have size (rows): %d \n",supportSize);
     data.supportSize=supportSize;
     data.supports=(bitSet*) calloc(supportSize,sizeof(bitSet));
 
@@ -108,7 +107,8 @@ CT readFile(const char* str) {
             row[ctr]=atoi(var);    
             ctr++;
             if(ctr%noVars==0){
-                for (int i = 0; i < noVars; ++i){
+                for (int i = 0; i < noVars; i++){
+                    
                     addToMaskInt(&(data.supports[skipSupportVar[i]+row[i]-data.variablesOffsets[i]]),constrNo);   
                 }
 

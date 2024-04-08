@@ -95,9 +95,8 @@ void intersectWithMask(bitSet* b){
 	unsigned long w;
 	for (int i = (b->limit)-1; i >= 0; i--){
 		offset=b->index[i];
-		b->words[offset]=b->words[offset] & b->mask[offset];
-		//w=b->words[offset] & b->mask[offset];
-		/* TODO FIX
+		w=b->words[offset] & b->mask[offset];
+		
 		if(w!=b->words[offset]){
 			b->words[offset]=w;
 			if(w==0){
@@ -105,7 +104,7 @@ void intersectWithMask(bitSet* b){
 				b->index[b->limit-1]=offset;
 				(b->limit)--;
 			}
-		}*/
+		}
 	}
 }
 
@@ -137,18 +136,22 @@ void printLongBits(unsigned long num) {
 //main print method for the structure
 
 void printBitSet(const bitSet bs,long offset, int includeMask) {
-    printf("Words (for value %ld): \n",offset);
+    
+    if(bs.limit>0)
+    	printf("\nWords (for value %ld): \n",offset);
+    else
+    	printf("\n*** Value %ld never found in any tuple ***\n",offset);
+
     for (int i = 0; i < bs.limit; i++) {
         printf("[%d] ", i);
         printLongBits(bs.words[i]);
-        printf("\n");
     }
-    if(includeMask==printMaskOn){
+    if(includeMask==printMaskOn && bs.limit>0){
 	    printf("Mask:\n");
 	    for (int i = 0; i < bs.limit; i++) {
 	        printf("[%d] ", i);
 	        printLongBits(bs.mask[i]);
-	        printf("\n");
+
 	    }
 	}
 }
@@ -161,8 +164,12 @@ void printBitSet(const bitSet bs,long offset, int includeMask) {
 void addToMaskInt(bitSet* b,int value){
 
 	int offset;
+
 	unsigned long wordToOr=(unsigned long) 1<<(bitsPerWord-(value%bitsPerWord));
 	int wordIndex=floor(value/bitsPerWord);
+	if(value%bitsPerWord==0){
+		wordIndex--;
+	}
 	offset=b->index[wordIndex];
 	b->mask[offset]=b->mask[offset] | wordToOr;
 	
