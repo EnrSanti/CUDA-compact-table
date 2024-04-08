@@ -1,8 +1,0 @@
-var 1..4: x;
-var 1..4: y;
-var 1..4: z;
-
-predicate table (x,z) {
-	1,3;
-	2,3;
-}
