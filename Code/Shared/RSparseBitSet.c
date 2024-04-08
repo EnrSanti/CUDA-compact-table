@@ -1,3 +1,5 @@
+#define printMaskOff 0
+#define printMaskOn 1
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -21,7 +23,7 @@ typedef struct RSBitSet{
 int bitsPerWord;
 //TODO: see variadic macro to use default offset to 0
 //function to create the bitset with the specified domain and offset
-bitSet createBitSet(int domainSize, int offset){
+bitSet createBitSet(int domainSize){
 
 	//calculate the number of words needed to store the domain
 	bitsPerWord=(sizeof(unsigned long)*8);
@@ -134,21 +136,23 @@ void printLongBits(unsigned long num) {
 }
 //main print method for the structure
 
-void printBitSet(const bitSet bs) {
-    printf("Words:\n");
+void printBitSet(const bitSet bs,long offset, int includeMask) {
+    printf("Words (for value %ld): \n",offset);
     for (int i = 0; i < bs.limit; i++) {
         printf("[%d] ", i);
         printLongBits(bs.words[i]);
         printf("\n");
     }
-
-    printf("Mask:\n");
-    for (int i = 0; i < bs.limit; i++) {
-        printf("[%d] ", i);
-        printLongBits(bs.mask[i]);
-        printf("\n");
-    }
+    if(includeMask==printMaskOn){
+	    printf("Mask:\n");
+	    for (int i = 0; i < bs.limit; i++) {
+	        printf("[%d] ", i);
+	        printLongBits(bs.mask[i]);
+	        printf("\n");
+	    }
+	}
 }
+
 
 //---------------------------------------------
 //-------------- AUX. FUNCTIONS ---------------
