@@ -63,8 +63,8 @@ void freeBitSet(bitSet* b){
 //------- BITSET MANIPULATION FUCNTIONS -------
 //---------------------------------------------
 
-int isEmpty(bitSet* b){
-	return (b->limit==-1);
+int isEmpty(bitSet b){
+	return (b.limit==-1);
 }
 
 void clearMask(bitSet* b){

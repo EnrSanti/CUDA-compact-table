@@ -1,3 +1,3 @@
 serial:
-	gcc ./Serial/constraintCT.c -o ./constraintCT -lm
+	gcc ./Serial/main.c -o ./main -lm
 	 
