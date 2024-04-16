@@ -70,29 +70,37 @@ CT readFile(const char* str) {
     data.currTable=createBitSet(noTuples);
     data.lastSizes=(int*) malloc(noVars*sizeof(int));
     data.supportSizes=(long*) malloc(noVars*sizeof(long));
-    
-    long* skipSupportVar=(long*) malloc(noVars*sizeof(long));
+    data.supportOffsetJmp=(long*) malloc(noVars*sizeof(long));
+    data.s_val=(int *)malloc(noVars*sizeof(int));
+    data.s_sup=(int *)malloc(noVars*sizeof(int));
+
     int supportSize=0;
     for (int i = 0; i < noVars; i++){
+        //in the mean time we intialize
+        data.s_val[i]=0;
+        data.s_sup[i]=0;
+
         data.lastSizes[i]=domainMax[i]-domainMin[i]+1;
         data.supportSizes[i]=(long)data.lastSizes[i];
         supportSize+=data.lastSizes[i];
     }
 
-    skipSupportVar[0]=0;
+    data.supportOffsetJmp[0]=0;
     for (int i = 1; i < noVars; i++){
-        skipSupportVar[i]=skipSupportVar[i-1]+data.lastSizes[i-1];
+        data.supportOffsetJmp[i]=data.supportOffsetJmp[i-1]+data.lastSizes[i-1];
     }
 
     printf("the supports will have size (rows): %d \n",supportSize);
     data.supportSize=supportSize;
-    data.supports=(bitSet*) calloc(supportSize,sizeof(bitSet));
+    data.residues= (long*) malloc(supportSize*sizeof(long));
+    data.supports=(bitSet*) malloc(supportSize*sizeof(bitSet));
 
  
 
     //we allocate and initialize the support bitsets
     for (int i = 0; i < supportSize; i++){
         data.supports[i]=createBitSet(noTuples); //the content doesn't make sense yet, later we need to update the mask and intersect it
+        data.residues[i]=1; //TODO intialize residuals in the proper way, may not be always 1
     }
 
    
@@ -108,7 +116,7 @@ CT readFile(const char* str) {
             if(ctr%noVars==0){
                 for (int i = 0; i < noVars; i++){
                     
-                    addToMaskInt(&(data.supports[skipSupportVar[i]+row[i]-data.variablesOffsets[i]]),constrNo);   
+                    addToMaskInt(&(data.supports[data.supportOffsetJmp[i]+row[i]-data.variablesOffsets[i]]),constrNo);   
                 }
 
                 ctr=0;
@@ -130,8 +138,7 @@ CT readFile(const char* str) {
     //we free the memory used
     free(domainMin);
     free(domainMax);
-    free(skipSupportVar);
-
+    
 
     //close the file and return the ct structure
     fclose(ptr);

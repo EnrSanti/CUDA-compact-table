@@ -4,52 +4,90 @@
 
 CT data;
 
+//---------------------------------------------
+//---- Aux functions to access the support ----
+//---------------------------------------------
+
+//eg which is the index to access support[x,a]
+int getSupportIndex(CT *table,int var, int value){
+	return table->supportOffsetJmp[var]+(value-(table->variablesOffsets[var]));
+}
 
 
-void updateTable(CT *data){
+//---------------------------------------------
+//------- The three functions of alg. 2 -------
+//---------------------------------------------
+
+void updateTable(CT *data,int** deltaXs,int* deltaXSizes){
+	//for now we loop through all the array, with a list we could be more efficient (todo)
 	for (int i=0; i<data->variablesNo; i++){
-		int delta_x=data->prevLastSizes[i]-data->lastSizes[i];
-		if(delta_x!=0){ //is the same as if variable in S_val
+		if(data->s_val[i]==1){
 			clearMask(&(data->currTable));
-			if(delta_x<data->lastSizes[i]){
-				//todo	//i valori di delta_x si possono prendere dal processo di search 
-				;
+			if(deltaXSizes[i]<data->lastSizes[i]){
+				for (int j = 0; j < deltaXSizes[i]; j++){
+					int index=getSupportIndex(data,i,deltaXs[i][j]);
+					addToMask(&(data->currTable),data->supports[index].words); 		
+				}
+				reverseMask(&(data->currTable));
 			}else{
-				//todo //i valori di delta_x si possono prendere dal processo di search 
-				;
+				//to improve with lists: todo
+				for (int j = 0; j < data->supportSizes[i]; j++){
+					int index=getSupportIndex(data,i,j+data->variablesOffsets[i]);
+					addToMask(&(data->currTable),data->supports[index].words); 		
+				}
 			}
 			intersectWithMask(&(data->currTable));
 			if(isEmpty(data->currTable))
 				break;
-			
 		}
 	}
 
 }
-void filterDomains(CT *data){
-	for (int i = 0; i < data->variablesNo; ++i){
+void filterDomains(CT *data,char** domains){
+	//for now we loop through all the array, with a list we could be more efficient (todo)
+	for (int i = 0; i < data->variablesNo; i++){
 		if(data->s_sup[i]==1){
-			//todo for all values in dom x, che si possono prendere dal processo di search
+			//todo for all values in dom x, che si possono prendere dal processo di search (for now we loop through all the array todo: lists)
+			for (int j = 0; j < data->supportSizes[i]; j++){
+				int x_aIndex=getSupportIndex(data,i,j+data->variablesOffsets[i]);
+				int index=data->residues[x_aIndex];
+				if((data->currTable.words[index] & (data->supports[x_aIndex]).words[index] ) ==0x0000000000000000){
+					index=intersectIndex(&(data->currTable),data->supports[x_aIndex].words);
+					if(index!=-1){
+						data->residues[x_aIndex]=index;
+					}else{
+						domains[i][j-data->variablesOffsets[i]]=0;
+					}
+
+				}
+			}
+			data->lastSizes[i];//=dom(x) todo;
 		}
 	}
 }
-int enfoceGAC(CT *data){
+int enfoceGAC(CT *data,solverData *sData){
 	//this for correspond to the assignment of s_val
 	int aux=0;
-	for (int i = 0; i < data->variablesNo; ++i){
-		int aux=data->lastSizes[i];
-		if(data->prevLastSizes-data->lastSizes[i]!=0){
-			data->prevLastSizes[i]=data->lastSizes[i];
-			//data->lastSizes[i]= //todo //i valori di delta_x si possono prendere dal processo di search 
+
+
+	for (int i = 0; i < data->variablesNo; i++){
+		//update s_val
+		data->s_val[i]=(sData->domainSizes[i] != data->lastSizes[i]) ? 1 : 0;
+
+		if(data->s_val[i]==1){
+			data->lastSizes[i]=sData->domainSizes[i];
 		}
+		//update s_sup
+		data->s_sup[i]=(sData->domainSizes[i]>1) ? 1 : 0;
 	}
 
-	//i valori di delta_x si possono prendere dal processo di search 
-	//todo for
-	updateTable(data);
+
+	updateTable(data,sData->deltaXs, sData->deltaXSizes);
 	if(isEmpty(data->currTable)){
 		return -1; //backtrack
 	}
-	filterDomains(data);
+	filterDomains(data,sData->domains);
 	return 0;
 }
+
+

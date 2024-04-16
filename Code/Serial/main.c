@@ -2,21 +2,20 @@
 #include "constraintCT.c"
 #include <math.h>
 
+
+//data to random remove supports
 int seed=123;
 int maxValuesToRemove=3;
-int** deltaXs;
-int* deltaXSizes;
-
+solverData sData;
 
 int hasSolution(CT table){
-	printf("%d",isEmpty((table.currTable)));
-	return 2;
+	return !isEmpty((table.currTable));
 }
 
 int* genNoSupportsVals(CT *table, int maxValuesToRemove){
 	int lowerbound= (maxValuesToRemove < table->variablesNo) ? maxValuesToRemove : table->variablesNo;
 	for (int i = 0; i < table->variablesNo; i++) {
-        deltaXSizes[i] = rand() % (lowerbound + 1); //random no between 0 and maxValuesToRemove
+        sData.deltaXSizes[i] = rand() % (lowerbound + 1); //random no between 0 and maxValuesToRemove
     }
 }
 
@@ -31,23 +30,24 @@ void RemoveRandomSupports(CT *table){
 	for (int i = 0; i < table->variablesNo; i++){
 		minValueInSupport=table->variablesOffsets[i];
 		maxValueInSupport=minValueInSupport+table->supportSizes[i]-1;
-		for (int j = 0; j < deltaXSizes[i]; j++){
+		for (int j = 0; j < sData.deltaXSizes[i]; j++){
 			//we now generate the actual values to remove
-			deltaXs[i][j]=(rand() % (maxValueInSupport - minValueInSupport + 1)) + minValueInSupport; //random no between min and max
+			sData.deltaXs[i][j]=(rand() % (maxValueInSupport - minValueInSupport + 1)) + minValueInSupport; //random no between min and max
 			//todo 1 volta funziona poi no (ovviamente)
 		}
 		//printf("for var %d i can remove %ld...%ld\n",i, minValueInSupport,maxValueInSupport);
 	}
 }
 
-void randomSolve(CT table,int iterations){
+void randomSolve(CT *table,int iterations){
 	for (int i = 0; i < iterations; i++)	{
-		if(!hasSolution(table)){
+		if(!hasSolution(*table)){
 			printf("\n--------------- The problem has no solution ---------------\n");
 			return;
 		}
-		RemoveRandomSupports(&table);
-		int enfoceGAC(&table)
+		RemoveRandomSupports(table);
+		enfoceGAC(table,&sData); //we discard for now the return value (backtrack, todo: use it)
+
 	}
 }
 
@@ -65,20 +65,30 @@ void main(int argc, char const* argv[]) {
 
     //create the strucure and we instanciate the array containing the number of support values to remove for each var
     CT table=readFile(argv[1]);
-    deltaXs=(int **) malloc(sizeof(int*)*table.variablesNo);
-    deltaXSizes=(int*) malloc(sizeof(int)*table.variablesNo);
+
+    //we initialize the solver specific data
+    sData.deltaXs=(int **) malloc(sizeof(int*)*table.variablesNo);
+    sData.deltaXSizes=(int*) malloc(sizeof(int)*table.variablesNo);
+    sData.domainSizes=(int*) malloc(sizeof(int)*table.variablesNo);
+    sData.domains=(char**) malloc(sizeof(char*)*table.variablesNo);
     for (int i = 0; i < table.variablesNo; i++){
-    	deltaXs[i]=(int*) malloc(sizeof(int)*maxValuesToRemove);
+    	sData.deltaXs[i]=(int*) malloc(sizeof(int)*maxValuesToRemove);
+    	sData.domains[i]=(char*) malloc(sizeof(char)*table.supportSizes[i]);
+    	sData.domainSizes[i]=table.supportSizes[i];
+    	sData.deltaXSizes[i]=0;
     }
 
     //we initialzie the number of iterations and at each we prune some elements of the supports
     int iterations=1;
-    randomSolve(table,iterations);
+    randomSolve(&table,iterations);
 
 
     //free memory
-    free(deltaXSizes);
+    free(sData.deltaXSizes);
     for (int i = 0; i < table.variablesNo; i++){
-    	free(deltaXs[i]);
+    	free(sData.deltaXs[i]);
+    	free(sData.domains[i]);
     }
+    free(sData.domains);
+    free(sData.deltaXs);
 }
