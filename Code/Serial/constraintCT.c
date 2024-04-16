@@ -43,7 +43,7 @@ void updateTable(CT *data,int** deltaXs,int* deltaXSizes){
 	}
 
 }
-void filterDomains(CT *data,char** domains){
+void filterDomains(CT *data,char** domains,int* domainSizes){
 	//for now we loop through all the array, with a list we could be more efficient (todo)
 	for (int i = 0; i < data->variablesNo; i++){
 		if(data->s_sup[i]==1){
@@ -51,11 +51,13 @@ void filterDomains(CT *data,char** domains){
 			for (int j = 0; j < data->supportSizes[i]; j++){
 				int x_aIndex=getSupportIndex(data,i,j+data->variablesOffsets[i]);
 				int index=data->residues[x_aIndex];
-				if((data->currTable.words[index] & (data->supports[x_aIndex]).words[index] ) ==0x0000000000000000){
+				if((data->currTable.words[index] & (data->supports[x_aIndex]).words[index] ) == 0x0000000000000000){
 					index=intersectIndex(&(data->currTable),data->supports[x_aIndex].words);
 					if(index!=-1){
 						data->residues[x_aIndex]=index;
 					}else{
+						if(domains[i][j-data->variablesOffsets[i]]!=0)
+							domainSizes[i]-=1;
 						domains[i][j-data->variablesOffsets[i]]=0;
 					}
 
@@ -86,7 +88,7 @@ int enfoceGAC(CT *data,solverData *sData){
 	if(isEmpty(data->currTable)){
 		return -1; //backtrack
 	}
-	filterDomains(data,sData->domains);
+	filterDomains(data,sData->domains,sData->domainSizes);
 	return 0;
 }
 
