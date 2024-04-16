@@ -4,7 +4,7 @@
 
 
 //data to random remove supports
-int seed=124;
+int seed=12;
 int maxValuesToRemove=1;
 solverData sData;
 int iterations=3;
@@ -50,17 +50,18 @@ void RemoveRandomSupports(CT *table){
 		minValueInSupport=table->variablesOffsets[i];
 		maxValueInSupport=minValueInSupport+table->supportSizes[i]-1;
 		actualRemoved=sData.deltaXSizes[i];
+		printf("to remove orignally: %d\n",actualRemoved);
 		for (int j = 0; j < sData.deltaXSizes[i]; j++){
 			//we now generate the actual values to remove
 			sData.deltaXs[i][j]=(rand() % (maxValueInSupport - minValueInSupport + 1)) + minValueInSupport; //random no between min and max
-			if(sData.domains[i][sData.deltaXs[i][j]-table->variablesOffsets[i]]==0){
+			if(sData.domains[i][sData.deltaXs[i][j]-table->variablesOffsets[i]]==0)
 				actualRemoved--;
-			}else{
-				sData.domains[i][sData.deltaXs[i][j]-table->variablesOffsets[i]]=0;
-			}
+			sData.domains[i][sData.deltaXs[i][j]-table->variablesOffsets[i]]=0;	
 		}
 		sData.domainSizes[i]-=actualRemoved;
 	}
+	
+	printValsToRemove(table);
 	printf("\nhere:\n");
 	for (int i = 0; i < table->variablesNo; ++i){
 		for (int j = 0; j < table->supportSizes[i]; ++j){
@@ -68,7 +69,6 @@ void RemoveRandomSupports(CT *table){
 		}
 		printf("\n");
 	}
-	printValsToRemove(table);
 }
 
 void randomSolve(CT *table,int iterations){
@@ -76,6 +76,13 @@ void randomSolve(CT *table,int iterations){
 		
 		RemoveRandomSupports(table);
 		enfoceGAC(table,&sData); //we discard for now the return value (backtrack, todo: use it)
+		printf("after GAC:\n");
+		for (int i = 0; i < table->variablesNo; ++i){
+			for (int j = 0; j < table->supportSizes[i]; ++j){
+				printf("%d,",sData.domains[i][j]);
+			}
+			printf("\n");
+		}
 		printCurrTable(table);
 		if(!hasSolution(*table)){
 			printf("\n--------------- The problem has no solution ---------------\n");

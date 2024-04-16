@@ -4,6 +4,16 @@
 
 CT data;
 
+
+void tmpPrintCose(CT *table,solverData sData){
+	for (int i = 0; i < table->variablesNo; ++i){
+		for (int j = 0; j < table->supportSizes[i]; ++j){
+			printf("%d,",sData.domains[i][j]);
+		}
+		printf("\n");
+	}
+}
+
 //---------------------------------------------
 //---- Aux functions to access the support ----
 //---------------------------------------------
@@ -49,18 +59,21 @@ void filterDomains(CT *data,char** domains,int* domainSizes){
 		if(data->s_sup[i]==1){
 			//todo for all values in dom x, che si possono prendere dal processo di search (for now we loop through all the array todo: lists)
 			for (int j = 0; j < data->supportSizes[i]; j++){
-				int x_aIndex=getSupportIndex(data,i,j+data->variablesOffsets[i]);
-				int index=data->residues[x_aIndex];
-				if((data->currTable.words[index] & (data->supports[x_aIndex]).words[index] ) == 0x0000000000000000){
-					index=intersectIndex(&(data->currTable),data->supports[x_aIndex].words);
-					if(index!=-1){
-						data->residues[x_aIndex]=index;
-					}else{
-						if(domains[i][j-data->variablesOffsets[i]]!=0)
-							domainSizes[i]-=1;
-						domains[i][j-data->variablesOffsets[i]]=0;
-					}
+				if(domains[i][j]==1){
+					int x_aIndex=getSupportIndex(data,i,j+data->variablesOffsets[i]);
+					int index=data->residues[x_aIndex];
+					if((data->currTable.words[index] & (data->supports[x_aIndex]).words[index] ) == 0x0000000000000000){
+						index=intersectIndex(&(data->currTable),data->supports[x_aIndex].words);
+						if(index!=-1){
+							data->residues[x_aIndex]=index;
+						}else{
+							if(domains[i][j]!=0)
+								domainSizes[i]-=1;
+							domains[i][j]=0;
 
+						}
+
+					}
 				}
 			}
 			data->lastSizes[i];//=dom(x) todo;
@@ -82,14 +95,15 @@ int enfoceGAC(CT *data,solverData *sData){
 		//update s_sup
 		data->s_sup[i]=(sData->domainSizes[i]>1) ? 1 : 0;
 	}
-
-
+	printf("this should be = to the previous\n");
+	tmpPrintCose(data,*sData);
 	updateTable(data,sData->deltaXs, sData->deltaXSizes);
+	printf("this should be = to the previous\n");
+	tmpPrintCose(data,*sData);
 	if(isEmpty(data->currTable)){
 		return -1; //backtrack
 	}
 	filterDomains(data,sData->domains,sData->domainSizes);
 	return 0;
 }
-
 
