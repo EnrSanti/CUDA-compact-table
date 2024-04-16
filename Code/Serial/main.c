@@ -4,7 +4,7 @@
 
 
 //data to random remove supports
-int seed=123;
+int seed=1273;
 int maxValuesToRemove=3;
 solverData sData;
 
@@ -19,6 +19,18 @@ int* genNoSupportsVals(CT *table, int maxValuesToRemove){
     }
 }
 
+void printValsToRemove(CT *table){
+	printf("\n-----------------------------------\n");
+	for (int i = 0; i < table->variablesNo; i++){
+		printf("Remove from %s: ",table->scope[i]);
+		for (int j = 0; j < sData.deltaXSizes[i]; j++){
+			printf("%d, ",sData.deltaXs[i][j]);
+		}
+		printf("\n");
+	}
+	printf("-----------------------------------\n");
+	
+}
 
 void RemoveRandomSupports(CT *table){
 
@@ -33,10 +45,14 @@ void RemoveRandomSupports(CT *table){
 		for (int j = 0; j < sData.deltaXSizes[i]; j++){
 			//we now generate the actual values to remove
 			sData.deltaXs[i][j]=(rand() % (maxValueInSupport - minValueInSupport + 1)) + minValueInSupport; //random no between min and max
+			sData.domains[i][j]=0;
 			//todo 1 volta funziona poi no (ovviamente)
 		}
-		//printf("for var %d i can remove %ld...%ld\n",i, minValueInSupport,maxValueInSupport);
+		sData.domainSizes[i]-=sData.deltaXSizes[i];
+
+		//todo doens't work this way
 	}
+	printValsToRemove(table);
 }
 
 void randomSolve(CT *table,int iterations){
@@ -47,9 +63,10 @@ void randomSolve(CT *table,int iterations){
 		}
 		RemoveRandomSupports(table);
 		enfoceGAC(table,&sData); //we discard for now the return value (backtrack, todo: use it)
-
+		printCurrTable(table);
 	}
 }
+
 
 
 void main(int argc, char const* argv[]) {

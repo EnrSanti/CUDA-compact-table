@@ -21,7 +21,7 @@ typedef struct CT{
 } CT;
 
 void printCT(const CT *ct) {
-     
+
   
     printf("Variables:");
 
@@ -45,11 +45,15 @@ void printCT(const CT *ct) {
     		currentOffset++;
     		offsetAccumulator+=ct->supportSizes[currentOffset];
     		internalOffset=0;
-    		printf("--- var: %s, size: %ld ---\n",ct->scope[currentOffset],ct->supportSizes[currentOffset]);
+    		printf("\n--- var: %s, size: %ld ---\n",ct->scope[currentOffset],ct->supportSizes[currentOffset]);
     	}
 		printBitSet(ct->supports[i],ct->variablesOffsets[currentOffset]+internalOffset,printMaskOff);	
     	
     	internalOffset++;
     }
    
+}
+void printCurrTable(const CT *ct) {
+    printf("\ncurrent table:\n");
+    printBitSet(ct->currTable,0,printMaskOff);
 }
