@@ -5,14 +5,6 @@
 CT data;
 
 
-void tmpPrintCose(CT *table,solverData sData){
-	for (int i = 0; i < table->variablesNo; ++i){
-		for (int j = 0; j < table->supportSizes[i]; ++j){
-			printf("%d,",sData.domains[i][j]);
-		}
-		printf("\n");
-	}
-}
 
 //---------------------------------------------
 //---- Aux functions to access the support ----
@@ -95,11 +87,7 @@ int enfoceGAC(CT *data,solverData *sData){
 		//update s_sup
 		data->s_sup[i]=(sData->domainSizes[i]>1) ? 1 : 0;
 	}
-	printf("this should be = to the previous\n");
-	tmpPrintCose(data,*sData);
-	updateTable(data,sData->deltaXs, sData->deltaXSizes);
-	printf("this should be = to the previous\n");
-	tmpPrintCose(data,*sData);
+	
 	if(isEmpty(data->currTable)){
 		return -1; //backtrack
 	}

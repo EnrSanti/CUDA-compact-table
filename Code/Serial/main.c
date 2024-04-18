@@ -2,27 +2,36 @@
 #include "constraintCT.c"
 #include <math.h>
 
+//-----------------------------------------------------------------------
+//This file provides a naive "solver" simulator which keeps track of the variables
+//and the domains, and at each iteration (no. fixed by "iterations") removes 
+//some random values from the domains
+//-----------------------------------------------------------------------
 
-//data to random remove supports
+//data to random remove supports:
+
 int seed=12;
-int maxValuesToRemove=1;
-solverData sData;
-int iterations=3;
+int maxValuesToRemove=1; //at each iteration how many values do we remove from a SINGLE variable
+solverData sData; //the data related to the "solver simulator (i.e. domains, vars..)"
+int iterations=3; //the number of iterations the simulator will do
 
-
+//given a (postive) table we return whether a solution may still be found
 int hasSolution(CT table){
 	return !isEmpty((table.currTable));
 }
 
+//given a (postive) table and a value, we generate a number of values to remove from each variable
 int* genNoSupportsVals(CT *table, int maxValuesToRemove){
-	int lowerbound= (maxValuesToRemove < table->variablesNo) ? maxValuesToRemove : table->variablesNo;
 	for (int i = 0; i < table->variablesNo; i++) {
-        sData.deltaXSizes[i] = rand() % (lowerbound + 1); //random no between 0 and maxValuesToRemove
+		//if maxValuesToRemove is bigger than the current domain size we can't remove that many ponits 
+		int lowerbound= (maxValuesToRemove < table->lastSizes[i]) ? maxValuesToRemove : table->lastSizes[i];
+        sData.deltaXSizes[i] = rand() % (lowerbound + 1); //random no between 0 and lowerbound
     }
 }
 
+//prints the values in deltaXs (i.e. for each variable which values are removeds)
 void printValsToRemove(CT *table){
-	printf("\n-----------------------------------\n");
+	printf("\n----------------------------------------------------------------------\n----------------------------------------------------------------------\n");
 	for (int i = 0; i < table->variablesNo; i++){
 		printf("Remove from %s: ",table->scope[i]);
 		for (int j = 0; j < sData.deltaXSizes[i]; j++){
@@ -35,13 +44,15 @@ void printValsToRemove(CT *table){
 	
 }
 
+//given a table it removes some domain values from each variable (up to maxValuesToRemove, for each var.)
 void RemoveRandomSupports(CT *table){
 
 	long minValueInSupport;
 	long maxValueInSupport;
 	int actualRemoved;
 	int toRemove;
-	//for each var we seek the number of values to remove
+
+	//for each var we seek the number (random) of values to remove
 	genNoSupportsVals(table,maxValuesToRemove); 
 
 	//for each var we get some (deltaXSizes[i]) random vars in the doman and remove them
@@ -50,10 +61,10 @@ void RemoveRandomSupports(CT *table){
 		minValueInSupport=table->variablesOffsets[i];
 		maxValueInSupport=minValueInSupport+table->supportSizes[i]-1;
 		actualRemoved=sData.deltaXSizes[i];
-		printf("to remove orignally: %d\n",actualRemoved);
 		for (int j = 0; j < sData.deltaXSizes[i]; j++){
 			//we now generate the actual values to remove
 			sData.deltaXs[i][j]=(rand() % (maxValueInSupport - minValueInSupport + 1)) + minValueInSupport; //random no between min and max
+			//some values may not be in the domain so we don't actually decrease delta
 			if(sData.domains[i][sData.deltaXs[i][j]-table->variablesOffsets[i]]==0)
 				actualRemoved--;
 			sData.domains[i][sData.deltaXs[i][j]-table->variablesOffsets[i]]=0;	
@@ -62,21 +73,15 @@ void RemoveRandomSupports(CT *table){
 	}
 	
 	printValsToRemove(table);
-	printf("\nhere:\n");
-	for (int i = 0; i < table->variablesNo; ++i){
-		for (int j = 0; j < table->supportSizes[i]; ++j){
-			printf("%d,",sData.domains[i][j]);
-		}
-		printf("\n");
-	}
 }
 
+//the main procedure invoekd by the main, we loop "iterations" times
 void randomSolve(CT *table,int iterations){
 	for (int i = 0; i < iterations; i++)	{
 		
 		RemoveRandomSupports(table);
 		enfoceGAC(table,&sData); //we discard for now the return value (backtrack, todo: use it)
-		printf("after GAC:\n");
+		printf("\nafter GAC:\n");
 		for (int i = 0; i < table->variablesNo; ++i){
 			for (int j = 0; j < table->supportSizes[i]; ++j){
 				printf("%d,",sData.domains[i][j]);
@@ -127,7 +132,8 @@ void main(int argc, char const* argv[]) {
     randomSolve(&table,iterations);
 
 
-    //free memory
+
+    //free memory:
     free(sData.deltaXSizes);
     for (int i = 0; i < table.variablesNo; i++){
     	free(sData.deltaXs[i]);
