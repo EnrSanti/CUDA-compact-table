@@ -100,7 +100,6 @@ CT readFile(const char* str) {
     //we allocate and initialize the support bitsets
     for (int i = 0; i < supportSize; i++){
         data.supports[i]=createBitSet(noTuples); //the content doesn't make sense yet, later we need to update the mask and intersect it
-        data.residues[i]=1; //TODO intialize residuals in the proper way, may not be always 1
     }
 
    
@@ -125,12 +124,18 @@ CT readFile(const char* str) {
             }
         }
     }
-    
 
     //then we update the bitsets with the mask to be coherent, lastly we rest the mask
     for (int i = 0; i < supportSize; ++i){  
         intersectWithMask(&(data.supports[i]));
         clearMask(&(data.supports[i])); 
+        //we initialize residues
+        for(int j=0; j<noTuples; j++){
+            if(data.supports[i].words[j/bitsPerWord]!=0x0000000000000000){
+                data.residues[i]=j; 
+                break;
+            }
+        }
     }
     
     printCT(&data);
