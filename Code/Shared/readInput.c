@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h> 
 #include <stdlib.h> 
+#include <stdbool.h>
 #include "RSparseBitSet.c"
 #include "CTData.c"
 
@@ -43,7 +44,7 @@ CT readFile(const char* str) {
         
         //we store the offset
         data.variablesOffsets[i]=domainMin[i];
-
+        printf("qui: %ld\n",data.variablesOffsets[i] );
         //copy name to the scope 
         int len=strlen(var_name);
         data.scope[i]=(char*) malloc((len+1)*sizeof(char));
@@ -94,29 +95,57 @@ CT readFile(const char* str) {
     data.supportSize=supportSize;
     data.residues= (long*) malloc(supportSize*sizeof(long));
     data.supports=(bitSet*) malloc(supportSize*sizeof(bitSet));
-
+    //we initialize also the additional support for short values
+    data.supportsShort=(bitSet*) malloc(supportSize*sizeof(bitSet));
  
-
+    printf("ok here\n");
     //we allocate and initialize the support bitsets
     for (int i = 0; i < supportSize; i++){
         data.supports[i]=createBitSet(noTuples); //the content doesn't make sense yet, later we need to update the mask and intersect it
+        data.supportsShort[i]=createBitSet(noTuples); 
     }
 
-   
+    printf("ok here\n");
     //we read and count the rows of the table
     int ctr=0;
-    int constrNo=1;
+    int constrNo=1; //keeps track of the rows
     int* row=(int*) malloc(noVars*sizeof(int));
+    bool* readingShortVal=(bool*) malloc(noVars*sizeof(bool));; //used to keep track of how we need to update the supports
+    
+    printf("ok here 1\n");
     while (fscanf(ptr, "%[^;,],\n", var) == 1) {
-        if(strncmp(var,"\n}",2)!=0 && strncmp(var,"}",1)!=0){
-            fscanf(ptr, ";\n"); 
-            row[ctr]=atoi(var);    
+        if(strncmp(var,"\n}",2)!=0 && strncmp(var,"}",1)!=0){ //check if I have read the last } of the table (may be after a new line)
+            fscanf(ptr, ";\n");
+
+            //we check if it's not a short entry (i.e. has *)
+
+            if(strncmp(var,"*",1)!=0){
+                readingShortVal[ctr]=false;
+                row[ctr]=atoi(var);   
+            }else{
+                readingShortVal[ctr]=true;                
+            }
+
             ctr++;
+
             if(ctr%noVars==0){
+                int offset;
                 for (int i = 0; i < noVars; i++){
-                    
-                    addToMaskInt(&(data.supports[data.supportOffsetJmp[i]+row[i]-data.variablesOffsets[i]]),constrNo);   
+                    if(readingShortVal[i]==false){
+                        offset=data.supportOffsetJmp[i]+row[i]-data.variablesOffsets[i];
+                        printf("offset[%d][%d]: %d\n",constrNo,i, offset);
+                        addToMaskInt(&(data.supports[offset]),constrNo);   
+                        addToMaskInt(&(data.supportsShort[offset]),constrNo);  
+                    }else{
+                        //to supports we need to set all the var values to 1
+                        for (int varValue = 0; varValue < data.supportSizes[i]; varValue++) {
+                            offset=data.supportOffsetJmp[i]+varValue;
+                            addToMaskInt(&(data.supports[offset]),constrNo);   
+                        }
+                        //to supportsShort to 0, so we don't add anything :)
+                    }
                 }
+
 
                 ctr=0;
                 constrNo++;
@@ -125,6 +154,7 @@ CT readFile(const char* str) {
         }
     }
 
+    printf("ok here 2\n");
     //then we update the bitsets with the mask to be coherent, lastly we rest the mask
     for (int i = 0; i < supportSize; ++i){  
         intersectWithMask(&(data.supports[i]));
