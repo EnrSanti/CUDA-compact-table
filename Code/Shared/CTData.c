@@ -50,7 +50,8 @@ void printCTData(const CT *ct) {
     		printf("\n--- var: %s, size: %ld ---\n",ct->scope[currentOffset],ct->supportSizes[currentOffset]);
     	}
 		printBitSet(ct->supports[i],ct->variablesOffsets[currentOffset]+internalOffset,printMaskOff);	
-    	
+    	printBitSet(ct->supportsShort[i],ct->variablesOffsets[currentOffset]+internalOffset,printMaskOff);  
+        
     	internalOffset++;
     }
    

@@ -30,7 +30,7 @@ void updateTable(CT *data,int** deltaXs,int* deltaXSizes, int* domainSizes, char
 				//printf("\n++++incremental update++++\n");
 				for (int j = 0; j < deltaXSizes[i]; j++){
 					int index=getSupportIndex(data,i,deltaXs[i][j]);
-					addToMask(&(data->currTable),data->supports[index].words); 		
+					addToMask(&(data->currTable),data->supportsShort[index].words); 		
 				}
 				reverseMask(&(data->currTable));
 			}else{
