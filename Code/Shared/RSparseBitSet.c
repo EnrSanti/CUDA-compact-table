@@ -34,7 +34,7 @@ bitSet createBitSet(int domainSize){
 	b.words = (unsigned long*)malloc(wordsNo*sizeof(unsigned long));
 	b.mask = (unsigned long*)malloc(wordsNo*sizeof(unsigned long));
 	b.index = (unsigned int*)malloc(wordsNo*sizeof(unsigned int));
-	b.limit = wordsNo;
+	b.limit = wordsNo-1;
 	for (int i = 0; i < wordsNo-1; i++){
 		b.index[i]=i;
 		b.mask[i]=0;
@@ -69,14 +69,14 @@ int isEmpty(bitSet b){
 
 void clearMask(bitSet* b){
 	//we only reset the parts of the mask useful
-	for (int i = 0; i < b->limit; i++){
+	for (int i = 0; i <= b->limit; i++){
 		b->mask[b->index[i]]=0;
 	}
 }
 
 void reverseMask(bitSet* b){
 	int offset;
-	for (int i = 0; i < b->limit; i++){
+	for (int i = 0; i <= b->limit; i++){
 		offset=b->index[i];
 		b->mask[offset]=~(b->mask[offset]);
 	}	
@@ -84,7 +84,7 @@ void reverseMask(bitSet* b){
 
 void addToMask(bitSet* b,unsigned long toAdd[]){
 	int offset;
-	for (int i = 0; i < b->limit; i++){
+	for (int i = 0; i <= b->limit; i++){
 		offset=b->index[i];
 		b->mask[offset]=b->mask[offset] | toAdd[offset];
 	}
@@ -93,16 +93,16 @@ void addToMask(bitSet* b,unsigned long toAdd[]){
 void intersectWithMask(bitSet* b){
 	int offset;
 	unsigned long w;
-	for (int i = (b->limit)-1; i >= 0; i--){
+	for (int i = (b->limit); i >= 0; i--){
 		offset=b->index[i];
 		w=b->words[offset] & b->mask[offset];
 		
 		if(w!=b->words[offset]){
 			b->words[offset]=w;
 			if(w==0){
-				b->index[i]=b->index[b->limit-1];
-				b->index[b->limit-1]=offset;
-				(b->limit)--;
+				b->index[i]=b->index[b->limit];
+				b->index[b->limit]=offset;
+				(b->limit)-=1;
 			}
 		}
 	}
@@ -110,7 +110,7 @@ void intersectWithMask(bitSet* b){
 
 int intersectIndex(bitSet* b,unsigned long toIntersect[]){
 	int offset;
-	for (int i = 0; i < b->limit; i++){
+	for (int i = 0; i <= b->limit; i++){
 		offset=b->index[i];
 		if((b->words[offset] & toIntersect[offset])!=0){
 			return offset;
@@ -137,18 +137,18 @@ void printLongBits(unsigned long num) {
 
 void printBitSet(const bitSet bs,long offset, int includeMask) {
     
-    if(bs.limit>0)
+    if(bs.limit>=0)
     	printf("\nWords (for value %ld): \n",offset);
     else
     	printf("\n*** Value %ld never found in any tuple ***\n",offset);
 
-    for (int i = 0; i < bs.limit; i++) {
+    for (int i = 0; i <= bs.limit; i++) {
         printf("[%d] ", i);
         printLongBits(bs.words[i]);
     }
-    if(includeMask==printMaskOn && bs.limit>0){
+    if(includeMask==printMaskOn && bs.limit>=0){
 	    printf("Mask:\n");
-	    for (int i = 0; i < bs.limit; i++) {
+	    for (int i = 0; i <= bs.limit; i++) {
 	        printf("[%d] ", i);
 	        printLongBits(bs.mask[i]);
 

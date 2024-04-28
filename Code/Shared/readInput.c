@@ -162,7 +162,7 @@ CT readFile(const char* str) {
         }
     }
     
-    printCT(&data);
+    printCTData(&data);
     
     //we free the memory used
     free(domainMin);

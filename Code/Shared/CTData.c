@@ -20,8 +20,11 @@ typedef struct CT{
     long* variablesOffsets; //offset of the variables, used in accessing the support rows (not all variables start from 0, eg  90..120, variablesOffsets[i]=90) 
 
 } CT;
-
-void printCT(const CT *ct) {
+void printCurrTable(const CT *ct){
+    printf("\ncurrent table:");
+    printBitSet(ct->currTable,0,printMaskOff);
+}
+void printCTData(const CT *ct) {
 
   
     printf("Variables:");
@@ -31,9 +34,7 @@ void printCT(const CT *ct) {
     }
 
 
-    printf("\ncurrent table:\n");
-	printBitSet(ct->currTable,0,printMaskOff);
-
+    printCurrTable(ct);
     printf("\n----------------------------\n");
 
     printf("supports: \n");
@@ -53,8 +54,4 @@ void printCT(const CT *ct) {
     	internalOffset++;
     }
    
-}
-void printCurrTable(const CT *ct) {
-    printf("\ncurrent table:\n");
-    printBitSet(ct->currTable,0,printMaskOff);
 }
