@@ -20,12 +20,13 @@ int getSupportIndex(CT *table,int var, int value){
 //------- The three functions of alg. 2 -------
 //---------------------------------------------
 
-void updateTable(CT *data,int** deltaXs,int* deltaXSizes){
+void updateTable(CT *data,int** deltaXs,int* deltaXSizes, int* domainSizes){
 	//for now we loop through all the array, with a list we could be more efficient (todo)
 	for (int i=0; i<data->variablesNo; i++){
 		if(data->s_val[i]==1){
 			clearMask(&(data->currTable));
-			if(deltaXSizes[i]<data->lastSizes[i]){
+
+			if(deltaXSizes[i]<domainSizes[i]){
 				for (int j = 0; j < deltaXSizes[i]; j++){
 					int index=getSupportIndex(data,i,deltaXs[i][j]);
 					addToMask(&(data->currTable),data->supports[index].words); 		
@@ -39,8 +40,10 @@ void updateTable(CT *data,int** deltaXs,int* deltaXSizes){
 				}
 			}
 			intersectWithMask(&(data->currTable));
-			if(isEmpty(data->currTable))
+			if(isEmpty(data->currTable)){
+				printf("UNSAT\n" );
 				break;
+			}
 		}
 	}
 
@@ -68,7 +71,7 @@ void filterDomains(CT *data,char** domains,int* domainSizes){
 					}
 				}
 			}
-			data->lastSizes[i];//=dom(x) todo;
+			data->lastSizes[i]=domainSizes[i];//=dom(x) todo;
 		}
 	}
 }
@@ -87,11 +90,14 @@ int enfoceGAC(CT *data,solverData *sData){
 		//update s_sup
 		data->s_sup[i]=(sData->domainSizes[i]>1) ? 1 : 0;
 	}
+
+	updateTable(data,sData->deltaXs,sData->deltaXSizes,sData->domainSizes);
 	
 	if(isEmpty(data->currTable)){
 		return -1; //backtrack
 	}
 	filterDomains(data,sData->domains,sData->domainSizes);
+	
 	return 0;
 }
 
