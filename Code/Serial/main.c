@@ -11,7 +11,7 @@
 //data to random remove supports:
 
 int seed=12;
-int maxValuesToRemove=2; //at each iteration how many values do we remove from a SINGLE variable
+int maxValuesToRemove=1; //at each iteration how many values do we remove from a SINGLE variable
 int iterations=4; //the number of iterations the simulator will do
 solverData sData; //the data related to the "solver simulator (i.e. domains, vars..)"
 
@@ -25,7 +25,7 @@ int* genNoSupportsVals(CT *table, int maxValuesToRemove){
 	for (int i = 0; i < table->variablesNo; i++) {
 		//if maxValuesToRemove is bigger than the current domain size we can't remove that many ponits 
 		int lowerbound= (maxValuesToRemove < table->lastSizes[i]) ? maxValuesToRemove : table->lastSizes[i];
-        sData.deltaXSizes[i] = rand() % (lowerbound) + 1; //random no between 1 and lowerbound
+        sData.deltaXSizes[i] = rand() % (lowerbound+1); //random no between 0 and lowerbound
     }
 }
 
@@ -40,7 +40,7 @@ void printValsToRemove(CT *table){
 		if(sData.deltaXSizes[i]==0){
 			printf("NONE, ");
 		}
-		printf("The domain size after: %d",sData.domainSizes[i]);
+		printf("The domain size after: %d (still before filtering)",sData.domainSizes[i]);
 		printf("\n");
 	}
 	printf("-----------------------------------\n");
