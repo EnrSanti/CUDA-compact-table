@@ -12,7 +12,7 @@
 
 int seed=12;
 int maxValuesToRemove=2; //at each iteration how many values do we remove from a SINGLE variable
-int iterations=6; //the number of iterations the simulator will do
+int iterations=3; //the number of iterations the simulator will do
 solverData sData; //the data related to the "solver simulator (i.e. domains, vars..)"
 
 //given a (postive) table we return whether a solution may still be found

@@ -106,42 +106,56 @@ CT readFile(const char* str) {
     //we read and count the rows of the table
     int ctr=0;
     int constrNo=1; //keeps track of the rows
-    int* row=(int*) malloc(noVars*sizeof(int));
-    bool* readingShortVal=(bool*) malloc(noVars*sizeof(bool));; //used to keep track of how we need to update the supports
-    
+    int offset;
+
     while (fscanf(ptr, "%[^;,],\n", var) == 1) {
         if(strncmp(var,"\n}",2)!=0 && strncmp(var,"}",1)!=0){ //check if I have read the last } of the table (may be after a new line)
+
             fscanf(ptr, ";\n");
 
             //we check if it's not a short entry (i.e. has *)
-
-            if(strncmp(var,"*",1)!=0){
-                readingShortVal[ctr]=false;
-                row[ctr]=atoi(var);   
+            if(strncmp(var,"*",1)==0){
+                //to supports we need to set all the var values to 1
+                for (int varValue = 0; varValue < data.supportSizes[ctr]; varValue++) {
+                    offset=data.supportOffsetJmp[ctr]+varValue;
+                    addToMaskInt(&(data.supports[offset]),constrNo);   
+                }
+                //supportsShort to 0, so we don't add anything :)
             }else{
-                readingShortVal[ctr]=true;                
+                //if we have a smart entry !=
+                if(strncmp(var,"!=",2)==0){
+                    int entryValue=atoi(var+2)-data.variablesOffsets[ctr]; //we skip over the chars != (no spaces allowed)
+                    printf("qui: %d\n",entryValue );
+                    for (int varValue = 0; varValue < entryValue; varValue++) {
+                        offset=data.supportOffsetJmp[ctr]+varValue;
+                        addToMaskInt(&(data.supports[offset]),constrNo);   
+                    }
+                    for (int varValue = entryValue+1; varValue < data.supportSizes[ctr]; varValue++) {
+                        offset=data.supportOffsetJmp[ctr]+varValue;
+                        addToMaskInt(&(data.supports[offset]),constrNo);   
+                    }
+                    //to supportsShort to 0, so we don't add anything :)
+                }else{
+                    int entryValue=atoi(var);   
+
+                    offset=data.supportOffsetJmp[ctr]+entryValue-data.variablesOffsets[ctr];
+                    addToMaskInt(&(data.supports[offset]),constrNo);   
+                    addToMaskInt(&(data.supportsShort[offset]),constrNo); 
+                }            
             }
+            /*
+            int entryValue=atoi(var+2); //we skip over the chars != (no spaces allowed)
+                    printf("entryValue: %d, constraintNO %d\n",entryValue,constrNo );
+                    int cose=entryValue-data.variablesOffsets[ctr];
+                    for (int varValue = 0; cose+varValue < data.supportSizes[ctr]; varValue++) {
+                        offset=data.supportOffsetJmp[ctr]+cose+varValue;
+                        addToMaskInt(&(data.supports[offset]),constrNo);   
+                    }
+            */
 
             ctr++;
 
             if(ctr%noVars==0){
-                int offset;
-                for (int i = 0; i < noVars; i++){
-                    if(readingShortVal[i]==false){
-                        offset=data.supportOffsetJmp[i]+row[i]-data.variablesOffsets[i];
-                        addToMaskInt(&(data.supports[offset]),constrNo);   
-                        addToMaskInt(&(data.supportsShort[offset]),constrNo);  
-                    }else{
-                        //to supports we need to set all the var values to 1
-                        for (int varValue = 0; varValue < data.supportSizes[i]; varValue++) {
-                            offset=data.supportOffsetJmp[i]+varValue;
-                            addToMaskInt(&(data.supports[offset]),constrNo);   
-                        }
-                        //to supportsShort to 0, so we don't add anything :)
-                    }
-                }
-
-
                 ctr=0;
                 constrNo++;
                 //we have read a full row

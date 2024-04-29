@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <limits.h>
+#include "colors.h"
 
 //---------------------------------------------
 //---------- BITSET DATA DEFINITION -----------
@@ -124,33 +125,33 @@ int intersectIndex(bitSet* b,unsigned long toIntersect[]){
 //----------- AUX. PRINT FUNCTIONS ------------
 //---------------------------------------------
 // Function to print the bit representation of a long value
-void printLongBits(unsigned long num) {
+void printLongBits(unsigned long num, char* color) {
   
     // Extracting each bit of the double and printing it
     for (int i = 63; i >= 0; i--) {
         long bit = (num >> i) & 1;
-        printf("%lu", bit);
+        printf( "%s%lu%s",color, bit,ANSI_COLOR_RESET);
     }
     printf("\n");
 }
 //main print method for the structure
 
-void printBitSet(const bitSet bs,long offset, int includeMask) {
+void printBitSet(const bitSet bs,long offset, int includeMask,char* color) {
     
     if(bs.limit>=0)
-    	printf("\nWords (for value %ld): \n",offset);
+    	printf("%s\nWords (for value %ld): \n%s",color,offset,ANSI_COLOR_RESET);
     else
-    	printf("\n*** Value %ld never found in any tuple ***\n",offset);
+    	printf("%s\n*** Value %ld never found in any tuple ***\n%s",color,offset,ANSI_COLOR_RESET);
 
     for (int i = 0; i <= bs.limit; i++) {
-        printf("[%d] ", i);
-        printLongBits(bs.words[i]);
+        printf("%s[%d] %s",color, i,ANSI_COLOR_RESET);
+        printLongBits(bs.words[i],color);
     }
     if(includeMask==printMaskOn && bs.limit>=0){
-	    printf("Mask:\n");
+	    printf("%sMask: \n%s",color, ANSI_COLOR_RESET);
 	    for (int i = 0; i <= bs.limit; i++) {
-	        printf("[%d] ", i);
-	        printLongBits(bs.mask[i]);
+	        printf("%s[%d]%s ",color, i,ANSI_COLOR_RESET);
+	        printLongBits(bs.mask[i],color);
 
 	    }
 	}

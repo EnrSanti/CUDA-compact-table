@@ -22,7 +22,7 @@ typedef struct CT{
 } CT;
 void printCurrTable(const CT *ct){
     printf("\ncurrent table:");
-    printBitSet(ct->currTable,0,printMaskOff);
+    printBitSet(ct->currTable,0,printMaskOff,ANSI_COLOR_RESET);
 }
 void printCTData(const CT *ct) {
 
@@ -49,8 +49,8 @@ void printCTData(const CT *ct) {
     		internalOffset=0;
     		printf("\n--- var: %s, size: %ld ---\n",ct->scope[currentOffset],ct->supportSizes[currentOffset]);
     	}
-		printBitSet(ct->supports[i],ct->variablesOffsets[currentOffset]+internalOffset,printMaskOff);	
-    	printBitSet(ct->supportsShort[i],ct->variablesOffsets[currentOffset]+internalOffset,printMaskOff);  
+		printBitSet(ct->supports[i],ct->variablesOffsets[currentOffset]+internalOffset,printMaskOff,ANSI_COLOR_GREEN);	
+    	printBitSet(ct->supportsShort[i],ct->variablesOffsets[currentOffset]+internalOffset,printMaskOff,ANSI_COLOR_GREEN);  
         
     	internalOffset++;
     }
