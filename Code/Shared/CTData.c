@@ -9,6 +9,9 @@ typedef struct CT{
     int supportSize; //the length (no of rows) of the supports bitset (CONSTANT)
     bitSet* supports; //table of which values for each variable are required in a constraint
     bitSet* supportsShort; //additional bitset to deal with short tables, bitset value to 1 iff (x,a) strictly accepted by the i-th tuple     //(in the paper they are supports*)
+    bitSet* supportsMin; //additional bitset to deal with <= and < (smart tables)
+    bitSet* supportsMax; //additional bitset to deal with >= and > (smart tables)
+
     int* lastSizes; //current domain size of each var
     int* s_val; //indexes of the vars not yet instanciated whose domain changed from last iteration (could be replaced by a bitset)
     int* s_sup; //indexes of the vars not yet inst. with at least one value in their domain for which no support has yet been found (could be replaced by a bitset)
@@ -20,6 +23,7 @@ typedef struct CT{
     long* variablesOffsets; //offset of the variables, used in accessing the support rows (not all variables start from 0, eg  90..120, variablesOffsets[i]=90) 
 
 } CT;
+
 void printCurrTable(const CT *ct){
     printf("\ncurrent table:");
     printBitSet(ct->currTable,0,printMaskOff,ANSI_COLOR_RESET);
@@ -49,8 +53,14 @@ void printCTData(const CT *ct) {
     		internalOffset=0;
     		printf("\n--- var: %s, size: %ld ---\n",ct->scope[currentOffset],ct->supportSizes[currentOffset]);
     	}
-		printBitSet(ct->supports[i],ct->variablesOffsets[currentOffset]+internalOffset,printMaskOff,ANSI_COLOR_GREEN);	
-    	printBitSet(ct->supportsShort[i],ct->variablesOffsets[currentOffset]+internalOffset,printMaskOff,ANSI_COLOR_GREEN);  
+		//support
+        printBitSet(ct->supports[i],ct->variablesOffsets[currentOffset]+internalOffset,printMaskOff,ANSI_COLOR_GREEN);	
+    	//supprot*
+        printBitSet(ct->supportsShort[i],ct->variablesOffsets[currentOffset]+internalOffset,printMaskOff,ANSI_COLOR_GREEN);  
+        //supportsMin
+        printBitSet(ct->supportsMin[i],ct->variablesOffsets[currentOffset]+internalOffset,printMaskOff,ANSI_COLOR_GREEN);  
+        //supportsMax
+        printBitSet(ct->supportsMax[i],ct->variablesOffsets[currentOffset]+internalOffset,printMaskOff,ANSI_COLOR_GREEN);  
         
     	internalOffset++;
     }
