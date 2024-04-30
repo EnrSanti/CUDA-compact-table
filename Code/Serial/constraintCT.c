@@ -26,13 +26,23 @@ void updateTable(CT *data,int** deltaXs,int* deltaXSizes, int* domainSizes, char
 		if(data->s_val[i]==1){
 			clearMask(&(data->currTable));
 
-			if(deltaXSizes[i]<domainSizes[i]){
+			if(deltaXSizes[i]+2<domainSizes[i]){
 				//printf("\n++++incremental update++++\n");
+				int domMin=
+				int domMax=
 				for (int j = 0; j < deltaXSizes[i]; j++){
-					int index=getSupportIndex(data,i,deltaXs[i][j]);
-					addToMask(&(data->currTable),data->supportsShort[index].words); 		
+					if(deltaXs[i][j]> && deltaXs[i][j]<){
+						int index=getSupportIndex(data,i,deltaXs[i][j]);
+						addToMask(&(data->currTable),data->supportsShort[index].words); 		
+					}
 				}
 				reverseMask(&(data->currTable));
+				if(){
+
+				}
+				if(){
+
+				}
 			}else{
 				//printf("\n++++reset based update++++\n"); 
 				for (int j = 0; j < data->supportSizes[i]; j++){
