@@ -26,23 +26,25 @@ void updateTable(CT *data,int** deltaXs,int* deltaXSizes, int* domainSizes, char
 		if(data->s_val[i]==1){
 			clearMask(&(data->currTable));
 
-			if(deltaXSizes[i]+2<domainSizes[i]){
+			if(deltaXSizes[i]+2<domainSizes[i] && 1==0){ //TODO TOGLI SECONDA CONDIZIONE, in questa versione incremental update non è considerato
 				//printf("\n++++incremental update++++\n");
-				int domMin=
-				int domMax=
+				int domMin=-1; //TODO CAMBIA
+				int domMax=-1; //TODO CAMBIA
 				for (int j = 0; j < deltaXSizes[i]; j++){
-					if(deltaXs[i][j]> && deltaXs[i][j]<){
+					if(deltaXs[i][j]>domMin && deltaXs[i][j]<domMax){
 						int index=getSupportIndex(data,i,deltaXs[i][j]);
 						addToMask(&(data->currTable),data->supportsShort[index].words); 		
 					}
 				}
 				reverseMask(&(data->currTable));
-				if(){
-
+				/* TODO UNCOMMENT
+				if(dom(i).minChanged()){
+					...	
 				}
-				if(){
-
+				if(dom(i).maxChanged()){
+					...
 				}
+				*/
 			}else{
 				//printf("\n++++reset based update++++\n"); 
 				for (int j = 0; j < data->supportSizes[i]; j++){
