@@ -1,0 +1,13 @@
+vars no: 3;
+tuples no: 4;
+
+var 1..4: x;
+var 5..7: y;
+var 3..6: z;
+
+predicate table (x,y,z) {
+	3,5,3;
+	<4,6,5;
+	>=3,<=5, *;
+	1,5,5;
+}
