@@ -1,2 +1,0 @@
-For now only positive instances make sense, since a non satisfiable (negative) instance would mean that there's a all rows in the table present non suported values
-
