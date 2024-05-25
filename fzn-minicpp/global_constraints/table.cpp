@@ -50,7 +50,7 @@ Table::Table(vector<var<int>::Ptr> & vars, const vector<vector<int>> & tuples) :
     printf("%%%%%% the supports will have size (rows): %d \n",_supportSize);
     for (int i = 0  ; i < noVars; i++){
          printf("%%%%%% the var[%d] starts at: %d \n",i,_supportOffsetJmp[i]);
-        
+         printf("%%%%%% the var[%d] has initial size %d \n",i,vars[i]->intialSize());
     }
     */
 
@@ -64,8 +64,29 @@ Table::Table(vector<var<int>::Ptr> & vars, const vector<vector<int>> & tuples) :
 
 
 
+    for (int t = 0; t < noTuples; t++){
+        for (int v = 0; v < noVars; v++){
+            //classical entry (we update all the supports in the same way)
+            int entryValue=tuples[t][v]-_variablesOffsets[v];   
+            int offset=_supportOffsetJmp[v]+entryValue;
+
+            _supports[offset].addToMaskInt(t);
+            _supportsShort[offset].addToMaskInt(t);
 
 
+            for (int varValue = 0; varValue <= entryValue; varValue++) {
+                offset=_supportOffsetJmp[v]+varValue;
+                //update supportsMin
+                _supportsMin[offset].addToMaskInt(t);  
+            }
+            for (int varValue = entryValue; varValue < vars[v]->intialSize(); varValue++) {
+                offset=_supportOffsetJmp[v]+varValue;
+                //update supportsMax
+                _supportsMax[offset].addToMaskInt(t);
+            }
+        }
+    }
+    
 
 
 

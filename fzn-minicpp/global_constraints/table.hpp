@@ -61,7 +61,7 @@ class Table : public Constraint{
         vector<trail<int>> _s_sup; //indexes of the vars not yet inst. with at least one value in their domain for which no support has yet been found (could be replaced by a bitset)
         vector<trail<int>> _residues; 
 
-        //già l'abbiamo in var[i]->_dom.getInitialMin() e _dom.getInitialMax() o in getInitialSize()
+        //già l'abbiamo in var[i]->InitialSize()
         //vector<long> supportSizes; //for each var the size of it's domain (CONSTANT), the sizes are the actual sizes (i.e. var 5..7: y; has size 3 not 7 as if was starting from 0)
         
         

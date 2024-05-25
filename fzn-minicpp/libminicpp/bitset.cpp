@@ -80,7 +80,19 @@ void SparseBitSet::addToMask(StaticBitSet& m) {
       _mask[offset] = (_mask[offset] | m[offset]);
    }
 }
+void SparseBitSet::addToMaskInt(int value){  
 
+	int offset;
+   int bitsPerWord=32;
+	unsigned long wordToOr=(unsigned long) 1<<(bitsPerWord-(value%bitsPerWord));
+	int wordIndex=floor(value/bitsPerWord);
+	if(value%bitsPerWord==0){
+		wordIndex--;
+	}
+	offset=_index[wordIndex];
+	_mask[offset]=_mask[offset] | wordToOr;
+	
+}
 void SparseBitSet::intersectWithMask() {
    int offset, w;
    for (int i = _limit; i >= 0; i--) {

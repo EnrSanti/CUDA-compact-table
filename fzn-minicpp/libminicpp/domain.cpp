@@ -25,7 +25,10 @@ BitDomain::BitDomain(Trailer::Ptr eng,Storage::Ptr store,int min,int max)
       _sz(eng,max - min + 1),
       _imin(floorDivision(min, 32) * 32),
       _words_count(ceilDivision(max - _imin + 1, 32)),
-      _imax(_imin + _words_count * 32 - 1)
+      _imax(_imin + _words_count * 32 - 1),
+      _initialMin(min),
+      _initialMax(max),
+      _initialSz(max - min + 1)
 {
     // Words are considered 32 aligned, from left to right, bits are considered left to right.
     _dom = (trail<unsigned int>*)store->allocate(sizeof(trail<unsigned int>) * _words_count); // allocate storage from stack allocator

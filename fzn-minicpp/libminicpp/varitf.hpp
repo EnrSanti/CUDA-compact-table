@@ -20,6 +20,7 @@ public:
    virtual int min() const  = 0;
    virtual int max() const  = 0;
    virtual int size() const = 0;
+   virtual int intialSize() const = 0;
    virtual bool isBound() const = 0;
    virtual bool changed() const noexcept = 0;
    virtual bool changedMax() const noexcept = 0;

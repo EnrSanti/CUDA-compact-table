@@ -35,6 +35,7 @@ struct IntNotifier   {
 class BitDomain {
     trail<unsigned int>*                 _dom;
     trail<int>                  _min,_max,_sz;
+    int const                 _initialMin,_initialMax,_initialSz;
     int const        _imin,_words_count,_imax;
     int count(int from,int to) const;
     int findMin(int from) const;
@@ -46,6 +47,9 @@ public:
     int min() const { return _min;}
     int max() const { return _max;}
     int size() const { return _sz;}
+    int initialMin() const { return _initialMin;}
+    int initialMax() const { return _initialMax;}
+    int initialSize() const { return _initialSz;}
     bool isBound() const { return _sz == 1;}
     bool member(int v) const noexcept { return _min <= v && v <= _max && GETBIT(v);}
     bool changed() const noexcept { return !_sz.fresh();}

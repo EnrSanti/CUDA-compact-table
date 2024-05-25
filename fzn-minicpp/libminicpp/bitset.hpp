@@ -22,7 +22,7 @@
 #include "handle.hpp"
 #include "store.hpp"
 #include <vector>
-
+#include <cmath>
 class StaticBitSet {
    std::vector<int>            _words;
    int                         _sz;
@@ -48,6 +48,7 @@ public:
    void clearMask();
    void reverseMask();
    void addToMask(StaticBitSet& m);
+   void addToMaskInt(int value);
    void intersectWithMask();
    int intersectIndex(StaticBitSet& m);
    trail<int>& operator[] (int i) { return _words[i];}
