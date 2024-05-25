@@ -1,8 +1,8 @@
 CMakeFiles/fzn-minicpp.dir/fzn_cli_helper.cpp.o: \
- /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/fzn_cli_helper.cpp \
+ /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/fzn_cli_helper.cpp \
  /usr/include/stdc-predef.h \
- /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/fzn_cli_helper.h \
- /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/cxxopts/cxxopts.hpp \
+ /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/fzn_cli_helper.h \
+ /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/cxxopts/cxxopts.hpp \
  /usr/include/c++/13/cstring \
  /usr/include/x86_64-linux-gnu/c++/13/bits/c++config.h \
  /usr/include/x86_64-linux-gnu/c++/13/bits/os_defines.h \

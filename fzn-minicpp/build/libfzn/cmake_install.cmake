@@ -1,4 +1,4 @@
-# Install script for directory: /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libfzn
+# Install script for directory: /home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libfzn
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

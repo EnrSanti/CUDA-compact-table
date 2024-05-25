@@ -1,11 +1,11 @@
-/home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/CMakeFiles/fzn-minicpp.dir
-/home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/CMakeFiles/edit_cache.dir
-/home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/CMakeFiles/rebuild_cache.dir
-/home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libfzn/CMakeFiles/libfzn.dir
-/home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libfzn/CMakeFiles/libfzn-demo.dir
-/home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libfzn/CMakeFiles/edit_cache.dir
-/home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libfzn/CMakeFiles/rebuild_cache.dir
-/home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp/CMakeFiles/libminicpp.dir
-/home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp/CMakeFiles/minicpp-demo.dir
-/home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp/CMakeFiles/edit_cache.dir
-/home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp/CMakeFiles/rebuild_cache.dir
+/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/CMakeFiles/fzn-minicpp.dir
+/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/CMakeFiles/edit_cache.dir
+/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/CMakeFiles/rebuild_cache.dir
+/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libfzn/CMakeFiles/libfzn.dir
+/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libfzn/CMakeFiles/libfzn-demo.dir
+/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libfzn/CMakeFiles/edit_cache.dir
+/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libfzn/CMakeFiles/rebuild_cache.dir
+/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp/CMakeFiles/libminicpp.dir
+/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp/CMakeFiles/minicpp-demo.dir
+/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp/CMakeFiles/edit_cache.dir
+/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp/CMakeFiles/rebuild_cache.dir

@@ -11,7 +11,7 @@ CUDA_FLAGS =  --diag-suppress 177 --diag-suppress 550 --diag-suppress 815 --diag
 
 CXX_DEFINES = 
 
-CXX_INCLUDES = -I/home/enry/Desktop/CUDA-compact-table/fzn-minicpp/. -I/home/enry/Desktop/CUDA-compact-table/fzn-minicpp
+CXX_INCLUDES = -I"/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/." -I"/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp"
 
 CXX_FLAGS = -O3 -DNDEBUG -std=gnu++17
 

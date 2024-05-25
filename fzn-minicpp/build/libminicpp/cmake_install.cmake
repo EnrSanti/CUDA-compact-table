@@ -1,4 +1,4 @@
-# Install script for directory: /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp
+# Install script for directory: /home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

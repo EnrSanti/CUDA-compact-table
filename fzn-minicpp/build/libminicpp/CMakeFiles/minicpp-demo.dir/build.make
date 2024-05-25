@@ -53,10 +53,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/enry/Desktop/CUDA-compact-table/fzn-minicpp
+CMAKE_SOURCE_DIR = "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp"
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build
+CMAKE_BINARY_DIR = "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build"
 
 # Include any dependencies generated for this target.
 include libminicpp/CMakeFiles/minicpp-demo.dir/depend.make
@@ -70,18 +70,18 @@ include libminicpp/CMakeFiles/minicpp-demo.dir/progress.make
 include libminicpp/CMakeFiles/minicpp-demo.dir/flags.make
 
 libminicpp/CMakeFiles/minicpp-demo.dir/Demo.cpp.o: libminicpp/CMakeFiles/minicpp-demo.dir/flags.make
-libminicpp/CMakeFiles/minicpp-demo.dir/Demo.cpp.o: /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/Demo.cpp
+libminicpp/CMakeFiles/minicpp-demo.dir/Demo.cpp.o: /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/libminicpp/Demo.cpp
 libminicpp/CMakeFiles/minicpp-demo.dir/Demo.cpp.o: libminicpp/CMakeFiles/minicpp-demo.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object libminicpp/CMakeFiles/minicpp-demo.dir/Demo.cpp.o"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT libminicpp/CMakeFiles/minicpp-demo.dir/Demo.cpp.o -MF CMakeFiles/minicpp-demo.dir/Demo.cpp.o.d -o CMakeFiles/minicpp-demo.dir/Demo.cpp.o -c /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/Demo.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir="/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object libminicpp/CMakeFiles/minicpp-demo.dir/Demo.cpp.o"
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT libminicpp/CMakeFiles/minicpp-demo.dir/Demo.cpp.o -MF CMakeFiles/minicpp-demo.dir/Demo.cpp.o.d -o CMakeFiles/minicpp-demo.dir/Demo.cpp.o -c "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/Demo.cpp"
 
 libminicpp/CMakeFiles/minicpp-demo.dir/Demo.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/minicpp-demo.dir/Demo.cpp.i"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/Demo.cpp > CMakeFiles/minicpp-demo.dir/Demo.cpp.i
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/Demo.cpp" > CMakeFiles/minicpp-demo.dir/Demo.cpp.i
 
 libminicpp/CMakeFiles/minicpp-demo.dir/Demo.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/minicpp-demo.dir/Demo.cpp.s"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/Demo.cpp -o CMakeFiles/minicpp-demo.dir/Demo.cpp.s
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/Demo.cpp" -o CMakeFiles/minicpp-demo.dir/Demo.cpp.s
 
 # Object files for target minicpp-demo
 minicpp__demo_OBJECTS = \
@@ -94,18 +94,18 @@ libminicpp/minicpp-demo: libminicpp/CMakeFiles/minicpp-demo.dir/Demo.cpp.o
 libminicpp/minicpp-demo: libminicpp/CMakeFiles/minicpp-demo.dir/build.make
 libminicpp/minicpp-demo: libminicpp/libminicpp.a
 libminicpp/minicpp-demo: libminicpp/CMakeFiles/minicpp-demo.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable minicpp-demo"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/minicpp-demo.dir/link.txt --verbose=$(VERBOSE)
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir="/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable minicpp-demo"
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/minicpp-demo.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
 libminicpp/CMakeFiles/minicpp-demo.dir/build: libminicpp/minicpp-demo
 .PHONY : libminicpp/CMakeFiles/minicpp-demo.dir/build
 
 libminicpp/CMakeFiles/minicpp-demo.dir/clean:
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && $(CMAKE_COMMAND) -P CMakeFiles/minicpp-demo.dir/cmake_clean.cmake
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && $(CMAKE_COMMAND) -P CMakeFiles/minicpp-demo.dir/cmake_clean.cmake
 .PHONY : libminicpp/CMakeFiles/minicpp-demo.dir/clean
 
 libminicpp/CMakeFiles/minicpp-demo.dir/depend:
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/enry/Desktop/CUDA-compact-table/fzn-minicpp /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp/CMakeFiles/minicpp-demo.dir/DependInfo.cmake "--color=$(COLOR)"
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build" && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp" "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp" "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build" "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp/CMakeFiles/minicpp-demo.dir/DependInfo.cmake" "--color=$(COLOR)"
 .PHONY : libminicpp/CMakeFiles/minicpp-demo.dir/depend
 

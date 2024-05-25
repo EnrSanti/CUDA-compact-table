@@ -1,8 +1,8 @@
 libminicpp/CMakeFiles/libminicpp.dir/controller.cpp.o: \
- /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/controller.cpp \
+ /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/libminicpp/controller.cpp \
  /usr/include/stdc-predef.h \
- /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/controller.hpp \
- /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/trail.hpp \
+ /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/libminicpp/controller.hpp \
+ /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/libminicpp/trail.hpp \
  /usr/include/c++/13/memory /usr/include/c++/13/bits/memoryfwd.h \
  /usr/include/x86_64-linux-gnu/c++/13/bits/c++config.h \
  /usr/include/x86_64-linux-gnu/c++/13/bits/os_defines.h \
@@ -126,7 +126,7 @@ libminicpp/CMakeFiles/libminicpp.dir/controller.cpp.o: \
  /usr/include/c++/13/bits/memory_resource.h /usr/include/c++/13/cstddef \
  /usr/include/c++/13/bits/uses_allocator_args.h \
  /usr/include/c++/13/bits/stl_stack.h \
- /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/state.hpp \
+ /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/libminicpp/state.hpp \
  /usr/include/c++/13/functional /usr/include/c++/13/bits/std_function.h \
  /usr/include/c++/13/unordered_map \
  /usr/include/c++/13/bits/unordered_map.h \
@@ -156,10 +156,10 @@ libminicpp/CMakeFiles/libminicpp.dir/controller.cpp.o: \
  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
  /usr/include/x86_64-linux-gnu/bits/stdlib.h \
  /usr/include/c++/13/bits/std_abs.h \
- /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/handle.hpp \
- /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/cont.hpp \
+ /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/libminicpp/handle.hpp \
+ /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/libminicpp/cont.hpp \
  /usr/include/c++/13/stdlib.h \
- /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/context.hpp \
+ /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/libminicpp/context.hpp \
  /usr/include/c++/13/iostream /usr/include/c++/13/ostream \
  /usr/include/c++/13/ios /usr/include/c++/13/bits/char_traits.h \
  /usr/include/c++/13/bits/localefwd.h \

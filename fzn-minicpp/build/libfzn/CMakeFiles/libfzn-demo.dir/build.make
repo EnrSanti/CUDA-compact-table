@@ -53,10 +53,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/enry/Desktop/CUDA-compact-table/fzn-minicpp
+CMAKE_SOURCE_DIR = "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp"
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build
+CMAKE_BINARY_DIR = "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build"
 
 # Include any dependencies generated for this target.
 include libfzn/CMakeFiles/libfzn-demo.dir/depend.make
@@ -70,18 +70,18 @@ include libfzn/CMakeFiles/libfzn-demo.dir/progress.make
 include libfzn/CMakeFiles/libfzn-demo.dir/flags.make
 
 libfzn/CMakeFiles/libfzn-demo.dir/Demo.cpp.o: libfzn/CMakeFiles/libfzn-demo.dir/flags.make
-libfzn/CMakeFiles/libfzn-demo.dir/Demo.cpp.o: /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libfzn/Demo.cpp
+libfzn/CMakeFiles/libfzn-demo.dir/Demo.cpp.o: /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/libfzn/Demo.cpp
 libfzn/CMakeFiles/libfzn-demo.dir/Demo.cpp.o: libfzn/CMakeFiles/libfzn-demo.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object libfzn/CMakeFiles/libfzn-demo.dir/Demo.cpp.o"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libfzn && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT libfzn/CMakeFiles/libfzn-demo.dir/Demo.cpp.o -MF CMakeFiles/libfzn-demo.dir/Demo.cpp.o.d -o CMakeFiles/libfzn-demo.dir/Demo.cpp.o -c /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libfzn/Demo.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir="/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object libfzn/CMakeFiles/libfzn-demo.dir/Demo.cpp.o"
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libfzn" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT libfzn/CMakeFiles/libfzn-demo.dir/Demo.cpp.o -MF CMakeFiles/libfzn-demo.dir/Demo.cpp.o.d -o CMakeFiles/libfzn-demo.dir/Demo.cpp.o -c "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libfzn/Demo.cpp"
 
 libfzn/CMakeFiles/libfzn-demo.dir/Demo.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/libfzn-demo.dir/Demo.cpp.i"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libfzn && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libfzn/Demo.cpp > CMakeFiles/libfzn-demo.dir/Demo.cpp.i
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libfzn" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libfzn/Demo.cpp" > CMakeFiles/libfzn-demo.dir/Demo.cpp.i
 
 libfzn/CMakeFiles/libfzn-demo.dir/Demo.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/libfzn-demo.dir/Demo.cpp.s"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libfzn && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libfzn/Demo.cpp -o CMakeFiles/libfzn-demo.dir/Demo.cpp.s
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libfzn" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libfzn/Demo.cpp" -o CMakeFiles/libfzn-demo.dir/Demo.cpp.s
 
 # Object files for target libfzn-demo
 libfzn__demo_OBJECTS = \
@@ -94,18 +94,18 @@ libfzn/libfzn-demo: libfzn/CMakeFiles/libfzn-demo.dir/Demo.cpp.o
 libfzn/libfzn-demo: libfzn/CMakeFiles/libfzn-demo.dir/build.make
 libfzn/libfzn-demo: libfzn/libfzn.a
 libfzn/libfzn-demo: libfzn/CMakeFiles/libfzn-demo.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable libfzn-demo"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libfzn && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/libfzn-demo.dir/link.txt --verbose=$(VERBOSE)
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir="/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable libfzn-demo"
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libfzn" && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/libfzn-demo.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
 libfzn/CMakeFiles/libfzn-demo.dir/build: libfzn/libfzn-demo
 .PHONY : libfzn/CMakeFiles/libfzn-demo.dir/build
 
 libfzn/CMakeFiles/libfzn-demo.dir/clean:
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libfzn && $(CMAKE_COMMAND) -P CMakeFiles/libfzn-demo.dir/cmake_clean.cmake
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libfzn" && $(CMAKE_COMMAND) -P CMakeFiles/libfzn-demo.dir/cmake_clean.cmake
 .PHONY : libfzn/CMakeFiles/libfzn-demo.dir/clean
 
 libfzn/CMakeFiles/libfzn-demo.dir/depend:
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/enry/Desktop/CUDA-compact-table/fzn-minicpp /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libfzn /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libfzn /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libfzn/CMakeFiles/libfzn-demo.dir/DependInfo.cmake "--color=$(COLOR)"
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build" && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp" "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libfzn" "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build" "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libfzn" "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libfzn/CMakeFiles/libfzn-demo.dir/DependInfo.cmake" "--color=$(COLOR)"
 .PHONY : libfzn/CMakeFiles/libfzn-demo.dir/depend
 

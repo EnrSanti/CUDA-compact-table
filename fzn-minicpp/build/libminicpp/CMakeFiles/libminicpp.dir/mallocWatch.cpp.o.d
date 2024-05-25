@@ -1,7 +1,7 @@
 libminicpp/CMakeFiles/libminicpp.dir/mallocWatch.cpp.o: \
- /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/mallocWatch.cpp \
+ /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/libminicpp/mallocWatch.cpp \
  /usr/include/stdc-predef.h \
- /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/mallocWatch.hpp \
+ /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/libminicpp/mallocWatch.hpp \
  /usr/include/c++/13/stdlib.h /usr/include/c++/13/cstdlib \
  /usr/include/x86_64-linux-gnu/c++/13/bits/c++config.h \
  /usr/include/x86_64-linux-gnu/c++/13/bits/os_defines.h \

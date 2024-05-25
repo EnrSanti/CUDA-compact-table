@@ -53,10 +53,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/enry/Desktop/CUDA-compact-table/fzn-minicpp
+CMAKE_SOURCE_DIR = "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp"
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build
+CMAKE_BINARY_DIR = "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build"
 
 # Include any dependencies generated for this target.
 include libminicpp/CMakeFiles/libminicpp.dir/depend.make
@@ -70,284 +70,284 @@ include libminicpp/CMakeFiles/libminicpp.dir/progress.make
 include libminicpp/CMakeFiles/libminicpp.dir/flags.make
 
 libminicpp/CMakeFiles/libminicpp.dir/acstr.cpp.o: libminicpp/CMakeFiles/libminicpp.dir/flags.make
-libminicpp/CMakeFiles/libminicpp.dir/acstr.cpp.o: /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/acstr.cpp
+libminicpp/CMakeFiles/libminicpp.dir/acstr.cpp.o: /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/libminicpp/acstr.cpp
 libminicpp/CMakeFiles/libminicpp.dir/acstr.cpp.o: libminicpp/CMakeFiles/libminicpp.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object libminicpp/CMakeFiles/libminicpp.dir/acstr.cpp.o"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT libminicpp/CMakeFiles/libminicpp.dir/acstr.cpp.o -MF CMakeFiles/libminicpp.dir/acstr.cpp.o.d -o CMakeFiles/libminicpp.dir/acstr.cpp.o -c /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/acstr.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir="/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object libminicpp/CMakeFiles/libminicpp.dir/acstr.cpp.o"
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT libminicpp/CMakeFiles/libminicpp.dir/acstr.cpp.o -MF CMakeFiles/libminicpp.dir/acstr.cpp.o.d -o CMakeFiles/libminicpp.dir/acstr.cpp.o -c "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/acstr.cpp"
 
 libminicpp/CMakeFiles/libminicpp.dir/acstr.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/libminicpp.dir/acstr.cpp.i"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/acstr.cpp > CMakeFiles/libminicpp.dir/acstr.cpp.i
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/acstr.cpp" > CMakeFiles/libminicpp.dir/acstr.cpp.i
 
 libminicpp/CMakeFiles/libminicpp.dir/acstr.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/libminicpp.dir/acstr.cpp.s"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/acstr.cpp -o CMakeFiles/libminicpp.dir/acstr.cpp.s
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/acstr.cpp" -o CMakeFiles/libminicpp.dir/acstr.cpp.s
 
 libminicpp/CMakeFiles/libminicpp.dir/bitset.cpp.o: libminicpp/CMakeFiles/libminicpp.dir/flags.make
-libminicpp/CMakeFiles/libminicpp.dir/bitset.cpp.o: /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/bitset.cpp
+libminicpp/CMakeFiles/libminicpp.dir/bitset.cpp.o: /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/libminicpp/bitset.cpp
 libminicpp/CMakeFiles/libminicpp.dir/bitset.cpp.o: libminicpp/CMakeFiles/libminicpp.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object libminicpp/CMakeFiles/libminicpp.dir/bitset.cpp.o"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT libminicpp/CMakeFiles/libminicpp.dir/bitset.cpp.o -MF CMakeFiles/libminicpp.dir/bitset.cpp.o.d -o CMakeFiles/libminicpp.dir/bitset.cpp.o -c /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/bitset.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir="/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object libminicpp/CMakeFiles/libminicpp.dir/bitset.cpp.o"
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT libminicpp/CMakeFiles/libminicpp.dir/bitset.cpp.o -MF CMakeFiles/libminicpp.dir/bitset.cpp.o.d -o CMakeFiles/libminicpp.dir/bitset.cpp.o -c "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/bitset.cpp"
 
 libminicpp/CMakeFiles/libminicpp.dir/bitset.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/libminicpp.dir/bitset.cpp.i"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/bitset.cpp > CMakeFiles/libminicpp.dir/bitset.cpp.i
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/bitset.cpp" > CMakeFiles/libminicpp.dir/bitset.cpp.i
 
 libminicpp/CMakeFiles/libminicpp.dir/bitset.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/libminicpp.dir/bitset.cpp.s"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/bitset.cpp -o CMakeFiles/libminicpp.dir/bitset.cpp.s
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/bitset.cpp" -o CMakeFiles/libminicpp.dir/bitset.cpp.s
 
 libminicpp/CMakeFiles/libminicpp.dir/constraint.cpp.o: libminicpp/CMakeFiles/libminicpp.dir/flags.make
-libminicpp/CMakeFiles/libminicpp.dir/constraint.cpp.o: /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/constraint.cpp
+libminicpp/CMakeFiles/libminicpp.dir/constraint.cpp.o: /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/libminicpp/constraint.cpp
 libminicpp/CMakeFiles/libminicpp.dir/constraint.cpp.o: libminicpp/CMakeFiles/libminicpp.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object libminicpp/CMakeFiles/libminicpp.dir/constraint.cpp.o"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT libminicpp/CMakeFiles/libminicpp.dir/constraint.cpp.o -MF CMakeFiles/libminicpp.dir/constraint.cpp.o.d -o CMakeFiles/libminicpp.dir/constraint.cpp.o -c /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/constraint.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir="/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object libminicpp/CMakeFiles/libminicpp.dir/constraint.cpp.o"
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT libminicpp/CMakeFiles/libminicpp.dir/constraint.cpp.o -MF CMakeFiles/libminicpp.dir/constraint.cpp.o.d -o CMakeFiles/libminicpp.dir/constraint.cpp.o -c "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/constraint.cpp"
 
 libminicpp/CMakeFiles/libminicpp.dir/constraint.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/libminicpp.dir/constraint.cpp.i"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/constraint.cpp > CMakeFiles/libminicpp.dir/constraint.cpp.i
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/constraint.cpp" > CMakeFiles/libminicpp.dir/constraint.cpp.i
 
 libminicpp/CMakeFiles/libminicpp.dir/constraint.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/libminicpp.dir/constraint.cpp.s"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/constraint.cpp -o CMakeFiles/libminicpp.dir/constraint.cpp.s
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/constraint.cpp" -o CMakeFiles/libminicpp.dir/constraint.cpp.s
 
 libminicpp/CMakeFiles/libminicpp.dir/cont.cpp.o: libminicpp/CMakeFiles/libminicpp.dir/flags.make
-libminicpp/CMakeFiles/libminicpp.dir/cont.cpp.o: /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/cont.cpp
+libminicpp/CMakeFiles/libminicpp.dir/cont.cpp.o: /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/libminicpp/cont.cpp
 libminicpp/CMakeFiles/libminicpp.dir/cont.cpp.o: libminicpp/CMakeFiles/libminicpp.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object libminicpp/CMakeFiles/libminicpp.dir/cont.cpp.o"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT libminicpp/CMakeFiles/libminicpp.dir/cont.cpp.o -MF CMakeFiles/libminicpp.dir/cont.cpp.o.d -o CMakeFiles/libminicpp.dir/cont.cpp.o -c /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/cont.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir="/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object libminicpp/CMakeFiles/libminicpp.dir/cont.cpp.o"
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT libminicpp/CMakeFiles/libminicpp.dir/cont.cpp.o -MF CMakeFiles/libminicpp.dir/cont.cpp.o.d -o CMakeFiles/libminicpp.dir/cont.cpp.o -c "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/cont.cpp"
 
 libminicpp/CMakeFiles/libminicpp.dir/cont.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/libminicpp.dir/cont.cpp.i"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/cont.cpp > CMakeFiles/libminicpp.dir/cont.cpp.i
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/cont.cpp" > CMakeFiles/libminicpp.dir/cont.cpp.i
 
 libminicpp/CMakeFiles/libminicpp.dir/cont.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/libminicpp.dir/cont.cpp.s"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/cont.cpp -o CMakeFiles/libminicpp.dir/cont.cpp.s
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/cont.cpp" -o CMakeFiles/libminicpp.dir/cont.cpp.s
 
 libminicpp/CMakeFiles/libminicpp.dir/context.cpp.o: libminicpp/CMakeFiles/libminicpp.dir/flags.make
-libminicpp/CMakeFiles/libminicpp.dir/context.cpp.o: /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/context.cpp
+libminicpp/CMakeFiles/libminicpp.dir/context.cpp.o: /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/libminicpp/context.cpp
 libminicpp/CMakeFiles/libminicpp.dir/context.cpp.o: libminicpp/CMakeFiles/libminicpp.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object libminicpp/CMakeFiles/libminicpp.dir/context.cpp.o"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT libminicpp/CMakeFiles/libminicpp.dir/context.cpp.o -MF CMakeFiles/libminicpp.dir/context.cpp.o.d -o CMakeFiles/libminicpp.dir/context.cpp.o -c /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/context.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir="/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object libminicpp/CMakeFiles/libminicpp.dir/context.cpp.o"
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT libminicpp/CMakeFiles/libminicpp.dir/context.cpp.o -MF CMakeFiles/libminicpp.dir/context.cpp.o.d -o CMakeFiles/libminicpp.dir/context.cpp.o -c "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/context.cpp"
 
 libminicpp/CMakeFiles/libminicpp.dir/context.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/libminicpp.dir/context.cpp.i"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/context.cpp > CMakeFiles/libminicpp.dir/context.cpp.i
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/context.cpp" > CMakeFiles/libminicpp.dir/context.cpp.i
 
 libminicpp/CMakeFiles/libminicpp.dir/context.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/libminicpp.dir/context.cpp.s"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/context.cpp -o CMakeFiles/libminicpp.dir/context.cpp.s
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/context.cpp" -o CMakeFiles/libminicpp.dir/context.cpp.s
 
 libminicpp/CMakeFiles/libminicpp.dir/controller.cpp.o: libminicpp/CMakeFiles/libminicpp.dir/flags.make
-libminicpp/CMakeFiles/libminicpp.dir/controller.cpp.o: /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/controller.cpp
+libminicpp/CMakeFiles/libminicpp.dir/controller.cpp.o: /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/libminicpp/controller.cpp
 libminicpp/CMakeFiles/libminicpp.dir/controller.cpp.o: libminicpp/CMakeFiles/libminicpp.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object libminicpp/CMakeFiles/libminicpp.dir/controller.cpp.o"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT libminicpp/CMakeFiles/libminicpp.dir/controller.cpp.o -MF CMakeFiles/libminicpp.dir/controller.cpp.o.d -o CMakeFiles/libminicpp.dir/controller.cpp.o -c /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/controller.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir="/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object libminicpp/CMakeFiles/libminicpp.dir/controller.cpp.o"
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT libminicpp/CMakeFiles/libminicpp.dir/controller.cpp.o -MF CMakeFiles/libminicpp.dir/controller.cpp.o.d -o CMakeFiles/libminicpp.dir/controller.cpp.o -c "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/controller.cpp"
 
 libminicpp/CMakeFiles/libminicpp.dir/controller.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/libminicpp.dir/controller.cpp.i"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/controller.cpp > CMakeFiles/libminicpp.dir/controller.cpp.i
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/controller.cpp" > CMakeFiles/libminicpp.dir/controller.cpp.i
 
 libminicpp/CMakeFiles/libminicpp.dir/controller.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/libminicpp.dir/controller.cpp.s"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/controller.cpp -o CMakeFiles/libminicpp.dir/controller.cpp.s
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/controller.cpp" -o CMakeFiles/libminicpp.dir/controller.cpp.s
 
 libminicpp/CMakeFiles/libminicpp.dir/domain.cpp.o: libminicpp/CMakeFiles/libminicpp.dir/flags.make
-libminicpp/CMakeFiles/libminicpp.dir/domain.cpp.o: /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/domain.cpp
+libminicpp/CMakeFiles/libminicpp.dir/domain.cpp.o: /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/libminicpp/domain.cpp
 libminicpp/CMakeFiles/libminicpp.dir/domain.cpp.o: libminicpp/CMakeFiles/libminicpp.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object libminicpp/CMakeFiles/libminicpp.dir/domain.cpp.o"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT libminicpp/CMakeFiles/libminicpp.dir/domain.cpp.o -MF CMakeFiles/libminicpp.dir/domain.cpp.o.d -o CMakeFiles/libminicpp.dir/domain.cpp.o -c /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/domain.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir="/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object libminicpp/CMakeFiles/libminicpp.dir/domain.cpp.o"
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT libminicpp/CMakeFiles/libminicpp.dir/domain.cpp.o -MF CMakeFiles/libminicpp.dir/domain.cpp.o.d -o CMakeFiles/libminicpp.dir/domain.cpp.o -c "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/domain.cpp"
 
 libminicpp/CMakeFiles/libminicpp.dir/domain.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/libminicpp.dir/domain.cpp.i"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/domain.cpp > CMakeFiles/libminicpp.dir/domain.cpp.i
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/domain.cpp" > CMakeFiles/libminicpp.dir/domain.cpp.i
 
 libminicpp/CMakeFiles/libminicpp.dir/domain.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/libminicpp.dir/domain.cpp.s"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/domain.cpp -o CMakeFiles/libminicpp.dir/domain.cpp.s
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/domain.cpp" -o CMakeFiles/libminicpp.dir/domain.cpp.s
 
 libminicpp/CMakeFiles/libminicpp.dir/fail.cpp.o: libminicpp/CMakeFiles/libminicpp.dir/flags.make
-libminicpp/CMakeFiles/libminicpp.dir/fail.cpp.o: /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/fail.cpp
+libminicpp/CMakeFiles/libminicpp.dir/fail.cpp.o: /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/libminicpp/fail.cpp
 libminicpp/CMakeFiles/libminicpp.dir/fail.cpp.o: libminicpp/CMakeFiles/libminicpp.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object libminicpp/CMakeFiles/libminicpp.dir/fail.cpp.o"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT libminicpp/CMakeFiles/libminicpp.dir/fail.cpp.o -MF CMakeFiles/libminicpp.dir/fail.cpp.o.d -o CMakeFiles/libminicpp.dir/fail.cpp.o -c /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/fail.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir="/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object libminicpp/CMakeFiles/libminicpp.dir/fail.cpp.o"
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT libminicpp/CMakeFiles/libminicpp.dir/fail.cpp.o -MF CMakeFiles/libminicpp.dir/fail.cpp.o.d -o CMakeFiles/libminicpp.dir/fail.cpp.o -c "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/fail.cpp"
 
 libminicpp/CMakeFiles/libminicpp.dir/fail.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/libminicpp.dir/fail.cpp.i"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/fail.cpp > CMakeFiles/libminicpp.dir/fail.cpp.i
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/fail.cpp" > CMakeFiles/libminicpp.dir/fail.cpp.i
 
 libminicpp/CMakeFiles/libminicpp.dir/fail.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/libminicpp.dir/fail.cpp.s"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/fail.cpp -o CMakeFiles/libminicpp.dir/fail.cpp.s
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/fail.cpp" -o CMakeFiles/libminicpp.dir/fail.cpp.s
 
 libminicpp/CMakeFiles/libminicpp.dir/intvar.cpp.o: libminicpp/CMakeFiles/libminicpp.dir/flags.make
-libminicpp/CMakeFiles/libminicpp.dir/intvar.cpp.o: /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/intvar.cpp
+libminicpp/CMakeFiles/libminicpp.dir/intvar.cpp.o: /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/libminicpp/intvar.cpp
 libminicpp/CMakeFiles/libminicpp.dir/intvar.cpp.o: libminicpp/CMakeFiles/libminicpp.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object libminicpp/CMakeFiles/libminicpp.dir/intvar.cpp.o"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT libminicpp/CMakeFiles/libminicpp.dir/intvar.cpp.o -MF CMakeFiles/libminicpp.dir/intvar.cpp.o.d -o CMakeFiles/libminicpp.dir/intvar.cpp.o -c /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/intvar.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir="/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object libminicpp/CMakeFiles/libminicpp.dir/intvar.cpp.o"
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT libminicpp/CMakeFiles/libminicpp.dir/intvar.cpp.o -MF CMakeFiles/libminicpp.dir/intvar.cpp.o.d -o CMakeFiles/libminicpp.dir/intvar.cpp.o -c "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/intvar.cpp"
 
 libminicpp/CMakeFiles/libminicpp.dir/intvar.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/libminicpp.dir/intvar.cpp.i"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/intvar.cpp > CMakeFiles/libminicpp.dir/intvar.cpp.i
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/intvar.cpp" > CMakeFiles/libminicpp.dir/intvar.cpp.i
 
 libminicpp/CMakeFiles/libminicpp.dir/intvar.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/libminicpp.dir/intvar.cpp.s"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/intvar.cpp -o CMakeFiles/libminicpp.dir/intvar.cpp.s
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/intvar.cpp" -o CMakeFiles/libminicpp.dir/intvar.cpp.s
 
 libminicpp/CMakeFiles/libminicpp.dir/lex.cpp.o: libminicpp/CMakeFiles/libminicpp.dir/flags.make
-libminicpp/CMakeFiles/libminicpp.dir/lex.cpp.o: /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/lex.cpp
+libminicpp/CMakeFiles/libminicpp.dir/lex.cpp.o: /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/libminicpp/lex.cpp
 libminicpp/CMakeFiles/libminicpp.dir/lex.cpp.o: libminicpp/CMakeFiles/libminicpp.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object libminicpp/CMakeFiles/libminicpp.dir/lex.cpp.o"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT libminicpp/CMakeFiles/libminicpp.dir/lex.cpp.o -MF CMakeFiles/libminicpp.dir/lex.cpp.o.d -o CMakeFiles/libminicpp.dir/lex.cpp.o -c /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/lex.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir="/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object libminicpp/CMakeFiles/libminicpp.dir/lex.cpp.o"
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT libminicpp/CMakeFiles/libminicpp.dir/lex.cpp.o -MF CMakeFiles/libminicpp.dir/lex.cpp.o.d -o CMakeFiles/libminicpp.dir/lex.cpp.o -c "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/lex.cpp"
 
 libminicpp/CMakeFiles/libminicpp.dir/lex.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/libminicpp.dir/lex.cpp.i"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/lex.cpp > CMakeFiles/libminicpp.dir/lex.cpp.i
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/lex.cpp" > CMakeFiles/libminicpp.dir/lex.cpp.i
 
 libminicpp/CMakeFiles/libminicpp.dir/lex.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/libminicpp.dir/lex.cpp.s"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/lex.cpp -o CMakeFiles/libminicpp.dir/lex.cpp.s
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/lex.cpp" -o CMakeFiles/libminicpp.dir/lex.cpp.s
 
 libminicpp/CMakeFiles/libminicpp.dir/mallocWatch.cpp.o: libminicpp/CMakeFiles/libminicpp.dir/flags.make
-libminicpp/CMakeFiles/libminicpp.dir/mallocWatch.cpp.o: /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/mallocWatch.cpp
+libminicpp/CMakeFiles/libminicpp.dir/mallocWatch.cpp.o: /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/libminicpp/mallocWatch.cpp
 libminicpp/CMakeFiles/libminicpp.dir/mallocWatch.cpp.o: libminicpp/CMakeFiles/libminicpp.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object libminicpp/CMakeFiles/libminicpp.dir/mallocWatch.cpp.o"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT libminicpp/CMakeFiles/libminicpp.dir/mallocWatch.cpp.o -MF CMakeFiles/libminicpp.dir/mallocWatch.cpp.o.d -o CMakeFiles/libminicpp.dir/mallocWatch.cpp.o -c /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/mallocWatch.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir="/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object libminicpp/CMakeFiles/libminicpp.dir/mallocWatch.cpp.o"
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT libminicpp/CMakeFiles/libminicpp.dir/mallocWatch.cpp.o -MF CMakeFiles/libminicpp.dir/mallocWatch.cpp.o.d -o CMakeFiles/libminicpp.dir/mallocWatch.cpp.o -c "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/mallocWatch.cpp"
 
 libminicpp/CMakeFiles/libminicpp.dir/mallocWatch.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/libminicpp.dir/mallocWatch.cpp.i"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/mallocWatch.cpp > CMakeFiles/libminicpp.dir/mallocWatch.cpp.i
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/mallocWatch.cpp" > CMakeFiles/libminicpp.dir/mallocWatch.cpp.i
 
 libminicpp/CMakeFiles/libminicpp.dir/mallocWatch.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/libminicpp.dir/mallocWatch.cpp.s"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/mallocWatch.cpp -o CMakeFiles/libminicpp.dir/mallocWatch.cpp.s
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/mallocWatch.cpp" -o CMakeFiles/libminicpp.dir/mallocWatch.cpp.s
 
 libminicpp/CMakeFiles/libminicpp.dir/matching.cpp.o: libminicpp/CMakeFiles/libminicpp.dir/flags.make
-libminicpp/CMakeFiles/libminicpp.dir/matching.cpp.o: /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/matching.cpp
+libminicpp/CMakeFiles/libminicpp.dir/matching.cpp.o: /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/libminicpp/matching.cpp
 libminicpp/CMakeFiles/libminicpp.dir/matching.cpp.o: libminicpp/CMakeFiles/libminicpp.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CXX object libminicpp/CMakeFiles/libminicpp.dir/matching.cpp.o"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT libminicpp/CMakeFiles/libminicpp.dir/matching.cpp.o -MF CMakeFiles/libminicpp.dir/matching.cpp.o.d -o CMakeFiles/libminicpp.dir/matching.cpp.o -c /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/matching.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir="/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_12) "Building CXX object libminicpp/CMakeFiles/libminicpp.dir/matching.cpp.o"
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT libminicpp/CMakeFiles/libminicpp.dir/matching.cpp.o -MF CMakeFiles/libminicpp.dir/matching.cpp.o.d -o CMakeFiles/libminicpp.dir/matching.cpp.o -c "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/matching.cpp"
 
 libminicpp/CMakeFiles/libminicpp.dir/matching.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/libminicpp.dir/matching.cpp.i"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/matching.cpp > CMakeFiles/libminicpp.dir/matching.cpp.i
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/matching.cpp" > CMakeFiles/libminicpp.dir/matching.cpp.i
 
 libminicpp/CMakeFiles/libminicpp.dir/matching.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/libminicpp.dir/matching.cpp.s"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/matching.cpp -o CMakeFiles/libminicpp.dir/matching.cpp.s
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/matching.cpp" -o CMakeFiles/libminicpp.dir/matching.cpp.s
 
 libminicpp/CMakeFiles/libminicpp.dir/regular.cpp.o: libminicpp/CMakeFiles/libminicpp.dir/flags.make
-libminicpp/CMakeFiles/libminicpp.dir/regular.cpp.o: /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/regular.cpp
+libminicpp/CMakeFiles/libminicpp.dir/regular.cpp.o: /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/libminicpp/regular.cpp
 libminicpp/CMakeFiles/libminicpp.dir/regular.cpp.o: libminicpp/CMakeFiles/libminicpp.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building CXX object libminicpp/CMakeFiles/libminicpp.dir/regular.cpp.o"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT libminicpp/CMakeFiles/libminicpp.dir/regular.cpp.o -MF CMakeFiles/libminicpp.dir/regular.cpp.o.d -o CMakeFiles/libminicpp.dir/regular.cpp.o -c /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/regular.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir="/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_13) "Building CXX object libminicpp/CMakeFiles/libminicpp.dir/regular.cpp.o"
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT libminicpp/CMakeFiles/libminicpp.dir/regular.cpp.o -MF CMakeFiles/libminicpp.dir/regular.cpp.o.d -o CMakeFiles/libminicpp.dir/regular.cpp.o -c "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/regular.cpp"
 
 libminicpp/CMakeFiles/libminicpp.dir/regular.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/libminicpp.dir/regular.cpp.i"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/regular.cpp > CMakeFiles/libminicpp.dir/regular.cpp.i
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/regular.cpp" > CMakeFiles/libminicpp.dir/regular.cpp.i
 
 libminicpp/CMakeFiles/libminicpp.dir/regular.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/libminicpp.dir/regular.cpp.s"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/regular.cpp -o CMakeFiles/libminicpp.dir/regular.cpp.s
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/regular.cpp" -o CMakeFiles/libminicpp.dir/regular.cpp.s
 
 libminicpp/CMakeFiles/libminicpp.dir/RuntimeMonitor.cpp.o: libminicpp/CMakeFiles/libminicpp.dir/flags.make
-libminicpp/CMakeFiles/libminicpp.dir/RuntimeMonitor.cpp.o: /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/RuntimeMonitor.cpp
+libminicpp/CMakeFiles/libminicpp.dir/RuntimeMonitor.cpp.o: /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/libminicpp/RuntimeMonitor.cpp
 libminicpp/CMakeFiles/libminicpp.dir/RuntimeMonitor.cpp.o: libminicpp/CMakeFiles/libminicpp.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Building CXX object libminicpp/CMakeFiles/libminicpp.dir/RuntimeMonitor.cpp.o"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT libminicpp/CMakeFiles/libminicpp.dir/RuntimeMonitor.cpp.o -MF CMakeFiles/libminicpp.dir/RuntimeMonitor.cpp.o.d -o CMakeFiles/libminicpp.dir/RuntimeMonitor.cpp.o -c /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/RuntimeMonitor.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir="/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_14) "Building CXX object libminicpp/CMakeFiles/libminicpp.dir/RuntimeMonitor.cpp.o"
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT libminicpp/CMakeFiles/libminicpp.dir/RuntimeMonitor.cpp.o -MF CMakeFiles/libminicpp.dir/RuntimeMonitor.cpp.o.d -o CMakeFiles/libminicpp.dir/RuntimeMonitor.cpp.o -c "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/RuntimeMonitor.cpp"
 
 libminicpp/CMakeFiles/libminicpp.dir/RuntimeMonitor.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/libminicpp.dir/RuntimeMonitor.cpp.i"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/RuntimeMonitor.cpp > CMakeFiles/libminicpp.dir/RuntimeMonitor.cpp.i
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/RuntimeMonitor.cpp" > CMakeFiles/libminicpp.dir/RuntimeMonitor.cpp.i
 
 libminicpp/CMakeFiles/libminicpp.dir/RuntimeMonitor.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/libminicpp.dir/RuntimeMonitor.cpp.s"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/RuntimeMonitor.cpp -o CMakeFiles/libminicpp.dir/RuntimeMonitor.cpp.s
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/RuntimeMonitor.cpp" -o CMakeFiles/libminicpp.dir/RuntimeMonitor.cpp.s
 
 libminicpp/CMakeFiles/libminicpp.dir/search.cpp.o: libminicpp/CMakeFiles/libminicpp.dir/flags.make
-libminicpp/CMakeFiles/libminicpp.dir/search.cpp.o: /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/search.cpp
+libminicpp/CMakeFiles/libminicpp.dir/search.cpp.o: /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/libminicpp/search.cpp
 libminicpp/CMakeFiles/libminicpp.dir/search.cpp.o: libminicpp/CMakeFiles/libminicpp.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_15) "Building CXX object libminicpp/CMakeFiles/libminicpp.dir/search.cpp.o"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT libminicpp/CMakeFiles/libminicpp.dir/search.cpp.o -MF CMakeFiles/libminicpp.dir/search.cpp.o.d -o CMakeFiles/libminicpp.dir/search.cpp.o -c /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/search.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir="/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_15) "Building CXX object libminicpp/CMakeFiles/libminicpp.dir/search.cpp.o"
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT libminicpp/CMakeFiles/libminicpp.dir/search.cpp.o -MF CMakeFiles/libminicpp.dir/search.cpp.o.d -o CMakeFiles/libminicpp.dir/search.cpp.o -c "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/search.cpp"
 
 libminicpp/CMakeFiles/libminicpp.dir/search.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/libminicpp.dir/search.cpp.i"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/search.cpp > CMakeFiles/libminicpp.dir/search.cpp.i
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/search.cpp" > CMakeFiles/libminicpp.dir/search.cpp.i
 
 libminicpp/CMakeFiles/libminicpp.dir/search.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/libminicpp.dir/search.cpp.s"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/search.cpp -o CMakeFiles/libminicpp.dir/search.cpp.s
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/search.cpp" -o CMakeFiles/libminicpp.dir/search.cpp.s
 
 libminicpp/CMakeFiles/libminicpp.dir/solver.cpp.o: libminicpp/CMakeFiles/libminicpp.dir/flags.make
-libminicpp/CMakeFiles/libminicpp.dir/solver.cpp.o: /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/solver.cpp
+libminicpp/CMakeFiles/libminicpp.dir/solver.cpp.o: /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/libminicpp/solver.cpp
 libminicpp/CMakeFiles/libminicpp.dir/solver.cpp.o: libminicpp/CMakeFiles/libminicpp.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_16) "Building CXX object libminicpp/CMakeFiles/libminicpp.dir/solver.cpp.o"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT libminicpp/CMakeFiles/libminicpp.dir/solver.cpp.o -MF CMakeFiles/libminicpp.dir/solver.cpp.o.d -o CMakeFiles/libminicpp.dir/solver.cpp.o -c /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/solver.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir="/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_16) "Building CXX object libminicpp/CMakeFiles/libminicpp.dir/solver.cpp.o"
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT libminicpp/CMakeFiles/libminicpp.dir/solver.cpp.o -MF CMakeFiles/libminicpp.dir/solver.cpp.o.d -o CMakeFiles/libminicpp.dir/solver.cpp.o -c "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/solver.cpp"
 
 libminicpp/CMakeFiles/libminicpp.dir/solver.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/libminicpp.dir/solver.cpp.i"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/solver.cpp > CMakeFiles/libminicpp.dir/solver.cpp.i
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/solver.cpp" > CMakeFiles/libminicpp.dir/solver.cpp.i
 
 libminicpp/CMakeFiles/libminicpp.dir/solver.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/libminicpp.dir/solver.cpp.s"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/solver.cpp -o CMakeFiles/libminicpp.dir/solver.cpp.s
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/solver.cpp" -o CMakeFiles/libminicpp.dir/solver.cpp.s
 
 libminicpp/CMakeFiles/libminicpp.dir/store.cpp.o: libminicpp/CMakeFiles/libminicpp.dir/flags.make
-libminicpp/CMakeFiles/libminicpp.dir/store.cpp.o: /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/store.cpp
+libminicpp/CMakeFiles/libminicpp.dir/store.cpp.o: /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/libminicpp/store.cpp
 libminicpp/CMakeFiles/libminicpp.dir/store.cpp.o: libminicpp/CMakeFiles/libminicpp.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_17) "Building CXX object libminicpp/CMakeFiles/libminicpp.dir/store.cpp.o"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT libminicpp/CMakeFiles/libminicpp.dir/store.cpp.o -MF CMakeFiles/libminicpp.dir/store.cpp.o.d -o CMakeFiles/libminicpp.dir/store.cpp.o -c /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/store.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir="/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_17) "Building CXX object libminicpp/CMakeFiles/libminicpp.dir/store.cpp.o"
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT libminicpp/CMakeFiles/libminicpp.dir/store.cpp.o -MF CMakeFiles/libminicpp.dir/store.cpp.o.d -o CMakeFiles/libminicpp.dir/store.cpp.o -c "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/store.cpp"
 
 libminicpp/CMakeFiles/libminicpp.dir/store.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/libminicpp.dir/store.cpp.i"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/store.cpp > CMakeFiles/libminicpp.dir/store.cpp.i
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/store.cpp" > CMakeFiles/libminicpp.dir/store.cpp.i
 
 libminicpp/CMakeFiles/libminicpp.dir/store.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/libminicpp.dir/store.cpp.s"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/store.cpp -o CMakeFiles/libminicpp.dir/store.cpp.s
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/store.cpp" -o CMakeFiles/libminicpp.dir/store.cpp.s
 
 libminicpp/CMakeFiles/libminicpp.dir/table.cpp.o: libminicpp/CMakeFiles/libminicpp.dir/flags.make
-libminicpp/CMakeFiles/libminicpp.dir/table.cpp.o: /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/table.cpp
+libminicpp/CMakeFiles/libminicpp.dir/table.cpp.o: /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/libminicpp/table.cpp
 libminicpp/CMakeFiles/libminicpp.dir/table.cpp.o: libminicpp/CMakeFiles/libminicpp.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_18) "Building CXX object libminicpp/CMakeFiles/libminicpp.dir/table.cpp.o"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT libminicpp/CMakeFiles/libminicpp.dir/table.cpp.o -MF CMakeFiles/libminicpp.dir/table.cpp.o.d -o CMakeFiles/libminicpp.dir/table.cpp.o -c /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/table.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir="/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_18) "Building CXX object libminicpp/CMakeFiles/libminicpp.dir/table.cpp.o"
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT libminicpp/CMakeFiles/libminicpp.dir/table.cpp.o -MF CMakeFiles/libminicpp.dir/table.cpp.o.d -o CMakeFiles/libminicpp.dir/table.cpp.o -c "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/table.cpp"
 
 libminicpp/CMakeFiles/libminicpp.dir/table.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/libminicpp.dir/table.cpp.i"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/table.cpp > CMakeFiles/libminicpp.dir/table.cpp.i
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/table.cpp" > CMakeFiles/libminicpp.dir/table.cpp.i
 
 libminicpp/CMakeFiles/libminicpp.dir/table.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/libminicpp.dir/table.cpp.s"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/table.cpp -o CMakeFiles/libminicpp.dir/table.cpp.s
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/table.cpp" -o CMakeFiles/libminicpp.dir/table.cpp.s
 
 libminicpp/CMakeFiles/libminicpp.dir/trailable.cpp.o: libminicpp/CMakeFiles/libminicpp.dir/flags.make
-libminicpp/CMakeFiles/libminicpp.dir/trailable.cpp.o: /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/trailable.cpp
+libminicpp/CMakeFiles/libminicpp.dir/trailable.cpp.o: /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/libminicpp/trailable.cpp
 libminicpp/CMakeFiles/libminicpp.dir/trailable.cpp.o: libminicpp/CMakeFiles/libminicpp.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_19) "Building CXX object libminicpp/CMakeFiles/libminicpp.dir/trailable.cpp.o"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT libminicpp/CMakeFiles/libminicpp.dir/trailable.cpp.o -MF CMakeFiles/libminicpp.dir/trailable.cpp.o.d -o CMakeFiles/libminicpp.dir/trailable.cpp.o -c /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/trailable.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir="/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_19) "Building CXX object libminicpp/CMakeFiles/libminicpp.dir/trailable.cpp.o"
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT libminicpp/CMakeFiles/libminicpp.dir/trailable.cpp.o -MF CMakeFiles/libminicpp.dir/trailable.cpp.o.d -o CMakeFiles/libminicpp.dir/trailable.cpp.o -c "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/trailable.cpp"
 
 libminicpp/CMakeFiles/libminicpp.dir/trailable.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/libminicpp.dir/trailable.cpp.i"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/trailable.cpp > CMakeFiles/libminicpp.dir/trailable.cpp.i
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/trailable.cpp" > CMakeFiles/libminicpp.dir/trailable.cpp.i
 
 libminicpp/CMakeFiles/libminicpp.dir/trailable.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/libminicpp.dir/trailable.cpp.s"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/trailable.cpp -o CMakeFiles/libminicpp.dir/trailable.cpp.s
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/trailable.cpp" -o CMakeFiles/libminicpp.dir/trailable.cpp.s
 
 libminicpp/CMakeFiles/libminicpp.dir/trail.cpp.o: libminicpp/CMakeFiles/libminicpp.dir/flags.make
-libminicpp/CMakeFiles/libminicpp.dir/trail.cpp.o: /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/trail.cpp
+libminicpp/CMakeFiles/libminicpp.dir/trail.cpp.o: /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/libminicpp/trail.cpp
 libminicpp/CMakeFiles/libminicpp.dir/trail.cpp.o: libminicpp/CMakeFiles/libminicpp.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_20) "Building CXX object libminicpp/CMakeFiles/libminicpp.dir/trail.cpp.o"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT libminicpp/CMakeFiles/libminicpp.dir/trail.cpp.o -MF CMakeFiles/libminicpp.dir/trail.cpp.o.d -o CMakeFiles/libminicpp.dir/trail.cpp.o -c /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/trail.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir="/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_20) "Building CXX object libminicpp/CMakeFiles/libminicpp.dir/trail.cpp.o"
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT libminicpp/CMakeFiles/libminicpp.dir/trail.cpp.o -MF CMakeFiles/libminicpp.dir/trail.cpp.o.d -o CMakeFiles/libminicpp.dir/trail.cpp.o -c "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/trail.cpp"
 
 libminicpp/CMakeFiles/libminicpp.dir/trail.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/libminicpp.dir/trail.cpp.i"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/trail.cpp > CMakeFiles/libminicpp.dir/trail.cpp.i
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/trail.cpp" > CMakeFiles/libminicpp.dir/trail.cpp.i
 
 libminicpp/CMakeFiles/libminicpp.dir/trail.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/libminicpp.dir/trail.cpp.s"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp/trail.cpp -o CMakeFiles/libminicpp.dir/trail.cpp.s
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp/trail.cpp" -o CMakeFiles/libminicpp.dir/trail.cpp.s
 
 # Object files for target libminicpp
 libminicpp_OBJECTS = \
@@ -397,19 +397,19 @@ libminicpp/libminicpp.a: libminicpp/CMakeFiles/libminicpp.dir/trailable.cpp.o
 libminicpp/libminicpp.a: libminicpp/CMakeFiles/libminicpp.dir/trail.cpp.o
 libminicpp/libminicpp.a: libminicpp/CMakeFiles/libminicpp.dir/build.make
 libminicpp/libminicpp.a: libminicpp/CMakeFiles/libminicpp.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_21) "Linking CXX static library libminicpp.a"
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && $(CMAKE_COMMAND) -P CMakeFiles/libminicpp.dir/cmake_clean_target.cmake
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/libminicpp.dir/link.txt --verbose=$(VERBOSE)
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir="/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_21) "Linking CXX static library libminicpp.a"
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && $(CMAKE_COMMAND) -P CMakeFiles/libminicpp.dir/cmake_clean_target.cmake
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/libminicpp.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
 libminicpp/CMakeFiles/libminicpp.dir/build: libminicpp/libminicpp.a
 .PHONY : libminicpp/CMakeFiles/libminicpp.dir/build
 
 libminicpp/CMakeFiles/libminicpp.dir/clean:
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp && $(CMAKE_COMMAND) -P CMakeFiles/libminicpp.dir/cmake_clean.cmake
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" && $(CMAKE_COMMAND) -P CMakeFiles/libminicpp.dir/cmake_clean.cmake
 .PHONY : libminicpp/CMakeFiles/libminicpp.dir/clean
 
 libminicpp/CMakeFiles/libminicpp.dir/depend:
-	cd /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/enry/Desktop/CUDA-compact-table/fzn-minicpp /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/libminicpp /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp /home/enry/Desktop/CUDA-compact-table/fzn-minicpp/build/libminicpp/CMakeFiles/libminicpp.dir/DependInfo.cmake "--color=$(COLOR)"
+	cd "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build" && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp" "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/libminicpp" "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build" "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp" "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/libminicpp/CMakeFiles/libminicpp.dir/DependInfo.cmake" "--color=$(COLOR)"
 .PHONY : libminicpp/CMakeFiles/libminicpp.dir/depend
 
