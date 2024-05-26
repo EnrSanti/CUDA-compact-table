@@ -78,6 +78,7 @@ class Table : public Constraint{
         Table(vector<var<int>::Ptr> & vars,  vector<vector<int>> const & tuples);
         void post() override;
         void propagate() override;
+        void print();
 };
 
 

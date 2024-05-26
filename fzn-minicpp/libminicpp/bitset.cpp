@@ -16,7 +16,10 @@
  */
 
 #include "bitset.hpp"
-
+#include <string>
+#include <stdio.h>
+#include <iostream>
+using namespace std;
 StaticBitSet::StaticBitSet(int sz)
    : _sz(sz)
 {
@@ -80,18 +83,17 @@ void SparseBitSet::addToMask(StaticBitSet& m) {
       _mask[offset] = (_mask[offset] | m[offset]);
    }
 }
-void SparseBitSet::addToMaskInt(int value){  
-
+void SparseBitSet::addToMaskInt(unsigned int value){  
 	int offset;
    int bitsPerWord=32;
-	unsigned long wordToOr=(unsigned long) 1<<(bitsPerWord-(value%bitsPerWord));
+	unsigned int wordToOr=(unsigned int) 1<<(bitsPerWord-(value%bitsPerWord));
 	int wordIndex=floor(value/bitsPerWord);
 	if(value%bitsPerWord==0){
 		wordIndex--;
 	}
 	offset=_index[wordIndex];
 	_mask[offset]=_mask[offset] | wordToOr;
-	
+	printf("\n%%%%%% val agguinto: %u: \n",wordToOr);
 }
 void SparseBitSet::intersectWithMask() {
    int offset, w;
@@ -115,4 +117,36 @@ int SparseBitSet::intersectIndex(StaticBitSet& m) {
          return offset;
    }
    return -1;
+}
+
+void SparseBitSet::print(int offset) {
+
+    if(_limit.value()>=0)
+    	printf("\n%%%%%% Words (for value %d): \n",offset);
+      
+    else{
+    	printf("\n%%%%%%*** Value %d never found in any tuple ***\n",offset);
+      return;
+   }
+    for (int i = 0; i <= _limit.value(); i++) {
+        printf("%%%%%% [%d] ", i);
+        printBits(_words[i].value());
+    }
+    if(_limit.value()>=0){
+	    printf("%%%%%% Mask: \n");
+	    for (int i = 0; i <= _limit.value(); i++) {
+	        printf("%%%%%% [%d] ", i);
+	        printBits(_mask[i]);
+	    }
+	}
+}
+void SparseBitSet::printBits(unsigned int num) {
+    // Extracting each bit of the int and printing it
+    //yes rather weird function, but since we need to print %%%%%
+    vector<char> str = {'0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0'};
+    for (int i = 31; i >= 0; i--) {
+        str[i] = (num >> i) & 1; 
+        printf("%d",str.at(i));
+    }
+    printf("\n%%%%%% \n");
 }

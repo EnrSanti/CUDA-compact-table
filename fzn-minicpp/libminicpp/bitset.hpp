@@ -23,36 +23,42 @@
 #include "store.hpp"
 #include <vector>
 #include <cmath>
+
 class StaticBitSet {
-   std::vector<int>            _words;
    int                         _sz;
+   void printBits(int num);
 public:
+   std::vector<int>            _words;
    StaticBitSet() {}
    StaticBitSet(int sz);
    StaticBitSet(StaticBitSet&& bs) : _words(std::move(bs._words)),_sz(bs._sz) {}
    int operator[] (int i) { return _words[i];}
    void remove (int pos);
    bool contains(int pos);
+   void print(int offset);
 };
 
 class SparseBitSet {
-   std::vector<trail<int>>     _words;  // length = nbWords
+   
    std::vector<int>            _index;  // length = nbWords
    std::vector<int>            _mask;   // length = nbWords
    trail<int>                  _limit;
    int                         _sz;
    int                         _nbWords;
+   void printBits(unsigned int num);
 public:
+   std::vector<trail<int>>     _words;  // length = nbWords
    SparseBitSet(Trailer::Ptr eng, Storage::Ptr store, int sz);
    bool isEmpty() { return _limit == -1;}
    void clearMask();
    void reverseMask();
    void addToMask(StaticBitSet& m);
-   void addToMaskInt(int value);
+   void addToMaskInt(unsigned int value);
    void intersectWithMask();
    int intersectIndex(StaticBitSet& m);
    trail<int>& operator[] (int i) { return _words[i];}
    int operator[] (int i) const { return _words[i].value();}
+   void print(int offset);
 };
 
 #endif

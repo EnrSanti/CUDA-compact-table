@@ -7,11 +7,7 @@ Table::Table(vector<var<int>::Ptr> & vars, const vector<vector<int>> & tuples) :
 
     setPriority(CLOW);
     int noTuples=tuples.size();
-    printf("%%%%%% Table constructor called\n");
-    printf("%%%%%% size of _currTable: %d \n", noTuples);
     int noVars=vars.size();
-    printf("%%%%%% the table has %d vars\n",noVars);
-
     _s_val= vector<trail<int>>(noVars);
     _s_sup= vector<trail<int>>(noVars);
     _supportOffsetJmp=vector<int>(noVars);
@@ -19,7 +15,6 @@ Table::Table(vector<var<int>::Ptr> & vars, const vector<vector<int>> & tuples) :
     _variablesOffsets=vector<int>(noVars);
     
     for (int i = 0; i < noVars; i++){
-        printf("%%%%%% var size: %d\n",vars[i]->size());
         //intializing the _s_val and _s_sup to 0s
         _s_val[i]=trail<int>(vars[0]->getSolver()->getStateManager(),0);
         _s_sup[i]=trail<int>(vars[0]->getSolver()->getStateManager(),0);
@@ -70,45 +65,54 @@ Table::Table(vector<var<int>::Ptr> & vars, const vector<vector<int>> & tuples) :
             int entryValue=tuples[t][v]-_variablesOffsets[v];   
             int offset=_supportOffsetJmp[v]+entryValue;
 
-            _supports[offset].addToMaskInt(t);
-            _supportsShort[offset].addToMaskInt(t);
+            printf("%%%%%% Offset %d\n",offset);
+            _supports[offset].addToMaskInt(t+1);
+            
+            /*_supportsShort[offset].addToMaskInt(t+1);
+
+
+
 
 
             for (int varValue = 0; varValue <= entryValue; varValue++) {
                 offset=_supportOffsetJmp[v]+varValue;
                 //update supportsMin
-                _supportsMin[offset].addToMaskInt(t);  
+                _supportsMin[offset].addToMaskInt(t+1);  
             }
             for (int varValue = entryValue; varValue < vars[v]->intialSize(); varValue++) {
                 offset=_supportOffsetJmp[v]+varValue;
                 //update supportsMax
-                _supportsMax[offset].addToMaskInt(t);
-            }
+                _supportsMax[offset].addToMaskInt(t+1);
+            }*/
         }
     }
     
 
+    int bitsPerWord=32;
 
+    for (int i = 0; i < _supportSize; ++i){  
+        _supports[i].intersectWithMask();
+        _supportsShort[i].intersectWithMask();
+        _supportsMin[i].intersectWithMask();
+        _supportsMax[i].intersectWithMask();
 
+        printf("\n%%%%%% _supports[offset]: %u: \n",_supports[i]._words[0].value());
+        _supports[i].clearMask();
+        _supportsShort[i].clearMask();
+        _supportsMin[i].clearMask();
+        _supportsMax[i].clearMask();
+        
+        //we initialize residues
+        for(int j=0; j<noTuples; j++){
+            if(_supports[i]._words[j/bitsPerWord]!=0x00000000){
+                _residues[i]=trail<int>(_vars[0]->getSolver()->getStateManager(), j); 
+            }else{
+                _residues[i]=trail<int>(_vars[0]->getSolver()->getStateManager(), 0); 
+            }
+        }
+    }
+    print();
 
-
-
-
-
-
-
-
-
-
-
-
-
-    // Examples:
-    // Initialization backtrackable int vector: [3,3,3,3,3,3,3,3,3,3]
-    //for (int i = 0; i < 10; i  += 1)
-    //{
-    //    biv.push_back(trail<int>(x[0]->getSolver()->getStateManager(), 3));
-    //}
 }
 
 void Table::post()
@@ -125,4 +129,30 @@ void Table::propagate()
 {
     printf("%%%%%% Table propagation called.\n");
     // Implement the propagation logic
+}
+
+void Table::print(){    
+    printf("%%%%%% ----------------- TABLE PRINT: -----------------\n\n");
+
+    printf("%%%%%% Size of currTable (no of rows): %ld \n", _tuples.size());
+    printf("%%%%%% The table (support) has %ld vars\n",_vars.size());
+    for (int i = 0; i < _vars.size(); i++){
+        printf("%%%%%% Var size: %d\n",_vars[i]->size());
+    }
+    int currentOffset=0;
+    int internalOffset=0;
+    int offsetAccumulator=_vars[0]->intialSize();
+	printf("%%%%%% ------ var %d in the table has current size: %d ------\n",currentOffset,_vars[currentOffset]->size());
+    
+    for (int i = 0; i < _supportSize; i++){
+        if(i>=offsetAccumulator){
+    		currentOffset++;
+    		offsetAccumulator+=_vars[currentOffset]->intialSize();
+    		internalOffset=0;
+    		printf("%%%%%% ------ var %d in the table has current size: %d ------\n",currentOffset,_vars[currentOffset]->size());
+    	}
+        _supports[i].print(_variablesOffsets[currentOffset]+internalOffset);
+        internalOffset++;
+    }
+
 }
