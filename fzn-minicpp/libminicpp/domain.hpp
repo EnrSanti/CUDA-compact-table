@@ -58,7 +58,7 @@ public:
     bool memberBase(int v) const noexcept { return GETBIT(v);}
     int getIthVal(int index) const;
     void dump(int min, int max, unsigned int * dump) const;
-
+    const int getNoWords() {return _words_count;}
     void assign(int v,IntNotifier& x);
     void remove(int v,IntNotifier& x);
     void removeBelow(int newMin,IntNotifier& x);

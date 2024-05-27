@@ -41,12 +41,13 @@ long* variablesOffsets; //offset of the variables, used in accessing the support
 
 class Table : public Constraint{
     // Constraint private data structures
-    public:
+    private:
         
         vector<var<int>::Ptr> _vars;
         vector<vector<int>> _tuples;
+
         SparseBitSet _currTable; 
-    
+
         int _supportSize; //the length (no of rows) of the supports bitset (CONSTANT)
 
         vector<SparseBitSet> _supports; //table of which values for each variable are required in a constraint
@@ -54,11 +55,14 @@ class Table : public Constraint{
         vector<SparseBitSet> _supportsMin; //additional bitset to deal with <= and < (smart tables)
         vector<SparseBitSet> _supportsMax; //additional bitset to deal with >= and > (smart tables)
         
+        vector<unsigned int*> _deltaXs; //deltaXs[i] is the delta of the ith variable
+
+
         //già l'abbiamo in var[i]->size()
         //int* lastSizes; //current domain size of each var 
 
-        vector<trail<bool>> _s_val; //indexes of the vars not yet instanciated whose domain changed from last iteration (could be replaced by a bitset)
-        vector<trail<bool>> _s_sup; //indexes of the vars not yet inst. with at least one value in their domain for which no support has yet been found (could be replaced by a bitset)
+        vector<int> _s_val; //indexes of the vars not yet instanciated whose domain changed from last iteration (could be replaced by a bitset)
+        vector<int> _s_sup; //indexes of the vars not yet inst. with at least one value in their domain for which no support has yet been found (could be replaced by a bitset)
         vector<trail<int>> _residues; 
 
         //già l'abbiamo in var[i]->InitialSize()
@@ -66,6 +70,8 @@ class Table : public Constraint{
         
         
         vector<int> _supportOffsetJmp; //for each var the index of the row in "supports" in which such variable starts (CONSTANT)
+        
+        //c'è in vars[i]->initialMin(); TODO LEVA
         vector<int> _variablesOffsets; //offset of the variables, used in accessing the support rows (not all variables start from 0, eg  90..120, variablesOffsets[i]=90) 
         
     public:
@@ -75,6 +81,8 @@ class Table : public Constraint{
         void print();
     private:
         void enfoceGAC();
+        void filterDomains();
+        void updateTable();
 };
 
 

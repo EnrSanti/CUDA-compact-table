@@ -59,10 +59,10 @@ public:
    bool containsBase(int v) const override { return _dom->memberBase(v);}
    int getIthVal(int index) const noexcept {assert(0 < index and index <= _dom->size()); return _dom->getIthVal(index);}
    void dump(int min, int max, unsigned int * dump) const override { _dom->dump(min,max,dump);};
+   const int getSizeOfBitSet() override { return _dom->getNoWords();}
    bool changed() const noexcept override  { return _dom->changed();}
    bool changedMin() const noexcept override  { return _dom->changedMin();}
    bool changedMax() const noexcept override  { return _dom->changedMax();}
-
    void assign(int v) override;
    void remove(int v) override;
    void removeBelow(int newMin) override;

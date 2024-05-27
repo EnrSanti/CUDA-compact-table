@@ -4,27 +4,21 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     Constraint(vars[0]->getSolver()), 
     _vars(vars), _tuples(tuples), 
     _currTable(SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),tuples.size())){
-
     
     int noTuples=tuples.size();
     int noVars=vars.size();
-    _s_val= vector<trail<bool>>(noVars);
-    _s_sup= vector<trail<bool>>(noVars);
-
+    _s_val= vector<int>();
+    _s_sup= vector<int>();
     _supportOffsetJmp=vector<int>(noVars);
-    
     _variablesOffsets=vector<int>(noVars);
-    
-    for (int i = 0; i < noVars; i++){
-        //intializing the _s_val and _s_sup to 0s
-        _s_val[i]=trail<bool>(vars[0]->getSolver()->getStateManager(),false);
-        _s_sup[i]=trail<bool>(vars[0]->getSolver()->getStateManager(),false);
-        
+    _deltaXs=vector<unsigned int*>(noVars,nullptr);
+
+    for (int i = 0; i < noVars; i++){        
         //calculating the number of rows in the support bitset
         _supportSize+=vars[i]->size();
         //we store the offset
         _variablesOffsets[i]=vars[i]->min();
-
+        _deltaXs[i]=new unsigned int[vars[i]->getSizeOfBitSet()];
     }
 
     //calculating the offset of the variables, used in accessing the support rows    
@@ -38,7 +32,8 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     _supportsShort=vector<SparseBitSet>(_supportSize,SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),noTuples));
     _supportsMin=vector<SparseBitSet>(_supportSize,SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),noTuples));
     _supportsMax=vector<SparseBitSet>(_supportSize,SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),noTuples));
-    
+   
+
     _residues= vector<trail<int>>(_supportSize);
 
 
@@ -227,13 +222,94 @@ void Table::post()
 void Table::propagate()
 {
     printf("%%%%%% Table propagation called.\n");
-    //enfoceGAC();
+    enfoceGAC();
 }
 
 
 
+//---------------------------------------------
+//------- The three functions of alg. 2 -------
+//---------------------------------------------
 
+void Table::updateTable(){
+    /*
+    for(int i=0; i < _s_val.size(); i++){
+        _currTable.clearMask();
+        if(){
+            //incremental update
+        }
+    }
+	for (int i=0; i<data->variablesNo; i++){
+		if(data->s_val[i]==1){
+			clearMask(&(data->currTable));
 
+			if(deltaXSizes[i]+2<domainSizes[i] && 1==0){ //TODO TOGLI SECONDA CONDIZIONE, in questa versione incremental update non è considerato
+				//printf("\n++++incremental update++++\n");
+				int domMin=-1; //TODO CAMBIA
+				int domMax=-1; //TODO CAMBIA
+				for (int j = 0; j < deltaXSizes[i]; j++){
+					if(deltaXs[i][j]>domMin && deltaXs[i][j]<domMax){
+						int index=getSupportIndex(data,i,deltaXs[i][j]);
+						addToMask(&(data->currTable),data->supportsShort[index].words); 		
+					}
+				}
+				reverseMask(&(data->currTable));
+				//TODO UNCOMMENT
+				//if(dom(i).minChanged()){
+				//	...	
+				//}
+				//if(dom(i).maxChanged()){
+				//	...
+				//}
+				
+            
+			}else{
+				//printf("\n++++reset based update++++\n"); 
+				for (int j = 0; j < data->supportSizes[i]; j++){
+					if(domains[i][j]==1){
+						int index=getSupportIndex(data,i,j+data->variablesOffsets[i]);
+						addToMask(&(data->currTable),data->supports[index].words); 		
+					}
+				}
+			}
+			intersectWithMask(&(data->currTable));
+			if(isEmpty(data->currTable)){
+				return;
+			}
+		}
+	}
+    */
+}
+
+/*
+void Table::filterDomains(CT *data,char** domains,int* domainSizes){
+	//for now we loop through all the array, with a list we could be more efficient (todo)
+	for (int i = 0; i < data->variablesNo; i++){
+		if(data->s_sup[i]==1){
+			//for all values in dom x, che si possono prendere dal processo di search (for now we loop through all the array todo: lists)
+			for (int j = 0; j < data->supportSizes[i]; j++){
+				if(domains[i][j]==1){ //i.e. a \in dom(x)
+					int x_aIndex=getSupportIndex(data,i,j+data->variablesOffsets[i]);
+					int index=data->residues[x_aIndex];
+					if((data->currTable.words[index] & (data->supports[x_aIndex]).words[index] ) == 0x0000000000000000){
+						index=intersectIndex(&(data->currTable),data->supports[x_aIndex].words);
+						if(index!=-1){
+							data->residues[x_aIndex]=index;
+						}else{
+							if(domains[i][j]!=0)
+								domainSizes[i]-=1;
+							domains[i][j]=0;
+
+						}
+
+					}
+				}
+			}
+			data->lastSizes[i]=domainSizes[i];//=dom(x) todo;
+		}
+	}
+}
+*/
 
 void Table::enfoceGAC(){
 
@@ -241,8 +317,21 @@ void Table::enfoceGAC(){
     //printf("%%%%%% %ld\n",_vars.size());
     //update the table
 	
-
-	//updateTable(data,sData->deltaXs,sData->deltaXSizes,sData->domainSizes,sData->domains);
+    //update the table
+    _s_val.clear();
+    _s_sup.clear();
+	for (int i = 0; i < _vars.size(); i++){
+		//update s_val
+        if(_vars[i]->changed()){
+            _s_val.push_back(i);
+        }
+		//update s_sup
+        if(_vars[i]->size()>1){
+            _s_sup.push_back(i);
+        }
+	}
+    
+	updateTable();
 	
 	//filterDomains(data,sData->domains,sData->domainSizes);
 }
@@ -276,6 +365,14 @@ void Table::print(){
     	}
         _supports[i].print(_variablesOffsets[currentOffset]+internalOffset);
         internalOffset++;
+    }
+    printf("%%%%%% ----------------- VARS: -----------------\n\n");
+    for (int i = 0; i < _vars.size(); i++){
+        printf("%%%%%% Var %d: %d\n",i,_vars[i]->getId());
+
+        _vars[i]->dump(_vars[i]->min(),_vars[i]->max(),_deltaXs[i]);
+        
+        printf("%%%%%% Var %d dump: %d \n",i,_deltaXs[i][0]);
     }
 
 }
