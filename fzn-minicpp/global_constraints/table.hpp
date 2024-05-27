@@ -56,8 +56,7 @@ class Table : public Constraint{
         vector<SparseBitSet> _supportsMax; //additional bitset to deal with >= and > (smart tables)
         
         vector<unsigned int*> _deltaXs; //deltaXs[i] is the delta of the ith variable
-
-
+        vector<SparseBitSet> _lastVarsValues; //_lastVarsValues[i] is the snapshot of the domain of ith variable at the previous step
         //già l'abbiamo in var[i]->size()
         //int* lastSizes; //current domain size of each var 
 
@@ -82,6 +81,7 @@ class Table : public Constraint{
     private:
         void enfoceGAC();
         void filterDomains();
+        void updateDelta(int);
         void updateTable();
 };
 

@@ -358,6 +358,7 @@ CMakeFiles/fzn-minicpp.dir/gpu_constriants/cumulative.cu.o : /home/enry/Desktop/
     /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/./libminicpp/fail.hpp \
     /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/./libminicpp/acstr.hpp \
     /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/./libminicpp/trailList.hpp \
+    /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/./libminicpp/bitset.hpp \
     /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/./libminicpp/constraint.hpp \
     /usr/include/c++/12/set \
     /usr/include/c++/12/bits/stl_tree.h \

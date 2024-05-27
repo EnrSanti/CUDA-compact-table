@@ -21,7 +21,7 @@
 #include "trailable.hpp"
 #include "store.hpp"
 #include "bitsUtils.h"
-
+#include "bitset.hpp"
 #define GETBIT(b) ((_dom[((b) - _imin) / 32]) & (getMask32(b % 32)))
 
 struct IntNotifier   {
@@ -58,6 +58,7 @@ public:
     bool memberBase(int v) const noexcept { return GETBIT(v);}
     int getIthVal(int index) const;
     void dump(int min, int max, unsigned int * dump) const;
+    void dumpInSparseBitSet(int min, int max, SparseBitSet & dump) const;
     const int getNoWords() {return _words_count;}
     void assign(int v,IntNotifier& x);
     void remove(int v,IntNotifier& x);

@@ -336,7 +336,36 @@ void BitDomain::dump(int min, int max, unsigned int * dump) const
         }
     }
 }
+void BitDomain::dumpInSparseBitSet(int min, int max, SparseBitSet & dump) const {
+    assert(min <= _min);
+    assert(_max <= max);
 
+    int min_dom_offset = _min - _imin;
+    int min_dom_word_idx = min_dom_offset / 32;
+    int min_dom_bit_idx = min_dom_offset % 32;
+    unsigned int min_word_mask = getRightFilledMask32(min_dom_bit_idx);
+    int max_dom_offset = _max - _imin;
+    int max_dom_word_idx = max_dom_offset / 32;
+    int max_dom_bit_idx = max_dom_offset % 32;
+    unsigned int max_word_mask = getLeftFilledMask32(max_dom_bit_idx);
+
+    int dom_dump_offset = _imin - min;
+    int dom_dump_offset_words = dom_dump_offset / 32;
+
+    if(min_dom_word_idx == max_dom_word_idx)
+    {
+        dump._words[dom_dump_offset_words + min_dom_word_idx] = _dom[min_dom_word_idx] & min_word_mask & max_word_mask;
+    }
+    else
+    {
+        dump._words[dom_dump_offset_words + min_dom_word_idx] = _dom[min_dom_word_idx] & min_word_mask;
+        dump._words[dom_dump_offset_words + max_dom_word_idx] = _dom[max_dom_word_idx] & max_word_mask;
+        for(int dom_word_idx = min_dom_word_idx + 1; dom_word_idx < max_dom_word_idx; dom_word_idx += 1)
+        {
+            dump._words[dom_dump_offset_words + dom_word_idx]= _dom[dom_word_idx];
+        }
+    }
+}
 int BitDomain::getIthVal(int index) const
 {
     int min_offset = _min - _imin;

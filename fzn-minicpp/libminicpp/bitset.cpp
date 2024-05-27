@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <iostream>
 using namespace std;
+
 StaticBitSet::StaticBitSet(int sz)
    : _sz(sz)
 {

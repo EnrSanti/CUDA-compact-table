@@ -254,6 +254,7 @@ CMakeFiles/fzn-minicpp.dir/fzn_statistics_helper.cpp.o: \
  /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/./libminicpp/intvar.hpp \
  /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/./libminicpp/varitf.hpp \
  /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/./libminicpp/trailList.hpp \
+ /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/./libminicpp/bitset.hpp \
  /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/./libminicpp/domain.hpp \
  /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/./libminicpp/bitsUtils.h \
  /usr/include/c++/13/climits \

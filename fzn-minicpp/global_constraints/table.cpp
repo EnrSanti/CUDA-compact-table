@@ -12,13 +12,21 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     _supportOffsetJmp=vector<int>(noVars);
     _variablesOffsets=vector<int>(noVars);
     _deltaXs=vector<unsigned int*>(noVars,nullptr);
+    _lastVarsValues=vector<SparseBitSet>(noVars,SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),0));
 
     for (int i = 0; i < noVars; i++){        
         //calculating the number of rows in the support bitset
         _supportSize+=vars[i]->size();
         //we store the offset
         _variablesOffsets[i]=vars[i]->min();
+
+        //we allocate the delta and lastVarsValues
         _deltaXs[i]=new unsigned int[vars[i]->getSizeOfBitSet()];
+        _lastVarsValues[i]=SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),_vars[i]->size());
+
+        //initialize lastVarsValues
+        vars[i]->dumpInSparseBitSet(vars[i]->min(),vars[i]->max(),_lastVarsValues[i]);
+
     }
 
     //calculating the offset of the variables, used in accessing the support rows    
@@ -321,9 +329,10 @@ void Table::enfoceGAC(){
     _s_val.clear();
     _s_sup.clear();
 	for (int i = 0; i < _vars.size(); i++){
-		//update s_val
+		//update s_val and the deltas
         if(_vars[i]->changed()){
             _s_val.push_back(i);
+            updateDelta(i);
         }
 		//update s_sup
         if(_vars[i]->size()>1){
@@ -337,7 +346,14 @@ void Table::enfoceGAC(){
 }
 
 
+void Table::updateDelta(int i){
 
+    _vars[i]->dump(_vars[i]->min(),_vars[i]->max(),_deltaXs[i]);
+    //we calculate the delta by xoring the words
+    for (int j = 0; j < _vars[i]->getSizeOfBitSet(); j++){
+        _deltaXs[i][j]=_deltaXs[i][j]^_lastVarsValues[i]._words[j].value();
+    }
+}
 
 
 
@@ -370,9 +386,9 @@ void Table::print(){
     for (int i = 0; i < _vars.size(); i++){
         printf("%%%%%% Var %d: %d\n",i,_vars[i]->getId());
 
-        _vars[i]->dump(_vars[i]->min(),_vars[i]->max(),_deltaXs[i]);
+        //_vars[i]->dump(_vars[i]->min(),_vars[i]->max(),_deltaXs[i]);
         
-        printf("%%%%%% Var %d dump: %d \n",i,_deltaXs[i][0]);
+        printf("%%%%%% Var %d dump: %d \n",i,_lastVarsValues[i]._words[0].value());
     }
 
 }

@@ -46,6 +46,7 @@ class SparseBitSet {
    int                         _sz;
    int                         _nbWords;
    void printBits(unsigned int num);
+   
 public:
    std::vector<trail<int>>     _words;  // length = nbWords
    SparseBitSet(Trailer::Ptr eng, Storage::Ptr store, int sz);
