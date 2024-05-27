@@ -1,23 +1,24 @@
 #include "table.hpp"
 
-Table::Table(vector<var<int>::Ptr> & vars, const vector<vector<int>> & tuples) :
+Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     Constraint(vars[0]->getSolver()), 
     _vars(vars), _tuples(tuples), 
     _currTable(SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),tuples.size())){
 
-    setPriority(CLOW);
+    
     int noTuples=tuples.size();
     int noVars=vars.size();
-    _s_val= vector<trail<int>>(noVars);
-    _s_sup= vector<trail<int>>(noVars);
+    _s_val= vector<trail<bool>>(noVars);
+    _s_sup= vector<trail<bool>>(noVars);
+
     _supportOffsetJmp=vector<int>(noVars);
     
     _variablesOffsets=vector<int>(noVars);
     
     for (int i = 0; i < noVars; i++){
         //intializing the _s_val and _s_sup to 0s
-        _s_val[i]=trail<int>(vars[0]->getSolver()->getStateManager(),0);
-        _s_sup[i]=trail<int>(vars[0]->getSolver()->getStateManager(),0);
+        _s_val[i]=trail<bool>(vars[0]->getSolver()->getStateManager(),false);
+        _s_sup[i]=trail<bool>(vars[0]->getSolver()->getStateManager(),false);
         
         //calculating the number of rows in the support bitset
         _supportSize+=vars[i]->size();
@@ -65,14 +66,115 @@ Table::Table(vector<var<int>::Ptr> & vars, const vector<vector<int>> & tuples) :
             int entryValue=tuples[t][v]-_variablesOffsets[v];   
             int offset=_supportOffsetJmp[v]+entryValue;
 
-            printf("%%%%%% Offset %d\n",offset);
-            _supports[offset].addToMaskInt(t+1);
+            //TO UNCOMMENT ONCE ALL ENTRIES ARE IMLPMENTED
+            //we check if it's not a short entry (i.e. has *)
+            /*if(strncmp(var,"*",1)==0){
+                //supports, supportMin, supportMax we need to set all the var values to 1
+                //done
+                for (int varValue = 0; varValue < data.supportSizes[ctr]; varValue++) {
+                    offset=data.supportOffsetJmp[ctr]+varValue;
+                    addToMaskInt(&(data.supports[offset]),constrNo);  
+                    //update supportsMin
+                    addToMaskInt(&(data.supportsMin[offset]),constrNo);  
+                    //update supportsMax
+                    addToMaskInt(&(data.supportsMax[offset]),constrNo);   
+                }
+                //supportsShort to 0, so we don't add anything :)
+
+            }else if(strncmp(var,"!=",2)==0){ //if we have a smart entry !=
+                //done
+                int entryValue=atoi(var+2)-data.variablesOffsets[ctr]; //we skip over the chars != (no spaces allowed), -varOffset, to retrieve the index of the value on it's domain, i.e. x 4..10, if we write 6 we mean the second possible value of x 
+                for (int varValue = 0; varValue < entryValue; varValue++) {
+                    offset=data.supportOffsetJmp[ctr]+varValue;
+                    addToMaskInt(&(data.supports[offset]),constrNo);   
+                }
+                for (int varValue = entryValue+1; varValue < data.supportSizes[ctr]; varValue++) {
+                    offset=data.supportOffsetJmp[ctr]+varValue;
+                    addToMaskInt(&(data.supports[offset]),constrNo);   
+                }
+                //TODO CHECK IF THE LAST VALUE HAS TO BE INCLUDED (i.e. x!=c for supportMin or x!=a for supportMax)
+                for (int varValue = 0; varValue < data.supportSizes[ctr]; varValue++) {
+                    offset=data.supportOffsetJmp[ctr]+varValue;
+                    //update supportsMin
+                    addToMaskInt(&(data.supportsMin[offset]),constrNo);  
+                    //update supportsMax
+                    addToMaskInt(&(data.supportsMax[offset]),constrNo);   
+                }
+                // supportsShort to 0, so we don't add anything :)
             
-            /*_supportsShort[offset].addToMaskInt(t+1);
+            }else if(strncmp(var,"<=",2)==0){
+
+                //done
+                int entryValue=atoi(var+2)-data.variablesOffsets[ctr];
+
+                for (int varValue = 0; varValue <= entryValue; varValue++) {
+                    offset=data.supportOffsetJmp[ctr]+varValue;
+                    addToMaskInt(&(data.supports[offset]),constrNo);  
+                    //update supportsMin
+                    addToMaskInt(&(data.supportsMin[offset]),constrNo);
+                }
+
+                //set supportsMax all to 1
+                for (int varValue = 0; varValue < data.supportSizes[ctr]; varValue++) {
+                    offset=data.supportOffsetJmp[ctr]+varValue;
+                    //update supportsMax
+                    addToMaskInt(&(data.supportsMax[offset]),constrNo);   
+                }
+                // supportsShort to 0, so we don't add anything :)
+
+            }else if(strncmp(var,"<",1)==0){
+                //done
+                int entryValue=atoi(var+1)-data.variablesOffsets[ctr];
 
 
+                for (int varValue = 0; varValue < entryValue; varValue++) {
+                    offset=data.supportOffsetJmp[ctr]+varValue;
+                    addToMaskInt(&(data.supports[offset]),constrNo);  
+                    //update supportsMin
+                    addToMaskInt(&(data.supportsMin[offset]),constrNo);
+                }
+                for (int varValue = 0; varValue < data.supportSizes[ctr]; varValue++) {
+                    offset=data.supportOffsetJmp[ctr]+varValue;
+                    //update supportsMax
+                    addToMaskInt(&(data.supportsMax[offset]),constrNo);   
+                }
+                // supportsShort to 0, so we don't add anything :)
+            }else if(strncmp(var,">=",2)==0){
+                //done
+                int entryValue=atoi(var+2)-data.variablesOffsets[ctr];
 
+                for (int varValue = entryValue; varValue < data.supportSizes[ctr]; varValue++) {
+                    offset=data.supportOffsetJmp[ctr]+varValue;
+                    addToMaskInt(&(data.supports[offset]),constrNo);  
+                    //update supportsMax
+                    addToMaskInt(&(data.supportsMax[offset]),constrNo);
+                }       
+                //set supportsMin all to 1
+                for (int varValue = 0; varValue < data.supportSizes[ctr]; varValue++) {
+                    offset=data.supportOffsetJmp[ctr]+varValue;
+                    //update supportsMax
+                    addToMaskInt(&(data.supportsMin[offset]),constrNo);   
+                }
 
+                // supportsShort to 0, so we don't add anything :)
+            }else if(strncmp(var,">",1)==0){
+                int entryValue=atoi(var+1)-data.variablesOffsets[ctr];
+                for (int varValue = entryValue+1; varValue < data.supportSizes[ctr]; varValue++) {
+                    offset=data.supportOffsetJmp[ctr]+varValue;
+                    addToMaskInt(&(data.supports[offset]),constrNo);  
+                    //update supportsMax
+                    addToMaskInt(&(data.supportsMax[offset]),constrNo);
+                }  
+                for (int varValue = 0; varValue < data.supportSizes[ctr]; varValue++) {
+                    offset=data.supportOffsetJmp[ctr]+varValue;
+                    //update supportsMin
+                    addToMaskInt(&(data.supportsMin[offset]),constrNo);   
+                }
+                // supportsShort to 0, so we don't add anything :)
+            }else{*/
+           
+            _supports[offset].addToMaskInt(t+1); 
+            _supportsShort[offset].addToMaskInt(t+1);
 
             for (int varValue = 0; varValue <= entryValue; varValue++) {
                 offset=_supportOffsetJmp[v]+varValue;
@@ -83,7 +185,7 @@ Table::Table(vector<var<int>::Ptr> & vars, const vector<vector<int>> & tuples) :
                 offset=_supportOffsetJmp[v]+varValue;
                 //update supportsMax
                 _supportsMax[offset].addToMaskInt(t+1);
-            }*/
+            }
         }
     }
     
@@ -96,7 +198,6 @@ Table::Table(vector<var<int>::Ptr> & vars, const vector<vector<int>> & tuples) :
         _supportsMin[i].intersectWithMask();
         _supportsMax[i].intersectWithMask();
 
-        printf("\n%%%%%% _supports[offset]: %u: \n",_supports[i]._words[0].value());
         _supports[i].clearMask();
         _supportsShort[i].clearMask();
         _supportsMin[i].clearMask();
@@ -105,31 +206,53 @@ Table::Table(vector<var<int>::Ptr> & vars, const vector<vector<int>> & tuples) :
         //we initialize residues
         for(int j=0; j<noTuples; j++){
             if(_supports[i]._words[j/bitsPerWord]!=0x00000000){
-                _residues[i]=trail<int>(_vars[0]->getSolver()->getStateManager(), j); 
+                _residues[i]=trail<int>(vars[0]->getSolver()->getStateManager(), j); 
             }else{
-                _residues[i]=trail<int>(_vars[0]->getSolver()->getStateManager(), 0); 
+                _residues[i]=trail<int>(vars[0]->getSolver()->getStateManager(), 0); 
             }
         }
     }
     print();
-
 }
 
 void Table::post()
 {
-    for (auto const & v : _vars)
-    {
-        // v->propagateOnBoundChange(this);
-        // v->whenBoundsChange([this, v] {v->removeAbove(0);});
+    printf("%%%%%% Table post called.\n");
+    for (auto const & v : _vars){
+        v->propagateOnDomainChange(this);
     }
-    propagate();
+
 }
 
 void Table::propagate()
 {
     printf("%%%%%% Table propagation called.\n");
-    // Implement the propagation logic
+    //enfoceGAC();
 }
+
+
+
+
+
+
+void Table::enfoceGAC(){
+
+    //printing the size
+    //printf("%%%%%% %ld\n",_vars.size());
+    //update the table
+	
+
+	//updateTable(data,sData->deltaXs,sData->deltaXSizes,sData->domainSizes,sData->domains);
+	
+	//filterDomains(data,sData->domains,sData->domainSizes);
+}
+
+
+
+
+
+
+
 
 void Table::print(){    
     printf("%%%%%% ----------------- TABLE PRINT: -----------------\n\n");

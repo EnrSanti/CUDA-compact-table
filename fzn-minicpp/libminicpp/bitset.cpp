@@ -93,7 +93,6 @@ void SparseBitSet::addToMaskInt(unsigned int value){
 	}
 	offset=_index[wordIndex];
 	_mask[offset]=_mask[offset] | wordToOr;
-	printf("\n%%%%%% val agguinto: %u: \n",wordToOr);
 }
 void SparseBitSet::intersectWithMask() {
    int offset, w;
@@ -125,7 +124,7 @@ void SparseBitSet::print(int offset) {
     	printf("\n%%%%%% Words (for value %d): \n",offset);
       
     else{
-    	printf("\n%%%%%%*** Value %d never found in any tuple ***\n",offset);
+    	printf("\n%%%%%% *** Value %d never found in any tuple ***\n",offset);
       return;
    }
     for (int i = 0; i <= _limit.value(); i++) {

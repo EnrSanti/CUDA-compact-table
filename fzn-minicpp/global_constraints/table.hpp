@@ -41,10 +41,10 @@ long* variablesOffsets; //offset of the variables, used in accessing the support
 
 class Table : public Constraint{
     // Constraint private data structures
-    protected:
+    public:
         
-        vector<var<int>::Ptr> & _vars;
-        const vector<vector<int>> & _tuples;
+        vector<var<int>::Ptr> _vars;
+        vector<vector<int>> _tuples;
         SparseBitSet _currTable; 
     
         int _supportSize; //the length (no of rows) of the supports bitset (CONSTANT)
@@ -57,8 +57,8 @@ class Table : public Constraint{
         //già l'abbiamo in var[i]->size()
         //int* lastSizes; //current domain size of each var 
 
-        vector<trail<int>> _s_val; //indexes of the vars not yet instanciated whose domain changed from last iteration (could be replaced by a bitset)
-        vector<trail<int>> _s_sup; //indexes of the vars not yet inst. with at least one value in their domain for which no support has yet been found (could be replaced by a bitset)
+        vector<trail<bool>> _s_val; //indexes of the vars not yet instanciated whose domain changed from last iteration (could be replaced by a bitset)
+        vector<trail<bool>> _s_sup; //indexes of the vars not yet inst. with at least one value in their domain for which no support has yet been found (could be replaced by a bitset)
         vector<trail<int>> _residues; 
 
         //già l'abbiamo in var[i]->InitialSize()
@@ -68,17 +68,13 @@ class Table : public Constraint{
         vector<int> _supportOffsetJmp; //for each var the index of the row in "supports" in which such variable starts (CONSTANT)
         vector<int> _variablesOffsets; //offset of the variables, used in accessing the support rows (not all variables start from 0, eg  90..120, variablesOffsets[i]=90) 
         
-
-        // Examples:
-        // Backtrackable int vector
-        //std::vector<trail<int>> biv;
-
-
     public:
-        Table(vector<var<int>::Ptr> & vars,  vector<vector<int>> const & tuples);
+        Table(vector<var<int>::Ptr> & vars,  vector<vector<int>> & tuples);
         void post() override;
         void propagate() override;
         void print();
+    private:
+        void enfoceGAC();
 };
 
 
