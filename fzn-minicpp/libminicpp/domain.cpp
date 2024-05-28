@@ -354,15 +354,15 @@ void BitDomain::dumpInSparseBitSet(int min, int max, SparseBitSet & dump) const 
 
     if(min_dom_word_idx == max_dom_word_idx)
     {
-        dump._words[dom_dump_offset_words + min_dom_word_idx] = _dom[min_dom_word_idx] & min_word_mask & max_word_mask;
+        dump._words[dom_dump_offset_words + min_dom_word_idx].setValue(_dom[min_dom_word_idx].value() & min_word_mask & max_word_mask);
     }
     else
     {
-        dump._words[dom_dump_offset_words + min_dom_word_idx] = _dom[min_dom_word_idx] & min_word_mask;
-        dump._words[dom_dump_offset_words + max_dom_word_idx] = _dom[max_dom_word_idx] & max_word_mask;
+        dump._words[dom_dump_offset_words + min_dom_word_idx].setValue(_dom[min_dom_word_idx].value() & min_word_mask);
+        dump._words[dom_dump_offset_words + max_dom_word_idx].setValue(_dom[max_dom_word_idx].value() & max_word_mask);
         for(int dom_word_idx = min_dom_word_idx + 1; dom_word_idx < max_dom_word_idx; dom_word_idx += 1)
         {
-            dump._words[dom_dump_offset_words + dom_word_idx]= _dom[dom_word_idx];
+            dump._words[dom_dump_offset_words + dom_word_idx].setValue(_dom[dom_word_idx].value());
         }
     }
 }
