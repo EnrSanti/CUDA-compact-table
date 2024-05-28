@@ -11,7 +11,7 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     _s_sup= vector<int>();
     _supportOffsetJmp=vector<int>(noVars);
     _variablesOffsets=vector<int>(noVars);
-    _deltaXs=vector<unsigned int*>(noVars,nullptr);
+    _deltaXs=vector<SparseBitSet>(noVars,SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),0));
     _lastVarsValues=vector<SparseBitSet>(noVars,SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),0));
 
     for (int i = 0; i < noVars; i++){        
@@ -21,7 +21,7 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
         _variablesOffsets[i]=vars[i]->min();
 
         //we allocate the delta and lastVarsValues
-        _deltaXs[i]=new unsigned int[vars[i]->getSizeOfBitSet()];
+        _deltaXs[i]=SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),_vars[i]->size());
         _lastVarsValues[i]=SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),_vars[i]->size());
 
         //initialize lastVarsValues
@@ -224,7 +224,6 @@ void Table::post()
     for (auto const & v : _vars){
         v->propagateOnDomainChange(this);
     }
-
 }
 
 void Table::propagate()
@@ -233,6 +232,14 @@ void Table::propagate()
     enfoceGAC();
 }
 
+//---------------------------------------------
+//---- Aux functions to access the support ----
+//---------------------------------------------
+
+//eg which is the index to access support[x,a]
+int getSupportIndex(int var, int value){
+	return 1;//table->supportOffsetJmp[var]+(value-(table->variablesOffsets[var]));
+}
 
 
 //---------------------------------------------
@@ -240,21 +247,17 @@ void Table::propagate()
 //---------------------------------------------
 
 void Table::updateTable(){
-    /*
-    for(int i=0; i < _s_val.size(); i++){
+   
+    //forall var x in s_val
+    int index=0;
+    
+    for(int i=0; i < _s_val.size(); ++i){
         _currTable.clearMask();
-        if(){
+        index=_s_val[i];
+        if(_deltaXs[index].countOnes() < _vars[index]->size() && 1==0){
             //incremental update
-        }
-    }
-	for (int i=0; i<data->variablesNo; i++){
-		if(data->s_val[i]==1){
-			clearMask(&(data->currTable));
-
-			if(deltaXSizes[i]+2<domainSizes[i] && 1==0){ //TODO TOGLI SECONDA CONDIZIONE, in questa versione incremental update non è considerato
-				//printf("\n++++incremental update++++\n");
-				int domMin=-1; //TODO CAMBIA
-				int domMax=-1; //TODO CAMBIA
+            printf("%%%%%% incremental update\n");
+            /*
 				for (int j = 0; j < deltaXSizes[i]; j++){
 					if(deltaXs[i][j]>domMin && deltaXs[i][j]<domMax){
 						int index=getSupportIndex(data,i,deltaXs[i][j]);
@@ -262,35 +265,59 @@ void Table::updateTable(){
 					}
 				}
 				reverseMask(&(data->currTable));
-				//TODO UNCOMMENT
+				
+				*/
+                // TODO UNCOMMENT
 				//if(dom(i).minChanged()){
 				//	...	
 				//}
 				//if(dom(i).maxChanged()){
 				//	...
 				//}
-				
-            
-			}else{
-				//printf("\n++++reset based update++++\n"); 
-				for (int j = 0; j < data->supportSizes[i]; j++){
-					if(domains[i][j]==1){
-						int index=getSupportIndex(data,i,j+data->variablesOffsets[i]);
-						addToMask(&(data->currTable),data->supports[index].words); 		
-					}
-				}
-			}
-			intersectWithMask(&(data->currTable));
-			if(isEmpty(data->currTable)){
-				return;
-			}
+        }else{
+            //reset based update
+            printf("%%%%%% reset based update\n");
+        
+            for (int j = 0; j < _vars[index]->size(); j++){
+                printf("%%%%%% LEh %d, index: %d, %d\n",j,index,_vars[index]->size());
+                if(_vars[index]->contains(j+_vars[index]->initialMin())){                    
+                    printf("%%%%%% var[%d] contains %d\n",index,j);
+                    int index_x_a=_supportOffsetJmp[index]+j;
+                    _currTable.addToMask2(_supports[index_x_a]._words);
+                }
+            }            
+
+        }
+        _currTable.intersectWithMask();
+        if(_currTable.isEmpty()){
+            return;
 		}
-	}
-    */
+    }
+
 }
 
-/*
-void Table::filterDomains(CT *data,char** domains,int* domainSizes){
+void Table::filterDomains(){
+    for(int i=0; i < _s_sup.size(); ++i){
+        int index=_s_sup[i];
+        for (int j = 0; j < _vars[index]->size(); j++){
+            //if(_vars[index]->contains(j)){
+
+                /*
+                int index_x_a=_supportOffsetJmp[index]+j;
+                int indexResidue=_residues[index_x_a].value();
+                if((_currTable._words[indexResidue] & _supports[index_x_a]._words[indexResidue] ) == 0x00000000){
+                    indexResidue=_supports[index_x_a].intersectIndex(_currTable);
+                    if(indexResidue!=-1){
+                        _residues[index_x_a]=trail<int>(_vars[0]->getSolver()->getStateManager(), indexResidue);
+                    }else{
+                        _vars[index]->remove(j);
+                    }
+                }
+                */
+            //}
+        }
+    }
+    /*
 	//for now we loop through all the array, with a list we could be more efficient (todo)
 	for (int i = 0; i < data->variablesNo; i++){
 		if(data->s_sup[i]==1){
@@ -315,9 +342,8 @@ void Table::filterDomains(CT *data,char** domains,int* domainSizes){
 			}
 			data->lastSizes[i]=domainSizes[i];//=dom(x) todo;
 		}
-	}
+	}*/
 }
-*/
 
 void Table::enfoceGAC(){
 
@@ -339,25 +365,25 @@ void Table::enfoceGAC(){
             _s_sup.push_back(i);
         }
 	}
-    
+    printf("%%%%%% s_val size: %d\n",_s_val.size());
+    //printing the s_val
+    for (int i = 0; i < _s_val.size(); i++){
+        printf("%%%%%% s_val[%d]: %d\n",i,_s_val[i]);
+    }
 	updateTable();
 	
-	//filterDomains(data,sData->domains,sData->domainSizes);
+	filterDomains();
 }
 
 
 void Table::updateDelta(int i){
 
-    _vars[i]->dump(_vars[i]->min(),_vars[i]->max(),_deltaXs[i]);
+    _vars[i]->dumpInSparseBitSet(_vars[i]->min(),_vars[i]->max(),_deltaXs[i]);
     //we calculate the delta by xoring the words
     for (int j = 0; j < _vars[i]->getSizeOfBitSet(); j++){
-        _deltaXs[i][j]=_deltaXs[i][j]^_lastVarsValues[i]._words[j].value();
+        _deltaXs[i]._words[j].setValue(_deltaXs[i]._words[j].value()^_lastVarsValues[i]._words[j].value());
     }
 }
-
-
-
-
 
 void Table::print(){    
     printf("%%%%%% ----------------- TABLE PRINT: -----------------\n\n");
@@ -365,7 +391,7 @@ void Table::print(){
     printf("%%%%%% Size of currTable (no of rows): %ld \n", _tuples.size());
     printf("%%%%%% The table (support) has %ld vars\n",_vars.size());
     for (int i = 0; i < _vars.size(); i++){
-        printf("%%%%%% Var size: %d\n",_vars[i]->size());
+        printf("%%%%%% Var size: %d, words no: %d \n",_vars[i]->size(),_vars[i]->getSizeOfBitSet());
     }
     int currentOffset=0;
     int internalOffset=0;
@@ -390,5 +416,14 @@ void Table::print(){
         
         printf("%%%%%% Var %d dump: %d \n",i,_lastVarsValues[i]._words[0].value());
     }
+    for (int i = 0; i < _vars.size(); i++){
+        //checking the contained values
+        for (int j = 0; j < _vars[i]->size(); j++){
+            if(_vars[i]->contains(j+_vars[i]->initialMin()))
+                printf("%%%%%% Var %d contains? %d: YES\n",i,j+_vars[i]->initialMin());
+            else
+                printf("%%%%%% Var %d contains? %d: NO\n",i,j+_vars[i]->initialMin());
 
+        }
+    }
 }

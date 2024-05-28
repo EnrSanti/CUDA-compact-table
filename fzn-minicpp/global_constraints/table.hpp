@@ -55,7 +55,7 @@ class Table : public Constraint{
         vector<SparseBitSet> _supportsMin; //additional bitset to deal with <= and < (smart tables)
         vector<SparseBitSet> _supportsMax; //additional bitset to deal with >= and > (smart tables)
         
-        vector<unsigned int*> _deltaXs; //deltaXs[i] is the delta of the ith variable
+        vector<SparseBitSet>  _deltaXs; //deltaXs[i] is the delta of the ith variable //TODO: replace with a STATSIC bitset
         vector<SparseBitSet> _lastVarsValues; //_lastVarsValues[i] is the snapshot of the domain of ith variable at the previous step
         //già l'abbiamo in var[i]->size()
         //int* lastSizes; //current domain size of each var 

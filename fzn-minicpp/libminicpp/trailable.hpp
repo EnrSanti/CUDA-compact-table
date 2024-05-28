@@ -43,6 +43,7 @@ public:
    Trailer::Ptr ctx() const { return _ctx;}
    operator T() const { return _value;}
    T value() const { return _value;}
+   void setValue(T val) { _value=val;}
    trail<T>& operator=(const T& v);
    trail<T>& operator+=(const T& v);
    trail<T>& operator-=(const T& v);

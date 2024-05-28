@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <iostream>
 using namespace std;
+using std::vector;
 
 StaticBitSet::StaticBitSet(int sz)
    : _sz(sz)
@@ -83,6 +84,14 @@ void SparseBitSet::addToMask(StaticBitSet& m) {
       offset = _index[i];
       _mask[offset] = (_mask[offset] | m[offset]);
    }
+}
+void SparseBitSet::addToMask2(const vector<trail<int>> &v){
+   int offset;
+   for (int i = 0; i <= _limit; i++) {
+      offset = _index[i];
+      _mask[offset] = (_mask[offset] | v[i]);
+   }
+
 }
 void SparseBitSet::addToMaskInt(unsigned int value){  
 	int offset;
@@ -149,4 +158,14 @@ void SparseBitSet::printBits(unsigned int num) {
         printf("%d",str.at(i));
     }
     printf("\n%%%%%% \n");
+}
+
+int SparseBitSet::countOnes(){
+   
+   int count=0;
+   for (int i = 0; i <= _nbWords; i++) {
+      count+=__builtin_popcount(_words[i].value());
+   }
+   return count;
+
 }

@@ -54,6 +54,8 @@ public:
    int max() const override { return _dom->max();}
    int size() const override { return _dom->size();}
    int intialSize() const override { return _dom->initialSize();}
+   int initialMin() const override { return _dom->initialMin();}
+   int initialMax() const override { return _dom->initialMax();}
    bool isBound() const override { return _dom->isBound();}
    bool contains(int v) const override { return _dom->member(v);}
    bool containsBase(int v) const override { return _dom->memberBase(v);}
@@ -96,6 +98,9 @@ public:
    int max() const  override { return - _x->min();}
    int size() const override { return _x->size();}
    int intialSize() const override { return 0;}
+   
+   int initialMin() const override { return 0;}
+   int initialMax() const override { return 0;}
    bool isBound() const override { return _x->isBound();}
    bool contains(int v) const override { return _x->contains(-v);}
    bool changed() const noexcept override  { return _x->changed();}
@@ -144,6 +149,8 @@ public:
    int max() const  override { return _a * _x->max();}
    int size() const override { return _x->size();}
    int intialSize() const override { return 0;}
+   int initialMin() const override { return 0;}
+   int initialMax() const override { return 0;}
    bool isBound() const override { return _x->isBound();}
    bool contains(int v) const override { return (v % _a != 0) ? false : _x->contains(v / _a);}
    bool changed() const noexcept override  { return _x->changed();}
@@ -188,6 +195,9 @@ public:
    int max() const  override { return _o + _x->max();}
    int size() const override { return _x->size();}
    int intialSize() const override { return 0;}
+   int initialMin() const override { return 0;}
+   int initialMax() const override { return 0;}
+   
    bool isBound() const override { return _x->isBound();}
    bool contains(int v) const override { return _x->contains(v - _o);}
    bool changed() const noexcept override  { return _x->changed();}
