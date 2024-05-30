@@ -85,11 +85,11 @@ void SparseBitSet::addToMask(StaticBitSet& m) {
       _mask[offset] = (_mask[offset] | m[offset]);
    }
 }
-void SparseBitSet::addToMask2(const vector<trail<int>> &v){
+void SparseBitSet::addToMaskVector(const vector<trail<int>> &v){
    int offset;
    for (int i = 0; i <= _limit; i++) {
       offset = _index[i];
-      _mask[offset] = (_mask[offset] | v[i]);
+      _mask[offset] = (_mask[offset] | v[i].value());
    }
 
 }
@@ -123,6 +123,15 @@ int SparseBitSet::intersectIndex(StaticBitSet& m) {
    for (int i = 0; i <= _limit; i++) {
       offset = _index[i];
       if ((_words[offset] & m[offset]) != 0)
+         return offset;
+   }
+   return -1;
+}
+int SparseBitSet::intersectIndexSparse(SparseBitSet& m) {
+   int offset;
+   for (int i = 0; i <= _limit; i++) {
+      offset = _index[i];
+      if ((_words[offset] & m[offset].value()) != 0)
          return offset;
    }
    return -1;

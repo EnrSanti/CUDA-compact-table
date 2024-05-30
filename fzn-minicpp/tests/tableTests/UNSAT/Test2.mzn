@@ -3,10 +3,11 @@ include "minicpp.mzn";
 
 var 1..10 : x0;
 var 1..10 : x1;
-var 8..10 : x2;
+var 1..10 : x2;
 
-array [int,int] of 1..10: t = [|1,2,3|3,2,1|4,2,1|5,2,1|];
+array [int,int] of 1..10: t = [|1,2,8|3,2,9|4,2,10|5,2,10|];
 
 constraint table([x0,x1,x2], t) ::uniud;
-
+constraint x2>8;
+constraint x0<3;
 solve satisfy;

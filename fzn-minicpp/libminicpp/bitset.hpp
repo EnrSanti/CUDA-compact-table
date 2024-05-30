@@ -54,10 +54,11 @@ public:
    void clearMask();
    void reverseMask();
    void addToMask(StaticBitSet& m);
-   void addToMask2(const std::vector<trail<int>> &v);
+   void addToMaskVector(const std::vector<trail<int>> &v);
    void addToMaskInt(unsigned int value);
    void intersectWithMask();
    int intersectIndex(StaticBitSet& m);
+   int intersectIndexSparse(SparseBitSet& m) ;
    trail<int>& operator[] (int i) { return _words[i];}
    int operator[] (int i) const { return _words[i].value();}
    void print(int offset);
