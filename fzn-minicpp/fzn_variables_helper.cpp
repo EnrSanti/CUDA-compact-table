@@ -324,10 +324,6 @@ std::vector<var<int>::Ptr> FznVariablesHelper::getArrayIntVars(std::vector<Fzn::
         Fzn::constraint_arg_t const bool_var_id{fzn_array_int_vars_ids.at(i)};
         array_int_vars.at(i) = getIntVar(bool_var_id);
     }
-    //print
-    printf("%%%%%% ----------------- TABLE INFO: -----------------\n");
-    for (auto i = 0; i < array_size; i += 1){
-        printf("%%%%%% min/max[%.*s] = %d..%d\n", fzn_array_int_vars_ids.at(i),array_int_vars.at(i)->min(), array_int_vars.at(i)->max());
-    }
+
     return array_int_vars;
 }

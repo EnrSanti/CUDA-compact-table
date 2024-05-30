@@ -32,10 +32,8 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     _supportOffsetJmp[0]=0;
     for (int i = 1; i < noVars; i++){
         _supportOffsetJmp[i]=_supportOffsetJmp[i-1]+vars[i-1]->size();
-        printf("%%%%%% the var[%d] starts LEH at: %d \n",i,_supportOffsetJmp[i]);
     }
     //pritning support size
-    printf("%%%%%% the support size is: %d \n",_supportSize);
 
     //we allocate and initialize the support bitsets
     _supports=vector<SparseBitSet>(_supportSize,SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),noTuples));
@@ -46,14 +44,6 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
 
     _residues= vector<trail<int>>(_supportSize);
 
-
-    /*
-    printf("%%%%%% the supports will have size (rows): %d \n",_supportSize);
-    for (int i = 0  ; i < noVars; i++){
-         printf("%%%%%% the var[%d] starts at: %d \n",i,_supportOffsetJmp[i]);
-         printf("%%%%%% the var[%d] has initial size %d \n",i,vars[i]->intialSize());
-    }
-    */
 
     //we allocate and initialize the support bitsets
     for (int i = 0; i < _supportSize; i++){
@@ -221,12 +211,11 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
             }
         }
     }
-    print();
+    //print();
 }
 
 void Table::post()
 {
-    printf("%%%%%% Table post called.\n");
     for (auto const & v : _vars){
         v->propagateOnBoundChange(this);
     }
@@ -234,7 +223,6 @@ void Table::post()
 
 void Table::propagate()
 {
-    printf("%%%%%% Table propagation called.\n");
     enfoceGAC();
 
 }
@@ -254,7 +242,6 @@ int getSupportIndex(int var, int value){
 //---------------------------------------------
 
 void Table::updateTable(){
-    printf("%%%%%% updateTable called.\n");
     //forall var x in s_val
     int index=0;
     
@@ -263,7 +250,6 @@ void Table::updateTable(){
         index=_s_val[i];
         if(_deltaXs[index].countOnes() < _vars[index]->size() && 1==0){
             //incremental update
-            printf("%%%%%% incremental update\n");
             /*
 				for (int j = 0; j < deltaXSizes[i]; j++){
 					if(deltaXs[i][j]>domMin && deltaXs[i][j]<domMax){
@@ -283,12 +269,9 @@ void Table::updateTable(){
 				//}
         }else{
             //reset based update
-            printf("%%%%%% reset based update for %d, index is %d\n",i,index);
         
             for (int j = 0; j < _vars[index]->intialSize(); j++){ //todo modifica con getithval 
-                printf("%%%%%% asking whether var[%d] contains %d\n",index,j+_vars[index]->initialMin());
                 if(_vars[index]->contains(j+_vars[index]->initialMin())){                    
-                    printf("%%%%%% var[%d] contains %d\n",index,j+_vars[index]->initialMin());
                     int index_x_a=_supportOffsetJmp[index]+j;
                     _currTable.addToMaskVector(_supports[index_x_a]._words);
                 }
@@ -297,25 +280,14 @@ void Table::updateTable(){
         }
         _currTable.intersectWithMask();
         if(_currTable.isEmpty()){
-            
-            printf("%%%%%% inconsistency detected LEH\n");
-            for (int i = 0; i < 1; i++){
-                printf("%%%%%% Word %d: %u\n",i,_currTable._words[i].value());
-            }
             failNow();
             return;
-		}else{
-            printf("%%%%%% curr LEH\n");
-            for (int i = 0; i < 1; i++){
-                printf("%%%%%% Word %d: %u\n",i,_currTable._words[i].value());
-            }
-        }
+		}
     }
 
 }
 
 void Table::filterDomains(){
-    printf("%%%%%% filterDomains called.\n");
     for(int i=0; i < _s_sup.size(); ++i){
         int index=_s_sup[i];
         for (int j = 0; j < _vars[index]->size(); j++){
@@ -331,7 +303,6 @@ void Table::filterDomains(){
                     if(indexResidue!=-1){
                         _residues[index_x_a].setValue(indexResidue);
                     }else{
-                        printf("%%%%%% removing from var[%d]  %d\n",index,j+_vars[index]->initialMin());
                         _vars[index]->remove(j+_vars[index]->initialMin());                   
                     }
                   
@@ -346,39 +317,12 @@ void Table::filterDomains(){
 }
 
 void Table::enfoceGAC(){
-
-
     //update the table
-    //printing _currTable bits
-    printf("%%%%%% ----------------- CURR TABLE: -----------------\n\n");
-    for (int i = 0; i < _currTable._words.size(); i++){
-        printf("%%%%%% Word %d: %u\n",i,_currTable._words[i].value());
-    }
-
-	printf("\n\n%%%%%% ----------------- VARS enfoceGAC: -----------------\n\n");
-    for (int i = 0; i < _vars.size(); i++){
-        printf("%%%%%% Var %d dump: %d \n",i,_lastVarsValues[i]._words[0].value());
-    }
-    for (int i = 0; i < _vars.size(); i++){
-        //checking the contained values
-        for (int j = 0; j < _vars[i]->intialSize(); j++){
-            if(_vars[i]->contains(j+_vars[i]->initialMin()))
-                printf("%%%%%% Var %d contains? %d: YES\n",i,j+_vars[i]->initialMin());
-            else
-                printf("%%%%%% Var %d contains? %d: NO\n",i,j+_vars[i]->initialMin());
-        }
-    }
-
-
-
-    //update the table
-    //printing s_val 
     _s_val.clear();
     _s_sup.clear();
 	for (int i = 0; i < _vars.size(); i++){
 		//update s_val and the deltas
         if(_vars[i]->changed()){
-            printf("%%%%%% var[%d] changed\n",i);
             _s_val.push_back(i);
             updateDelta(i);
         }
@@ -387,11 +331,7 @@ void Table::enfoceGAC(){
             _s_sup.push_back(i);
         }
 	}
-    printf("%%%%%% s_val size: %d\n",_s_val.size());
-    //printing the s_val
-    for (int i = 0; i < _s_val.size(); i++){
-        printf("%%%%%% s_val[%d]: %d\n",i,_s_val[i]);
-    }
+
 	updateTable();
 	
 	filterDomains();
