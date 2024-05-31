@@ -1,5 +1,5 @@
 #include "table.hpp"
-
+#include <unistd.h>
 Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     Constraint(vars[0]->getSolver()), 
     _vars(vars), _tuples(tuples), 
@@ -16,7 +16,7 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
 
     for (int i = 0; i < noVars; i++){        
         //calculating the number of rows in the support bitset
-        _supportSize+=vars[i]->size();
+        _supportSize+=vars[i]->intialSize();
         //we store the offset
         _variablesOffsets[i]=vars[i]->min();
         //we allocate the delta and lastVarsValues
@@ -33,15 +33,12 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     for (int i = 1; i < noVars; i++){
         _supportOffsetJmp[i]=_supportOffsetJmp[i-1]+vars[i-1]->size();
     }
-    //pritning support size
 
     //we allocate and initialize the support bitsets
     _supports=vector<SparseBitSet>(_supportSize,SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),noTuples));
     _supportsShort=vector<SparseBitSet>(_supportSize,SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),noTuples));
     _supportsMin=vector<SparseBitSet>(_supportSize,SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),noTuples));
     _supportsMax=vector<SparseBitSet>(_supportSize,SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),noTuples));
-   
-
     _residues= vector<trail<int>>(_supportSize);
 
 
@@ -212,6 +209,7 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
         }
     }
     //print();
+    
 }
 
 void Table::post()
@@ -227,14 +225,7 @@ void Table::propagate()
 
 }
 
-//---------------------------------------------
-//---- Aux functions to access the support ----
-//---------------------------------------------
 
-//eg which is the index to access support[x,a]
-int getSupportIndex(int var, int value){
-	return 1;//table->supportOffsetJmp[var]+(value-(table->variablesOffsets[var]));
-}
 
 
 //---------------------------------------------
@@ -251,15 +242,16 @@ void Table::updateTable(){
         if(_deltaXs[index].countOnes() < _vars[index]->size() && 1==0){
             //incremental update
             /*
-				for (int j = 0; j < deltaXSizes[i]; j++){
-					if(deltaXs[i][j]>domMin && deltaXs[i][j]<domMax){
-						int index=getSupportIndex(data,i,deltaXs[i][j]);
-						addToMask(&(data->currTable),data->supportsShort[index].words); 		
-					}
-				}
-				reverseMask(&(data->currTable));
+            printf("incremental update\n");
+            for (int j = 0; j < _vars[index]->intialSize(); j++){ //todo modifica con getithval 
+                if(_deltaXs[index].contains(j)){                    
+                    int index_x_a=_supportOffsetJmp[index]+j;
+                    _currTable.addToMaskVector(_supports[index_x_a]._words);
+                }
+            }    
+			*/
+            _currTable.reverseMask();
 				
-				*/
                 // TODO UNCOMMENT
 				//if(dom(i).minChanged()){
 				//	...	
@@ -269,13 +261,13 @@ void Table::updateTable(){
 				//}
         }else{
             //reset based update
-        
-            for (int j = 0; j < _vars[index]->intialSize(); j++){ //todo modifica con getithval 
-                if(_vars[index]->contains(j+_vars[index]->initialMin())){                    
-                    int index_x_a=_supportOffsetJmp[index]+j;
-                    _currTable.addToMaskVector(_supports[index_x_a]._words);
-                }
-            }            
+            vector<int> dom=_vars[index]->dumpDomainToVec();
+            
+            for (int j = 0; j < dom.size(); j++){ //todo modifica con getithval 
+                int index_x_a=_supportOffsetJmp[index]+dom[j]-_variablesOffsets[index];
+                _currTable.addToMaskVector(_supports[index_x_a]._words);
+            } 
+                       
 
         }
         _currTable.intersectWithMask();
@@ -301,7 +293,7 @@ void Table::filterDomains(){
                     indexResidue=_supports[index_x_a].intersectIndexSparse(_currTable);
                     
                     if(indexResidue!=-1){
-                        _residues[index_x_a].setValue(indexResidue);
+                        _residues[index_x_a].setValue(indexResidue); //ok setVal
                     }else{
                         _vars[index]->remove(j+_vars[index]->initialMin());                   
                     }
@@ -343,7 +335,7 @@ void Table::updateDelta(int i){
     _vars[i]->dumpInSparseBitSet(_vars[i]->min(),_vars[i]->max(),_deltaXs[i]);
     //we calculate the delta by xoring the words
     for (int j = 0; j < _vars[i]->getSizeOfBitSet(); j++){
-        _deltaXs[i]._words[j].setValue(_deltaXs[i]._words[j].value()^_lastVarsValues[i]._words[j].value());
+        _deltaXs[i]._words[j].setValue(_deltaXs[i]._words[j].value()^_lastVarsValues[i]._words[j].value()); //NO
     }
 }
 

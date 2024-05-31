@@ -31,6 +31,7 @@ public:
    virtual bool containsBase(int v) const { return contains(v);}
    virtual void dump(int min, int max, unsigned int * dump) const {throw std::runtime_error("Unsupported opration");};
    virtual void dumpInSparseBitSet(int min, int max, SparseBitSet & dump) const {throw std::runtime_error("Unsupported opration");};
+   virtual std::vector<int> dumpDomainToVec() {throw std::runtime_error("Unsupported opration");};
    virtual const int getSizeOfBitSet() {throw std::runtime_error("Unsupported opration");};
    virtual int getIthVal(int index) const { throw std::runtime_error("Unsupported opration");};
    virtual void assign(int v) = 0;

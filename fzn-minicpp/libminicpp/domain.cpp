@@ -18,7 +18,7 @@
 #include "mathUtils.h"
 #include "bitsUtils.h"
 #include <iostream>
-
+#include "bitset.hpp"
 BitDomain::BitDomain(Trailer::Ptr eng,Storage::Ptr store,int min,int max)
     : _min(eng,min),
       _max(eng,max),
@@ -410,6 +410,65 @@ int BitDomain::getIthVal(int index) const
     }
 
     return _imin + word_idx * 32 + bit_idx;
+}
+
+std::vector<int> BitDomain::dumpToVecOfInts(){
+    std::vector<int> dump=std::vector<int>();
+    int min= _min;
+    int min_dom_offset = _min - _imin;
+    int min_dom_word_idx = min_dom_offset / 32;
+    int min_dom_bit_idx = min_dom_offset % 32;
+    unsigned int min_word_mask = getRightFilledMask32(min_dom_bit_idx);
+    int max_dom_offset = _max - _imin;
+    int max_dom_word_idx = max_dom_offset / 32;
+    int max_dom_bit_idx = max_dom_offset % 32;
+    unsigned int max_word_mask = getLeftFilledMask32(max_dom_bit_idx);
+
+    int dom_dump_offset = _imin - min;
+    int dom_dump_offset_words = dom_dump_offset / 32;
+
+    if(min_dom_word_idx == max_dom_word_idx)
+    {
+        
+        for (int j = min_dom_bit_idx; j < 32; j++){
+            //check if the bit is set
+            if ((_dom[min_dom_word_idx] & min_word_mask & max_word_mask & getMask32(j)) != 0){
+               //add the value to the vector
+                dump.push_back(_imin+min_dom_word_idx * 32 + j);
+            }
+        }
+        
+    }else{
+        for (int j = min_dom_bit_idx; j < 32; j++){
+            //check if the bit is set
+            if ((_dom[min_dom_word_idx] & min_word_mask & getMask32(j)) != 0){
+                //add the value to the vector
+                dump.push_back(_imin+min_dom_word_idx * 32 + j);
+            }
+        }
+       
+        for(int dom_word_idx = min_dom_word_idx + 1; dom_word_idx < max_dom_word_idx; dom_word_idx += 1)
+        {
+            if((_dom[dom_word_idx]) != 0x00000000){
+                for (int j = 0; j < 32; j++){
+                    //check if the bit is set
+                    if ((_dom[dom_word_idx] & getMask32(j)) != 0){
+                        //add the value to the vector
+                        dump.push_back(( _imin+(dom_word_idx-min_dom_word_idx-dom_dump_offset_words) * 32 + j)); 
+                    }
+                }
+            }
+        }
+         for (int j = 0; j < 32; j++){
+            //check if the bit is set
+            if ((_dom[max_dom_word_idx] & max_word_mask & getMask32(j)) != 0){
+                //add the value to the vector
+                dump.push_back(_imin+(max_dom_word_idx) * 32 + j);
+            }
+        }
+    }
+
+    return dump;   
 }
 
 

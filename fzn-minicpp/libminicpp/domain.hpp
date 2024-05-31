@@ -59,6 +59,7 @@ public:
     int getIthVal(int index) const;
     void dump(int min, int max, unsigned int * dump) const;
     void dumpInSparseBitSet(int min, int max, SparseBitSet & dump) const;
+    std::vector<int> dumpToVecOfInts();
     const int getNoWords() {return _words_count;}
     void assign(int v,IntNotifier& x);
     void remove(int v,IntNotifier& x);

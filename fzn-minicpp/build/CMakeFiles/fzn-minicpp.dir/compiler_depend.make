@@ -5322,6 +5322,7 @@ CMakeFiles/fzn-minicpp.dir/global_constraints/table.cpp.o: /home/enry/Desktop/CU
   /usr/include/errno.h \
   /usr/include/features-time64.h \
   /usr/include/features.h \
+  /usr/include/linux/close_range.h \
   /usr/include/linux/errno.h \
   /usr/include/locale.h \
   /usr/include/math.h \
@@ -5333,20 +5334,25 @@ CMakeFiles/fzn-minicpp.dir/global_constraints/table.cpp.o: /home/enry/Desktop/CU
   /usr/include/stdio.h \
   /usr/include/stdlib.h \
   /usr/include/time.h \
+  /usr/include/unistd.h \
   /usr/include/wchar.h \
   /usr/include/wctype.h \
   /usr/include/x86_64-linux-gnu/asm/errno.h \
   /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
   /usr/include/x86_64-linux-gnu/bits/byteswap.h \
+  /usr/include/x86_64-linux-gnu/bits/confname.h \
   /usr/include/x86_64-linux-gnu/bits/cpu-set.h \
   /usr/include/x86_64-linux-gnu/bits/endian.h \
   /usr/include/x86_64-linux-gnu/bits/endianness.h \
+  /usr/include/x86_64-linux-gnu/bits/environments.h \
   /usr/include/x86_64-linux-gnu/bits/errno.h \
   /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
   /usr/include/x86_64-linux-gnu/bits/floatn.h \
   /usr/include/x86_64-linux-gnu/bits/flt-eval-method.h \
   /usr/include/x86_64-linux-gnu/bits/fp-fast.h \
   /usr/include/x86_64-linux-gnu/bits/fp-logb.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_core.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_posix.h \
   /usr/include/x86_64-linux-gnu/bits/iscanonical.h \
   /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
   /usr/include/x86_64-linux-gnu/bits/libm-simd-decl-stubs.h \
@@ -5356,6 +5362,7 @@ CMakeFiles/fzn-minicpp.dir/global_constraints/table.cpp.o: /home/enry/Desktop/CU
   /usr/include/x86_64-linux-gnu/bits/mathcalls-helper-functions.h \
   /usr/include/x86_64-linux-gnu/bits/mathcalls-narrow.h \
   /usr/include/x86_64-linux-gnu/bits/mathcalls.h \
+  /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
   /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
   /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
   /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
@@ -5409,6 +5416,9 @@ CMakeFiles/fzn-minicpp.dir/global_constraints/table.cpp.o: /home/enry/Desktop/CU
   /usr/include/x86_64-linux-gnu/bits/types/wint_t.h \
   /usr/include/x86_64-linux-gnu/bits/typesizes.h \
   /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
+  /usr/include/x86_64-linux-gnu/bits/unistd-decl.h \
+  /usr/include/x86_64-linux-gnu/bits/unistd.h \
+  /usr/include/x86_64-linux-gnu/bits/unistd_ext.h \
   /usr/include/x86_64-linux-gnu/bits/waitflags.h \
   /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
   /usr/include/x86_64-linux-gnu/bits/wchar.h \
@@ -6331,10 +6341,6 @@ CMakeFiles/fzn-minicpp.dir/main.cpp.o: /home/enry/Desktop/CUDA-compact-table\ GI
 
 /usr/include/c++/12/ostream:
 
-/usr/include/c++/12/type_traits:
-
-/usr/include/c++/12/memory:
-
 /usr/include/c++/12/math.h:
 
 /usr/include/c++/12/locale:
@@ -6346,6 +6352,22 @@ CMakeFiles/fzn-minicpp.dir/main.cpp.o: /home/enry/Desktop/CUDA-compact-table\ GI
 /usr/include/c++/12/iostream:
 
 /usr/include/c++/12/iosfwd:
+
+/usr/include/texture_indirect_functions.h:
+
+/usr/include/c++/12/ios:
+
+/usr/include/c++/12/initializer_list:
+
+/usr/include/c++/12/ext/type_traits.h:
+
+/usr/include/c++/12/ext/numeric_traits.h:
+
+/usr/include/c++/12/ext/concurrence.h:
+
+/usr/include/c++/12/tr1/special_function_util.h:
+
+/usr/include/c++/12/ext/alloc_traits.h:
 
 /usr/include/x86_64-linux-gnu/bits/wchar2.h:
 
@@ -6529,8 +6551,6 @@ CMakeFiles/fzn-minicpp.dir/main.cpp.o: /home/enry/Desktop/CUDA-compact-table\ GI
 
 /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h:
 
-/usr/include/c++/12/ext/type_traits.h:
-
 /usr/include/c++/13/ext/numeric_traits.h:
 
 /usr/include/c++/13/bits/stl_iterator.h:
@@ -6606,8 +6626,6 @@ CMakeFiles/fzn-minicpp.dir/main.cpp.o: /home/enry/Desktop/CUDA-compact-table\ GI
 /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h:
 
 /usr/include/c++/13/bits/stl_multimap.h:
-
-/usr/include/c++/12/ext/numeric_traits.h:
 
 /usr/include/c++/13/bits/regex_error.h:
 
@@ -6691,6 +6709,10 @@ CMakeFiles/fzn-minicpp.dir/main.cpp.o: /home/enry/Desktop/CUDA-compact-table\ GI
 
 /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/global_constraints/table.hpp:
 
+/usr/include/c++/12/ext/atomicity.h:
+
+/usr/include/c++/13/bits/locale_classes.tcc:
+
 /usr/include/c++/12/bits/specfun.h:
 
 /usr/include/c++/13/bits/uniform_int_dist.h:
@@ -6748,10 +6770,6 @@ CMakeFiles/fzn-minicpp.dir/main.cpp.o: /home/enry/Desktop/CUDA-compact-table\ GI
 /usr/include/c++/13/bits/locale_facets.h:
 
 /usr/include/c++/12/bits/stl_construct.h:
-
-/usr/include/c++/13/bits/stl_vector.h:
-
-/usr/include/x86_64-linux-gnu/bits/stdlib.h:
 
 /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/libminicpp/handle.hpp:
 
@@ -6857,6 +6875,12 @@ CMakeFiles/fzn-minicpp.dir/main.cpp.o: /home/enry/Desktop/CUDA-compact-table\ GI
 
 /usr/include/x86_64-linux-gnu/bits/struct_mutex.h:
 
+/usr/lib/gcc/x86_64-linux-gnu/12/include/syslimits.h:
+
+/usr/include/c++/12/iomanip:
+
+/usr/include/c++/13/bits/shared_ptr.h:
+
 /usr/include/x86_64-linux-gnu/bits/string_fortified.h:
 
 /usr/include/c++/13/initializer_list:
@@ -6902,6 +6926,8 @@ CMakeFiles/fzn-minicpp.dir/main.cpp.o: /home/enry/Desktop/CUDA-compact-table\ GI
 /usr/include/x86_64-linux-gnu/bits/libc-header-start.h:
 
 /usr/include/c++/13/bits/functexcept.h:
+
+/usr/include/x86_64-linux-gnu/bits/getopt_posix.h:
 
 /usr/include/c++/13/locale:
 
@@ -7133,6 +7159,8 @@ CMakeFiles/fzn-minicpp.dir/main.cpp.o: /home/enry/Desktop/CUDA-compact-table\ GI
 
 /usr/include/c++/13/climits:
 
+/usr/include/x86_64-linux-gnu/bits/posix_opt.h:
+
 /usr/include/c++/13/functional:
 
 /usr/include/asm-generic/errno.h:
@@ -7222,8 +7250,6 @@ CMakeFiles/fzn-minicpp.dir/main.cpp.o: /home/enry/Desktop/CUDA-compact-table\ GI
 /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h:
 
 /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/fzn_constraints/int_misc.cpp:
-
-/usr/include/c++/12/ext/concurrence.h:
 
 /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/fzn_constraints/int_misc.hpp:
 
@@ -7327,7 +7353,41 @@ CMakeFiles/fzn-minicpp.dir/main.cpp.o: /home/enry/Desktop/CUDA-compact-table\ GI
 
 /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/global_constraints/table.cpp:
 
+/usr/include/x86_64-linux-gnu/bits/environments.h:
+
 /usr/include/c++/12/bits/charconv.h:
+
+/usr/include/linux/close_range.h:
+
+/usr/include/unistd.h:
+
+/usr/include/c++/13/bits/stl_vector.h:
+
+/usr/include/x86_64-linux-gnu/bits/stdlib.h:
+
+/usr/include/x86_64-linux-gnu/bits/getopt_core.h:
+
+/usr/include/x86_64-linux-gnu/bits/unistd-decl.h:
+
+/usr/include/c++/12/type_traits:
+
+/usr/include/c++/12/memory:
+
+/usr/include/x86_64-linux-gnu/bits/unistd.h:
+
+/usr/include/c++/12/tr1/bessel_function.tcc:
+
+/usr/include/x86_64-linux-gnu/bits/strings_fortified.h:
+
+/usr/include/c++/12/bits/shared_ptr.h:
+
+/usr/include/x86_64-linux-gnu/bits/unistd_ext.h:
+
+/usr/include/x86_64-linux-gnu/bits/errno.h:
+
+/home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/libminicpp/matrix.hpp:
+
+/usr/include/c++/12/bits/new_allocator.h:
 
 /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/fzn_variables_helper.cpp:
 
@@ -7391,17 +7451,7 @@ CMakeFiles/fzn-minicpp.dir/main.cpp.o: /home/enry/Desktop/CUDA-compact-table\ GI
 
 /usr/include/c++/12/bits/localefwd.h:
 
-/usr/include/x86_64-linux-gnu/bits/errno.h:
-
-/home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/libminicpp/matrix.hpp:
-
-/usr/include/c++/12/bits/new_allocator.h:
-
 /usr/include/c++/12/bits/node_handle.h:
-
-/usr/include/c++/13/bits/locale_classes.tcc:
-
-/usr/include/c++/12/ext/atomicity.h:
 
 /usr/include/c++/13/bits/stl_construct.h:
 
@@ -7410,12 +7460,6 @@ CMakeFiles/fzn-minicpp.dir/main.cpp.o: /home/enry/Desktop/CUDA-compact-table\ GI
 /usr/include/c++/12/bits/range_access.h:
 
 /usr/include/c++/12/bits/refwrap.h:
-
-/usr/include/c++/12/tr1/bessel_function.tcc:
-
-/usr/include/x86_64-linux-gnu/bits/strings_fortified.h:
-
-/usr/include/c++/12/bits/shared_ptr.h:
 
 /usr/include/c++/12/bits/istream.tcc:
 
@@ -7463,6 +7507,8 @@ CMakeFiles/fzn-minicpp.dir/main.cpp.o: /home/enry/Desktop/CUDA-compact-table\ GI
 
 /usr/include/c++/12/bits/stl_vector.h:
 
+/usr/include/x86_64-linux-gnu/bits/confname.h:
+
 /usr/include/c++/12/bits/stringfwd.h:
 
 /usr/include/c++/12/bits/stl_set.h:
@@ -7487,20 +7533,4 @@ CMakeFiles/fzn-minicpp.dir/main.cpp.o: /home/enry/Desktop/CUDA-compact-table\ GI
 
 /usr/include/c++/12/debug/debug.h:
 
-/usr/lib/gcc/x86_64-linux-gnu/12/include/syslimits.h:
-
-/usr/include/c++/13/bits/shared_ptr.h:
-
-/usr/include/c++/12/iomanip:
-
 /usr/include/c++/12/exception:
-
-/usr/include/c++/12/tr1/special_function_util.h:
-
-/usr/include/c++/12/ext/alloc_traits.h:
-
-/usr/include/c++/12/initializer_list:
-
-/usr/include/texture_indirect_functions.h:
-
-/usr/include/c++/12/ios:
