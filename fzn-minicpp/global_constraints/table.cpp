@@ -239,31 +239,33 @@ void Table::updateTable(){
     for(int i=0; i < _s_val.size(); ++i){
         _currTable.clearMask();
         index=_s_val[i];
-        if(_deltaXs[index].countOnes() < _vars[index]->size() && 1==0){
+        if(_deltaXs[index].countOnes() < _vars[index]->size()){
             //incremental update
-            /*
-            printf("incremental update\n");
-            for (int j = 0; j < _vars[index]->intialSize(); j++){ //todo modifica con getithval 
-                if(_deltaXs[index].contains(j)){                    
+            printf("%%%%%% incremental update \n");
+            
+            for (int j = 0; j < _vars[index]->intialSize(); j++){
+                if(_deltaXs[index].getIthBit(j)==1){                    
                     int index_x_a=_supportOffsetJmp[index]+j;
+                    printf("%%%%%% incremental update \n");
                     _currTable.addToMaskVector(_supports[index_x_a]._words);
                 }
             }    
-			*/
+			
             _currTable.reverseMask();
 				
-                // TODO UNCOMMENT
-				//if(dom(i).minChanged()){
-				//	...	
-				//}
-				//if(dom(i).maxChanged()){
-				//	...
-				//}
+            // TODO UNCOMMENT
+            //if(dom(i).minChanged()){
+            //	...	
+            //}
+            //if(dom(i).maxChanged()){
+            //	...
+            //}
         }else{
             //reset based update
+            printf("%%%%%% reset based update \n");
             vector<int> dom=_vars[index]->dumpDomainToVec();
             
-            for (int j = 0; j < dom.size(); j++){ //todo modifica con getithval 
+            for (int j = 0; j < dom.size(); j++){ 
                 int index_x_a=_supportOffsetJmp[index]+dom[j]-_variablesOffsets[index];
                 _currTable.addToMaskVector(_supports[index_x_a]._words);
             } 
@@ -335,7 +337,7 @@ void Table::updateDelta(int i){
     _vars[i]->dumpInSparseBitSet(_vars[i]->min(),_vars[i]->max(),_deltaXs[i]);
     //we calculate the delta by xoring the words
     for (int j = 0; j < _vars[i]->getSizeOfBitSet(); j++){
-        _deltaXs[i]._words[j].setValue(_deltaXs[i]._words[j].value()^_lastVarsValues[i]._words[j].value()); //NO
+        _deltaXs[i]._words[j].setValue(_deltaXs[i]._words[j].value()^_lastVarsValues[i]._words[j].value()); //BEWARE, BROKEN THE DATA STRUCTURE can be replaced with x XOR y = (x AND (NOT y)) OR ((NOT x) AND y)
     }
 }
 

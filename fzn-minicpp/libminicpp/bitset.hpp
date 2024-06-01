@@ -62,7 +62,8 @@ public:
    trail<int>& operator[] (int i) { return _words[i];}
    int operator[] (int i) const { return _words[i].value();}
    void print(int offset);
-   int countOnes();
+   int countOnes(); //"size"
+   int getIthBit(int index);
 };
 
 #endif

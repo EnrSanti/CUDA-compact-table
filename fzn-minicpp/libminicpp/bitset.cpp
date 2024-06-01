@@ -178,3 +178,8 @@ int SparseBitSet::countOnes(){
    return count;
 
 }
+int SparseBitSet::getIthBit(int index){
+   int wordIndex=floor(index/32);
+   int bitIndex=index%32;
+   return (_words[wordIndex].value()>>bitIndex);
+}
