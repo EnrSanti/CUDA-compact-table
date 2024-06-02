@@ -1,18 +1,15 @@
 include "table.mzn";
 include "minicpp.mzn";
 
-var 10..20 : AnohterxNotInTable;
-var 1..10 : x0;
+var 5..6 : x0;
 var 30..50 : x1;
 var 5..50 : x2;
-var 10..20 : xNotInTable;
 
-array [int,int] of 1..50: t = [|1,30,8|2,32,9|4,32,9|2,31,9|4,36,9|5,36,40|];
+constraint x0>5;
+array [int,int] of 1..50: t = [|6,30,8|6,32,9|6,32,9|6,31,9|6,36,9|6,36,40|];
 
 constraint table([x0,x1,x2], t) ::uniud;
-constraint xNotInTable>15;
 constraint x1>35;
 constraint x2>36;
 constraint x2<48;
-constraint x0=5;
 solve satisfy;

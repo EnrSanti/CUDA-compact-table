@@ -20,8 +20,8 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
         //we store the offset
         _variablesOffsets[i]=vars[i]->min();
         //we allocate the delta and lastVarsValues
-        _deltaXs[i]=SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),_vars[i]->size());
-        _lastVarsValues[i]=SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),_vars[i]->size());
+        _deltaXs[i]=SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),_vars[i]->size()+1);
+        _lastVarsValues[i]=SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),_vars[i]->size()+1);
 
         //initialize lastVarsValues
         vars[i]->dumpInSparseBitSet(vars[i]->min(),vars[i]->max(),_lastVarsValues[i]);
@@ -61,112 +61,7 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
                 
                 int offset=_supportOffsetJmp[v]+entryValue;
 
-                //TO UNCOMMENT ONCE ALL ENTRIES ARE IMLPMENTED
-                //we check if it's not a short entry (i.e. has *)
-                /*if(strncmp(var,"*",1)==0){
-                    //supports, supportMin, supportMax we need to set all the var values to 1
-                    //done
-                    for (int varValue = 0; varValue < data.supportSizes[ctr]; varValue++) {
-                        offset=data.supportOffsetJmp[ctr]+varValue;
-                        addToMaskInt(&(data.supports[offset]),constrNo);  
-                        //update supportsMin
-                        addToMaskInt(&(data.supportsMin[offset]),constrNo);  
-                        //update supportsMax
-                        addToMaskInt(&(data.supportsMax[offset]),constrNo);   
-                    }
-                    //supportsShort to 0, so we don't add anything :)
-
-                }else if(strncmp(var,"!=",2)==0){ //if we have a smart entry !=
-                    //done
-                    int entryValue=atoi(var+2)-data.variablesOffsets[ctr]; //we skip over the chars != (no spaces allowed), -varOffset, to retrieve the index of the value on it's domain, i.e. x 4..10, if we write 6 we mean the second possible value of x 
-                    for (int varValue = 0; varValue < entryValue; varValue++) {
-                        offset=data.supportOffsetJmp[ctr]+varValue;
-                        addToMaskInt(&(data.supports[offset]),constrNo);   
-                    }
-                    for (int varValue = entryValue+1; varValue < data.supportSizes[ctr]; varValue++) {
-                        offset=data.supportOffsetJmp[ctr]+varValue;
-                        addToMaskInt(&(data.supports[offset]),constrNo);   
-                    }
-                    //TODO CHECK IF THE LAST VALUE HAS TO BE INCLUDED (i.e. x!=c for supportMin or x!=a for supportMax)
-                    for (int varValue = 0; varValue < data.supportSizes[ctr]; varValue++) {
-                        offset=data.supportOffsetJmp[ctr]+varValue;
-                        //update supportsMin
-                        addToMaskInt(&(data.supportsMin[offset]),constrNo);  
-                        //update supportsMax
-                        addToMaskInt(&(data.supportsMax[offset]),constrNo);   
-                    }
-                    // supportsShort to 0, so we don't add anything :)
-                
-                }else if(strncmp(var,"<=",2)==0){
-
-                    //done
-                    int entryValue=atoi(var+2)-data.variablesOffsets[ctr];
-
-                    for (int varValue = 0; varValue <= entryValue; varValue++) {
-                        offset=data.supportOffsetJmp[ctr]+varValue;
-                        addToMaskInt(&(data.supports[offset]),constrNo);  
-                        //update supportsMin
-                        addToMaskInt(&(data.supportsMin[offset]),constrNo);
-                    }
-
-                    //set supportsMax all to 1
-                    for (int varValue = 0; varValue < data.supportSizes[ctr]; varValue++) {
-                        offset=data.supportOffsetJmp[ctr]+varValue;
-                        //update supportsMax
-                        addToMaskInt(&(data.supportsMax[offset]),constrNo);   
-                    }
-                    // supportsShort to 0, so we don't add anything :)
-
-                }else if(strncmp(var,"<",1)==0){
-                    //done
-                    int entryValue=atoi(var+1)-data.variablesOffsets[ctr];
-
-
-                    for (int varValue = 0; varValue < entryValue; varValue++) {
-                        offset=data.supportOffsetJmp[ctr]+varValue;
-                        addToMaskInt(&(data.supports[offset]),constrNo);  
-                        //update supportsMin
-                        addToMaskInt(&(data.supportsMin[offset]),constrNo);
-                    }
-                    for (int varValue = 0; varValue < data.supportSizes[ctr]; varValue++) {
-                        offset=data.supportOffsetJmp[ctr]+varValue;
-                        //update supportsMax
-                        addToMaskInt(&(data.supportsMax[offset]),constrNo);   
-                    }
-                    // supportsShort to 0, so we don't add anything :)
-                }else if(strncmp(var,">=",2)==0){
-                    //done
-                    int entryValue=atoi(var+2)-data.variablesOffsets[ctr];
-
-                    for (int varValue = entryValue; varValue < data.supportSizes[ctr]; varValue++) {
-                        offset=data.supportOffsetJmp[ctr]+varValue;
-                        addToMaskInt(&(data.supports[offset]),constrNo);  
-                        //update supportsMax
-                        addToMaskInt(&(data.supportsMax[offset]),constrNo);
-                    }       
-                    //set supportsMin all to 1
-                    for (int varValue = 0; varValue < data.supportSizes[ctr]; varValue++) {
-                        offset=data.supportOffsetJmp[ctr]+varValue;
-                        //update supportsMax
-                        addToMaskInt(&(data.supportsMin[offset]),constrNo);   
-                    }
-
-                    // supportsShort to 0, so we don't add anything :)
-                }else if(strncmp(var,">",1)==0){
-                    int entryValue=atoi(var+1)-data.variablesOffsets[ctr];
-                    for (int varValue = entryValue+1; varValue < data.supportSizes[ctr]; varValue++) {
-                        offset=data.supportOffsetJmp[ctr]+varValue;
-                        addToMaskInt(&(data.supports[offset]),constrNo);  
-                        //update supportsMax
-                        addToMaskInt(&(data.supportsMax[offset]),constrNo);
-                    }  
-                    for (int varValue = 0; varValue < data.supportSizes[ctr]; varValue++) {
-                        offset=data.supportOffsetJmp[ctr]+varValue;
-                        //update supportsMin
-                        addToMaskInt(&(data.supportsMin[offset]),constrNo);   
-                    }
-                    // supportsShort to 0, so we don't add anything :)
-                }else{*/
+              
             
                 _supports[offset].addToMaskInt(t+1); 
                 _supportsShort[offset].addToMaskInt(t+1);
@@ -241,9 +136,9 @@ void Table::updateTable(){
     for(int i=0; i < _s_val.size(); ++i){
         _currTable.clearMask();
         index=_s_val[i];
-        if(_deltaXs[index].countOnes() < _vars[index]->size()){
+        if(_deltaXs[index].countOnes() < _vars[index]->size() && 1==0){
             //incremental update
-            printf("%%%%%% incremental update \n");
+            //printf("%%%%%% incremental update \n");
             
             for (int j = 0; j < _vars[index]->intialSize(); j++){
                 if(_deltaXs[index].getIthBit(j)==1){                    
@@ -264,7 +159,7 @@ void Table::updateTable(){
             //}
         }else{
             //reset based update
-            printf("%%%%%% reset based update \n");
+            //printf("%%%%%% reset based update \n");
             vector<int> dom=_vars[index]->dumpDomainToVec();
             
             for (int j = 0; j < dom.size(); j++){ 
