@@ -5,8 +5,13 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     _vars(vars), _tuples(tuples), 
     _currTable(SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),tuples.size())){
     
+
+
+
+    
     int noTuples=tuples.size();
     int noVars=vars.size();
+
     _s_val= vector<int>();
     _s_sup= vector<int>();
     _supportOffsetJmp=vector<int>(noVars);
@@ -50,19 +55,19 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
         _supportsMin[i]=SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),noTuples);
     }
 
+    
 
-
-    for (int t = 0; t < noTuples; t++){
-        for (int v = 0; v < noVars; v++){
-            
+    bool found=false;
+    int tuplesOfSingletons[noVars];
+    for (int v = 0; v < noVars; v++){
+        tuplesOfSingletons[v]=-1;
+        for (int t = 0; t < noTuples; t++){
             if(tuples[t][v]>=_vars[v]->min() && tuples[t][v]<=_vars[v]->max()){
                 //classical entry (we update all the supports in the same way)
                 int entryValue=tuples[t][v]-_variablesOffsets[v];   
                 
                 int offset=_supportOffsetJmp[v]+entryValue;
 
-              
-            
                 _supports[offset].addToMaskInt(t+1); 
                 _supportsShort[offset].addToMaskInt(t+1);
 
@@ -76,7 +81,14 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
                     //update supportsMax
                     _supportsMax[offset].addToMaskInt(t+1);
                 }
+                found=true;
+                tuplesOfSingletons[v]=t;
             }
+        }
+        if (found==false){
+            //printf("%%%%%% EMPTY DOMAIN\n");
+            failNow();
+            return;
         }
     }
     
@@ -105,14 +117,34 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
             }
         }
     }
+   
     //print();
-    
+    //forall vars
+    for (int i = 0; i < noVars; i++){
+        if(_vars[i]->size()==1){
+            if(tuplesOfSingletons[i]==-1){
+                //printf("%%%%%% EMPTY DOMAIN 2\n");
+                failNow();
+                return;
+            }
+            _currTable.addToMaskInt(tuplesOfSingletons[i]+1);
+            _currTable.intersectWithMask();
+            _currTable.clearMask();
+        }
+    }
+    if(_currTable.isEmpty()){
+        //printf("%%%%%% EMPTY DOMAIN 3\n");
+        failNow();
+        return;
+    }
+    //printf("%%%%%% Table after initialization\n");
+    //_currTable.print(0);
 }
 
 void Table::post()
 {
     for (auto const & v : _vars){
-        v->propagateOnBoundChange(this);
+       v->propagateOnBoundChange(this);
     }
 }
 
@@ -138,18 +170,21 @@ void Table::updateTable(){
         index=_s_val[i];
         if(_deltaXs[index].countOnes() < _vars[index]->size() && 1==0){
             //incremental update
-            //printf("%%%%%% incremental update \n");
+            printf("%%%%%% incremental update \n");
             
             for (int j = 0; j < _vars[index]->intialSize(); j++){
-                if(_deltaXs[index].getIthBit(j)==1){                    
+                printf("%%%%%% DELTA %d \n",index);
+                _deltaXs[index].printNoMask(_supportOffsetJmp[index]+j);
+                if(_deltaXs[index].getIthBit(j)==1){               
                     int index_x_a=_supportOffsetJmp[index]+j;
-                    printf("%%%%%% incremental update \n");
                     _currTable.addToMaskVector(_supports[index_x_a]._words);
                 }
             }    
-			
+            printf("%%%%%% BEFORE \n");
+			_currTable.print(0);
             _currTable.reverseMask();
-				
+            printf("%%%%%% AFETR \n");
+			_currTable.print(0);
             // TODO UNCOMMENT
             //if(dom(i).minChanged()){
             //	...	
@@ -160,6 +195,7 @@ void Table::updateTable(){
         }else{
             //reset based update
             //printf("%%%%%% reset based update \n");
+            //_currTable.print(0);
             vector<int> dom=_vars[index]->dumpDomainToVec();
             
             for (int j = 0; j < dom.size(); j++){ 
@@ -171,6 +207,7 @@ void Table::updateTable(){
         }
         _currTable.intersectWithMask();
         if(_currTable.isEmpty()){
+            //printf("%%%%%% Table is empty, backtrack\n");
             failNow();
             return;
 		}
@@ -215,6 +252,7 @@ void Table::enfoceGAC(){
 		//update s_val and the deltas
         if(_vars[i]->changed()){
             _s_val.push_back(i);
+            //printf("%%%%%% Var %d changed UPDATING DELTA\n",i);
             updateDelta(i);
         }
 		//update s_sup
@@ -226,16 +264,21 @@ void Table::enfoceGAC(){
 	updateTable();
 	
 	filterDomains();
+    //print();
 }
 
 
 void Table::updateDelta(int i){
 
     _vars[i]->dumpInSparseBitSet(_vars[i]->min(),_vars[i]->max(),_deltaXs[i]);
+    //printf("%%%%%% this DELTA should be all 1s %d \n",i);
+    //deltaXs[i].printNoMask(0);
     //we calculate the delta by xoring the words
     for (int j = 0; j < _vars[i]->getSizeOfBitSet(); j++){
         _deltaXs[i]._words[j].setValue(_deltaXs[i]._words[j].value()^_lastVarsValues[i]._words[j].value()); //BEWARE, BROKEN THE DATA STRUCTURE can be replaced with x XOR y = (x AND (NOT y)) OR ((NOT x) AND y)
     }
+    //printf("%%%%%% this DELTA contain the changes %d \n",i);
+    //_deltaXs[i].printNoMask(0);
 }
 
 void Table::print(){    

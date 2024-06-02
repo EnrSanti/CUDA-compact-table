@@ -64,6 +64,7 @@ public:
    void print(int offset);
    int countOnes(); //"size"
    int getIthBit(int index);
+   void printNoMask(int offset);
 };
 
 #endif
