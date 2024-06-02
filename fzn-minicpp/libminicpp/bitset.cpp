@@ -21,6 +21,7 @@
 #include <iostream>
 using namespace std;
 using std::vector;
+#define CHECK_BIT(var,pos) ((var) & (1<<(pos)))
 
 StaticBitSet::StaticBitSet(int sz)
    : _sz(sz)
@@ -196,5 +197,8 @@ int SparseBitSet::countOnes(){
 int SparseBitSet::getIthBit(int index){
    int wordIndex=floor(index/32);
    int bitIndex=index%32;
-   return (_words[wordIndex].value()>>bitIndex);
+   if(_words[wordIndex].value() &(1<<(31-bitIndex))){
+      return 1;
+   }
+   return 0;
 }
