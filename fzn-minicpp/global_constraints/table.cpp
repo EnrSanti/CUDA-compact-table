@@ -200,9 +200,11 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
         _supportsMax[i].clearMask();
         
         //we initialize residues
+        bool broken=false;
         for(int j=0; j<noTuples; j++){
-            if(_supports[i]._words[j/bitsPerWord]!=0x00000000){
+            if(_supports[i]._words[j/bitsPerWord].value()!=0x00000000 && !broken){
                 _residues[i]=trail<int>(vars[0]->getSolver()->getStateManager(), j); 
+                broken=true;
             }else{
                 _residues[i]=trail<int>(vars[0]->getSolver()->getStateManager(), 0); 
             }
