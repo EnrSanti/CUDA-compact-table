@@ -13,4 +13,5 @@ constraint table([x0,x1,x2], t) ::uniud;
 
 constraint xNotInTable>15;
 constraint x1>36;
+
 solve satisfy;

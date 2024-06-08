@@ -9,7 +9,7 @@ var 10..33 : xNotInTable;
 
 array [int,int] of 1..100: t = [|1,39,81|2,38,91|4,37,91|];
 
-constraint table([x0,x1,x2], t) ::uniud;
+constraint table([x0,x1,x2], t) :: gpu;
 constraint xNotInTable>15;
 constraint x1>34;
 solve satisfy;

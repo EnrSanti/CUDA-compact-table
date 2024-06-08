@@ -119,12 +119,12 @@ CMakeFiles/fzn-minicpp.dir/all: libfzn/CMakeFiles/libfzn.dir/all
 CMakeFiles/fzn-minicpp.dir/all: libminicpp/CMakeFiles/libminicpp.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/fzn-minicpp.dir/build.make CMakeFiles/fzn-minicpp.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/fzn-minicpp.dir/build.make CMakeFiles/fzn-minicpp.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir="/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/CMakeFiles" --progress-num=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21 "Built target fzn-minicpp"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir="/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/CMakeFiles" --progress-num=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22 "Built target fzn-minicpp"
 .PHONY : CMakeFiles/fzn-minicpp.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/fzn-minicpp.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/CMakeFiles" 45
+	$(CMAKE_COMMAND) -E cmake_progress_start "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/CMakeFiles" 46
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/fzn-minicpp.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start "/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/CMakeFiles" 0
 .PHONY : CMakeFiles/fzn-minicpp.dir/rule
@@ -145,7 +145,7 @@ CMakeFiles/fzn-minicpp.dir/clean:
 libfzn/CMakeFiles/libfzn.dir/all:
 	$(MAKE) $(MAKESILENT) -f libfzn/CMakeFiles/libfzn.dir/build.make libfzn/CMakeFiles/libfzn.dir/depend
 	$(MAKE) $(MAKESILENT) -f libfzn/CMakeFiles/libfzn.dir/build.make libfzn/CMakeFiles/libfzn.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir="/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/CMakeFiles" --progress-num=22,23,24 "Built target libfzn"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir="/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/CMakeFiles" --progress-num=23,24,25 "Built target libfzn"
 .PHONY : libfzn/CMakeFiles/libfzn.dir/all
 
 # Build rule for subdir invocation for target.
@@ -171,7 +171,7 @@ libfzn/CMakeFiles/libfzn.dir/clean:
 libfzn/CMakeFiles/libfzn-demo.dir/all: libfzn/CMakeFiles/libfzn.dir/all
 	$(MAKE) $(MAKESILENT) -f libfzn/CMakeFiles/libfzn-demo.dir/build.make libfzn/CMakeFiles/libfzn-demo.dir/depend
 	$(MAKE) $(MAKESILENT) -f libfzn/CMakeFiles/libfzn-demo.dir/build.make libfzn/CMakeFiles/libfzn-demo.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir="/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/CMakeFiles" --progress-num=25,26 "Built target libfzn-demo"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir="/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/CMakeFiles" --progress-num=26,27 "Built target libfzn-demo"
 .PHONY : libfzn/CMakeFiles/libfzn-demo.dir/all
 
 # Build rule for subdir invocation for target.
@@ -197,7 +197,7 @@ libfzn/CMakeFiles/libfzn-demo.dir/clean:
 libminicpp/CMakeFiles/libminicpp.dir/all:
 	$(MAKE) $(MAKESILENT) -f libminicpp/CMakeFiles/libminicpp.dir/build.make libminicpp/CMakeFiles/libminicpp.dir/depend
 	$(MAKE) $(MAKESILENT) -f libminicpp/CMakeFiles/libminicpp.dir/build.make libminicpp/CMakeFiles/libminicpp.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir="/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/CMakeFiles" --progress-num=27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47 "Built target libminicpp"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir="/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/CMakeFiles" --progress-num=28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48 "Built target libminicpp"
 .PHONY : libminicpp/CMakeFiles/libminicpp.dir/all
 
 # Build rule for subdir invocation for target.
@@ -223,7 +223,7 @@ libminicpp/CMakeFiles/libminicpp.dir/clean:
 libminicpp/CMakeFiles/minicpp-demo.dir/all: libminicpp/CMakeFiles/libminicpp.dir/all
 	$(MAKE) $(MAKESILENT) -f libminicpp/CMakeFiles/minicpp-demo.dir/build.make libminicpp/CMakeFiles/minicpp-demo.dir/depend
 	$(MAKE) $(MAKESILENT) -f libminicpp/CMakeFiles/minicpp-demo.dir/build.make libminicpp/CMakeFiles/minicpp-demo.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir="/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/CMakeFiles" --progress-num=48,49 "Built target minicpp-demo"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir="/home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/build/CMakeFiles" --progress-num=49,50 "Built target minicpp-demo"
 .PHONY : libminicpp/CMakeFiles/minicpp-demo.dir/all
 
 # Build rule for subdir invocation for target.

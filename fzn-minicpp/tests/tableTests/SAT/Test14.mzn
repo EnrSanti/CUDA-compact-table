@@ -14,6 +14,7 @@ constraint table([x1,x2], t2) ::uniud;
 array [int,int] of 1..50: t3 = [|30|31|32|33|];
 constraint table([x1], t3) ::uniud;
 constraint x1<33;
-constraint AnohterxNotInTable=10;
+constraint AnohterxNotInTable>=8;
+constraint AnohterxNotInTable<=8;
 
 solve satisfy;

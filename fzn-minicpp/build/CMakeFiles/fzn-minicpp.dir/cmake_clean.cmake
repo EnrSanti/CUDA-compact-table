@@ -36,6 +36,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/fzn-minicpp.dir/global_constraints/table.cpp.o.d"
   "CMakeFiles/fzn-minicpp.dir/gpu_constriants/cumulative.cu.o"
   "CMakeFiles/fzn-minicpp.dir/gpu_constriants/cumulative.cu.o.d"
+  "CMakeFiles/fzn-minicpp.dir/gpu_constriants/table.cu.o"
+  "CMakeFiles/fzn-minicpp.dir/gpu_constriants/table.cu.o.d"
   "CMakeFiles/fzn-minicpp.dir/main.cpp.o"
   "CMakeFiles/fzn-minicpp.dir/main.cpp.o.d"
   "fzn-minicpp"
