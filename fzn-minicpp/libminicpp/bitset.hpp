@@ -48,7 +48,7 @@ class SparseBitSet {
    void printBits(unsigned int num);
    
 public:
-   std::vector<int>            _index;  // length = nbWords
+std::vector<int>            _index;  // length = nbWords
    trail<int>                  _limit;  //can be put private again
    std::vector<trail<int>>     _words;  // length = nbWords, DO NOT MOFIY DIRECTLY
    SparseBitSet(Trailer::Ptr eng, Storage::Ptr store, int sz);
@@ -57,6 +57,7 @@ public:
    void reverseMask();
    void addToMask(StaticBitSet& m);
    void addToMaskVector(const std::vector<trail<int>> &v);
+   void addToMaskVectorNaive(const std::vector<trail<int>> &v);
    void addToMaskInt(unsigned int value);
    void intersectWithMask();
    int intersectIndex(StaticBitSet& m);

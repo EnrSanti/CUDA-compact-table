@@ -131,6 +131,14 @@ void SparseBitSet::addToMaskVector(const vector<trail<int>> &v){
    }
 
 }
+void SparseBitSet::addToMaskVectorNaive(const vector<trail<int>> &v){
+   int offset;
+   for (int i = 0; i <= _words.size(); i++) {
+      offset = _index[i];
+      _mask[offset] = (_mask[offset] | v[i].value());
+   }
+
+}
 
 void SparseBitSet::addToMaskInt(unsigned int value){  
 	int offset;
@@ -197,8 +205,8 @@ void SparseBitSet::printBits(unsigned int num) {
 int SparseBitSet::countOnes(){
    
    int count=0;
-   for (int i = 0; i <= _limit; i++) { 
-      count+=__builtin_popcount(_words[_index[i]].value()); 
+   for (int i = 0; i <= _nbWords; i++) {
+      count+=__builtin_popcount(_words[i].value());
    }
    return count;
 

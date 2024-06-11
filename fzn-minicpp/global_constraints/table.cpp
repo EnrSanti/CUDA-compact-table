@@ -146,10 +146,6 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
         failNow();
         return;
     }
-    printf("%%%%%% Table after initialization\n");
-    
-     printf("%%%%%% _words.size: %u\n", _currTable._words.size());
-    printf("%%%%%% limit: %u\n", _currTable._limit.value());
 
 }
 
@@ -179,15 +175,13 @@ void Table::updateTable(){
     for(int i=0; i < _s_val.size(); ++i){
         _currTable.clearMask();
         index=_s_val[i];
-        if(_deltaXs[index].countOnes() < _vars[index]->size() && 1==0){//_deltaXs[index].countOnes() < _vars[index]->size()
+        if(_deltaXs[index].countOnes() < _vars[index]->size()){//_deltaXs[index].countOnes() < _vars[index]->size()
             //incremental update
-            //printf("%%%%%% incremental update for var %d\n",index);
-            
+             //print the words of the delta
+          
             for (int j = 0; j < _vars[index]->intialSize(); j++){
-                //printf("%%%%%% deltaXs[%d] contains 1 at pos %d? \n",index,_vars[index]->initialMin()+j);  
-                //_deltaXs[index].printNoMask(_vars[index]->initialMin()+j);
+                //printf("%%%%%% deltaXs[%d] contains 1 at pos %d? ",index,_vars[index]->initialMin()+j);  
                 if(_deltaXs[index].getIthBit(j+_vars[index]->initialMin())==1){     
-       
                     int index_x_a=_supportOffsetJmp[index]+j;
                     _currTable.addToMaskVector(_supports[index_x_a]._words);
                 }
@@ -212,11 +206,8 @@ void Table::updateTable(){
                 _currTable.addToMaskVector(_supports[index_x_a]._words);
             } 
         }
-        printf("%%%%%% in between update table \n");
-        printf("%%%%%% _words.size(): %u\n",_currTable._words.size());
-        printf("%%%%%% limit: %u\n",_currTable._limit.value());
+
         _currTable.intersectWithMask();
-        printf("%%%%%% **************** CurrTable ****************\n");
 
         if(_currTable.isEmpty()){
             //printf("%%%%%% Table is empty, backtrack\n");
@@ -224,9 +215,6 @@ void Table::updateTable(){
             return;
 		}
     }
-    printf("%%%%%% after update table");
-    printf("%%%%%% _words.size(): %u\n",_currTable._words.size());
-    printf("%%%%%% limit: %u\n",_currTable._limit.value());
 
 }
 
@@ -263,12 +251,7 @@ void Table::filterDomains(){
 
 void Table::enfoceGAC(){
     //update the table
-    printf("%%%%%% Enforcing GAC\n");
-    printf("%%%%%% limit: %u\n",_currTable._limit.value());
-    for (int i = 0; i < _currTable._limit.value(); i++)
-    {
-        printf("%%%%%% _index[%d] %d", i,_currTable._index[i]);
-    }
+    
     _s_val.clear();
     _s_sup.clear();
 	for (int i = 0; i < _vars.size(); i++){
@@ -283,8 +266,6 @@ void Table::enfoceGAC(){
             _s_sup.push_back(i);
         }
 	}
-    printf("%%%%%% _words.size(): %u\n",_currTable._words.size());
-    printf("%%%%%% limit: %u\n",_currTable._limit.value());
 	updateTable();
 	
 	filterDomains();
