@@ -299,4 +299,5 @@ CMakeFiles/fzn-minicpp.dir/fzn_constraints_helper.cpp.o: \
  /usr/include/device_types.h /usr/include/driver_types.h \
  /usr/include/vector_types.h /usr/include/surface_types.h \
  /usr/include/texture_types.h /usr/include/cuda_device_runtime_api.h \
- /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/./libgpu/LinearAllocator.cuh
+ /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/./libgpu/LinearAllocator.cuh \
+ /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/gpu_constriants/table.cuh

@@ -2868,6 +2868,7 @@ CMakeFiles/fzn-minicpp.dir/fzn_constraints_helper.cpp.o
  /home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/global_constraints/stable_matching.hpp
  /home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/global_constraints/table.hpp
  /home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/gpu_constriants/cumulative.cuh
+ /home/enry/Desktop/CUDA-compact-table GIT/CUDA-compact-table/fzn-minicpp/gpu_constriants/table.cuh
  /usr/include/alloca.h
  /usr/include/asm-generic/errno-base.h
  /usr/include/asm-generic/errno.h

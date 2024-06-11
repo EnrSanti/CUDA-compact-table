@@ -13,7 +13,7 @@
 #include "global_constraints/table.hpp"
 #include "global_constraints/stable_matching.hpp"
 #include "gpu_constriants/cumulative.cuh"
-
+#include "gpu_constriants/table.cuh"
 using backward_implication_t = std::function<void()>;
 
 FznConstraintHelper::FznConstraintHelper(CPSolver::Ptr solver, FznVariablesHelper & fvh) :
@@ -875,7 +875,7 @@ void FznConstraintHelper::addGlobalConstraintsBuilders()
         }
         else
         {
-            return new (solver) TableCT(x, _t);
+            return new (solver) TableGPU(x, _t);
         }
     });
 

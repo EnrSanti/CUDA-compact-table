@@ -6,8 +6,6 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     _currTable(SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),tuples.size())){
     
 
-
-
     
     int noTuples=tuples.size();
     int noVars=vars.size();
@@ -18,6 +16,9 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     _variablesOffsets=vector<int>(noVars);
     _deltaXs=vector<SparseBitSet>(noVars,SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),0));
     _lastVarsValues=vector<SparseBitSet>(noVars,SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),0));
+
+
+    _currTable=SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),tuples.size());
 
     for (int i = 0; i < noVars; i++){        
         //calculating the number of rows in the support bitset
@@ -57,7 +58,7 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     }
 
     
-
+    
     bool found=false;
     int tuplesOfSingletons[noVars];
     for (int v = 0; v < noVars; v++){
@@ -94,11 +95,13 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
             return;
         }
     }
+    
     _currTable.reverseMask();
     _currTable.intersectWithMask();
     _currTable.clearMask();
-    
 
+    
+    
     int bitsPerWord=32;
 
     for (int i = 0; i < _supportSize; ++i){  
@@ -143,8 +146,11 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
         failNow();
         return;
     }
-    //printf("%%%%%% Table after initialization\n");
-    //_currTable.print(0);
+    printf("%%%%%% Table after initialization\n");
+    
+     printf("%%%%%% _words.size: %u\n", _currTable._words.size());
+    printf("%%%%%% limit: %u\n", _currTable._limit.value());
+
 }
 
 void Table::post()
@@ -173,7 +179,7 @@ void Table::updateTable(){
     for(int i=0; i < _s_val.size(); ++i){
         _currTable.clearMask();
         index=_s_val[i];
-        if(_deltaXs[index].countOnes() < _vars[index]->size()){//_deltaXs[index].countOnes() < _vars[index]->size()
+        if(_deltaXs[index].countOnes() < _vars[index]->size() && 1==0){//_deltaXs[index].countOnes() < _vars[index]->size()
             //incremental update
             //printf("%%%%%% incremental update for var %d\n",index);
             
@@ -206,15 +212,21 @@ void Table::updateTable(){
                 _currTable.addToMaskVector(_supports[index_x_a]._words);
             } 
         }
+        printf("%%%%%% in between update table \n");
+        printf("%%%%%% _words.size(): %u\n",_currTable._words.size());
+        printf("%%%%%% limit: %u\n",_currTable._limit.value());
         _currTable.intersectWithMask();
-        //printf("%%%%%% **************** CurrTable ****************\n");
-        //_currTable.printNoMask(0);
+        printf("%%%%%% **************** CurrTable ****************\n");
+
         if(_currTable.isEmpty()){
             //printf("%%%%%% Table is empty, backtrack\n");
             failNow();
             return;
 		}
     }
+    printf("%%%%%% after update table");
+    printf("%%%%%% _words.size(): %u\n",_currTable._words.size());
+    printf("%%%%%% limit: %u\n",_currTable._limit.value());
 
 }
 
@@ -251,8 +263,12 @@ void Table::filterDomains(){
 
 void Table::enfoceGAC(){
     //update the table
-    //printf("%%%%%% Enforcing GAC\n");
-    //print();
+    printf("%%%%%% Enforcing GAC\n");
+    printf("%%%%%% limit: %u\n",_currTable._limit.value());
+    for (int i = 0; i < _currTable._limit.value(); i++)
+    {
+        printf("%%%%%% _index[%d] %d", i,_currTable._index[i]);
+    }
     _s_val.clear();
     _s_sup.clear();
 	for (int i = 0; i < _vars.size(); i++){
@@ -267,7 +283,8 @@ void Table::enfoceGAC(){
             _s_sup.push_back(i);
         }
 	}
-
+    printf("%%%%%% _words.size(): %u\n",_currTable._words.size());
+    printf("%%%%%% limit: %u\n",_currTable._limit.value());
 	updateTable();
 	
 	filterDomains();

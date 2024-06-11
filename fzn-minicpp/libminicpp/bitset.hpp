@@ -40,15 +40,17 @@ public:
 
 class SparseBitSet {
    
-   std::vector<int>            _index;  // length = nbWords
+   
    std::vector<int>            _mask;   // length = nbWords
-   trail<int>                  _limit;
+   
    int                         _sz;
    int                         _nbWords;
    void printBits(unsigned int num);
    
 public:
-   std::vector<trail<int>>     _words;  // length = nbWords
+   std::vector<int>            _index;  // length = nbWords
+   trail<int>                  _limit;  //can be put private again
+   std::vector<trail<int>>     _words;  // length = nbWords, DO NOT MOFIY DIRECTLY
    SparseBitSet(Trailer::Ptr eng, Storage::Ptr store, int sz);
    bool isEmpty() { return _limit == -1;}
    void clearMask();

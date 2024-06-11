@@ -86,25 +86,7 @@ void SparseBitSet::addToMask(StaticBitSet& m) {
       _mask[offset] = (_mask[offset] | m[offset]);
    }
 }
-void SparseBitSet::addToMaskVector(const vector<trail<int>> &v){
-   int offset;
-   for (int i = 0; i <= _limit; i++) {
-      offset = _index[i];
-      _mask[offset] = (_mask[offset] | v[i].value());
-   }
 
-}
-void SparseBitSet::addToMaskInt(unsigned int value){  
-	int offset;
-   int bitsPerWord=32;
-	unsigned int wordToOr=(unsigned int) 1<<(bitsPerWord-(value%bitsPerWord));
-	int wordIndex=floor(value/bitsPerWord);
-	if(value%bitsPerWord==0){
-		wordIndex--;
-	}
-	offset=_index[wordIndex];
-	_mask[offset]=_mask[offset] | wordToOr;
-}
 void SparseBitSet::intersectWithMask() {
    int offset, w;
    for (int i = _limit; i >= 0; i--) {
@@ -128,7 +110,10 @@ int SparseBitSet::intersectIndex(StaticBitSet& m) {
    }
    return -1;
 }
+
+
 int SparseBitSet::intersectIndexSparse(SparseBitSet& m) {
+
    int offset;
    for (int i = 0; i <= _limit; i++) {
       offset = _index[i];
@@ -136,6 +121,27 @@ int SparseBitSet::intersectIndexSparse(SparseBitSet& m) {
          return offset;
    }
    return -1;
+}
+
+void SparseBitSet::addToMaskVector(const vector<trail<int>> &v){
+   int offset;
+   for (int i = 0; i <= _limit; i++) {
+      offset = _index[i];
+      _mask[offset] = (_mask[offset] | v[offset].value());
+   }
+
+}
+
+void SparseBitSet::addToMaskInt(unsigned int value){  
+	int offset;
+   int bitsPerWord=32;
+	unsigned int wordToOr=(unsigned int) 1<<(bitsPerWord-(value%bitsPerWord));
+	int wordIndex=floor(value/bitsPerWord);
+	if(value%bitsPerWord==0){
+		wordIndex--;
+	}
+	offset=_index[wordIndex];
+	_mask[offset]=_mask[offset] | wordToOr;
 }
 
 void SparseBitSet::print(int offset) {
@@ -149,18 +155,19 @@ void SparseBitSet::print(int offset) {
    }
     for (int i = 0; i <= _limit.value(); i++) {
         printf("%%%%%% [%d] ", i);
-        printBits(_words[i].value());
+        printBits(_words[_index[i]].value());
     }
     if(_limit.value()>=0){
 	    printf("%%%%%% Mask: \n");
 	    for (int i = 0; i <= _limit.value(); i++) {
 	        printf("%%%%%% [%d] ", i);
-	        printBits(_mask[i]);
+	        printBits(_mask[_index[i]]);
 	    }
 	}
 }
 
 void SparseBitSet::printNoMask(int offset) {
+
 
     if(_limit.value()>=0)
     	printf("\n%%%%%% Words (for value %d): \n",offset);
@@ -171,9 +178,10 @@ void SparseBitSet::printNoMask(int offset) {
    }
     for (int i = 0; i <= _limit.value(); i++) {
         printf("%%%%%% [%d] ", i);
-        printBits(_words[i].value());
+        printBits(_words[_index[i]].value());
     }
 }
+
 void SparseBitSet::printBits(unsigned int num) {
     // Extracting each bit of the int and printing it
     //yes rather weird function, but since we need to print %%%%%
@@ -185,15 +193,17 @@ void SparseBitSet::printBits(unsigned int num) {
     printf("\n%%%%%% \n");
 }
 
+
 int SparseBitSet::countOnes(){
    
    int count=0;
-   for (int i = 0; i <= _nbWords; i++) {
-      count+=__builtin_popcount(_words[i].value());
+   for (int i = 0; i <= _limit; i++) { 
+      count+=__builtin_popcount(_words[_index[i]].value()); 
    }
    return count;
 
 }
+//to fix
 int SparseBitSet::getIthBit(int index){
    int wordIndex=floor(index/32);
    int bitIndex=index%32;

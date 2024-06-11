@@ -41,7 +41,7 @@ long* variablesOffsets; //offset of the variables, used in accessing the support
 
 class Table : public Constraint{
     // Constraint private data structures
-    private:
+    protected:
         
         vector<var<int>::Ptr> _vars;
         vector<vector<int>> _tuples;
@@ -57,6 +57,7 @@ class Table : public Constraint{
         
         vector<SparseBitSet>  _deltaXs; //deltaXs[i] is the delta of the ith variable 
         vector<SparseBitSet> _lastVarsValues; //_lastVarsValues[i] is the snapshot of the domain of ith variable at the previous step
+        
         //già l'abbiamo in var[i]->size()
         //int* lastSizes; //current domain size of each var 
 
@@ -67,12 +68,11 @@ class Table : public Constraint{
         //già l'abbiamo in var[i]->InitialSize()
         //vector<long> supportSizes; //for each var the size of it's domain (CONSTANT), the sizes are the actual sizes (i.e. var 5..7: y; has size 3 not 7 as if was starting from 0)
         
-        
         vector<int> _supportOffsetJmp; //for each var the index of the row in "supports" in which such variable starts (CONSTANT)
         
         //c'è in vars[i]->initialMin(); TODO LEVA
         vector<int> _variablesOffsets; //offset of the variables, used in accessing the support rows (not all variables start from 0, eg  90..120, variablesOffsets[i]=90) 
-        
+       //doing things from scratch could have been easier...
     public:
         Table(vector<var<int>::Ptr> & vars,  vector<vector<int>> & tuples);
         void post() override;
