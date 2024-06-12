@@ -174,21 +174,6 @@ void SparseBitSet::print(int offset) {
 	}
 }
 
-void SparseBitSet::printNoMask(int offset) {
-
-
-    if(_limit.value()>=0)
-    	printf("\n%%%%%% Words (for value %d): \n",offset);
-      
-    else{
-    	printf("\n%%%%%% *** Value %d never found in any tuple ***\n",offset);
-      return;
-   }
-    for (int i = 0; i <= _limit.value(); i++) {
-        printf("%%%%%% [%d] ", i);
-        printBits(_words[_index[i]].value());
-    }
-}
 
 void SparseBitSet::printBits(unsigned int num) {
     // Extracting each bit of the int and printing it

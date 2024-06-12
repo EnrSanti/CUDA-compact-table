@@ -246,7 +246,6 @@ void Table::filterDomains(){
         _vars[index]->dumpInSparseBitSet(_vars[index]->min(),_vars[index]->max(),_lastVarsValues[index]);
         //_lastVarsValues[index].printNoMask(0);
     }
-    
 }
 
 void Table::enfoceGAC(){

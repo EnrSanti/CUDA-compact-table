@@ -67,7 +67,6 @@ std::vector<int>            _index;  // length = nbWords
    void print(int offset);
    int countOnes(); //"size"
    int getIthBit(int index);
-   void printNoMask(int offset);
 };
 
 #endif
