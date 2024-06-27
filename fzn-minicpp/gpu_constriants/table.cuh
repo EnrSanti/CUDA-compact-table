@@ -28,11 +28,18 @@ class TableGPU : public Table{
         unsigned int * _vars_dev; //array (matrix) (the domains)
         unsigned int * _currTable_reduction_dev; //array
         int * _output_dev; //pointer
+        int currTableSize;
+        int noVars;
+        int *_vars_host;
+        unsigned int *_currTable_host;
+
     public:
         TableGPU(vector<var<int>::Ptr> & vars,  vector<vector<int>> & tuples);
         void post() override;
         void propagate() override;
         void enfoceGAC();
+        void filterDomains();
+        void print();
 };
 
 __global__ void printGPUdata(int *_supportSize_dev, int *_variablesOffsets_dev,unsigned int *_currTable_dev,unsigned int *_supports_dev,int * _supportOffsetJmp_dev, int* currTable_size_dev);

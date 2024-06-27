@@ -144,6 +144,7 @@ void SparseBitSet::addToMaskInt(unsigned int value){
 	int offset;
    int bitsPerWord=32;
 	unsigned int wordToOr=(unsigned int) 1<<(bitsPerWord-(value%bitsPerWord));
+   
 	int wordIndex=floor(value/bitsPerWord);
 	if(value%bitsPerWord==0){
 		wordIndex--;
