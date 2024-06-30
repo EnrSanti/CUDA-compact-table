@@ -10,7 +10,8 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     int noTuples=tuples.size();
     noVars=vars.size();
     currTableSize=(noTuples/32)+1;
-
+    _noVars_dev=mallocDevice<int>(sizeof(int));
+    cudaMemcpyAsync(_noVars_dev, &noVars, sizeof(int), cudaMemcpyHostToDevice);
     cudaDeviceProp device_prop;
     cudaGetDeviceProperties(&device_prop, 0);
     sm_count = device_prop.multiProcessorCount;
@@ -27,7 +28,7 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     _supports_dev = mallocDevice<unsigned int >(sizeof(unsigned int)*_supportSize*currTableSize);
     _supportSize_dev = mallocDevice<int>(sizeof(int));
     _variablesOffsets_dev = mallocDevice<int>(sizeof(int)*noVars);
-    _supportOffsetJmp_dev = mallocDevice<int>(sizeof(int)*noVars);
+    _supportOffsetJmp_dev = mallocDevice<int>(sizeof(int)*(noVars+1));
     _currTable_size_dev=mallocDevice<int>(sizeof(int));
     _s_val_size_dev=mallocDevice<int>(sizeof(int));
     _offset=mallocDevice<int>(sizeof(int));
@@ -45,7 +46,10 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
 
     //get the vectors to arrays
     for(int i=0;i<_supportSize;i++){
-        _supports_host[i*currTableSize]=_supports[i]._words.data()->value();
+        for(int j=0; j<currTableSize;j++){
+            _supports_host[i*currTableSize+j]=_supports[i]._words[j].value();
+        }
+        
     }
 
     for(int i=0;i<((_supportSize/32)+1);i++){
@@ -67,7 +71,6 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     printf("%%%%%% the vars squished together[0] : %u\n",_vars_host[0]);
             
     //end of could be done better
-
     *_currTable_host=_currTable._words.data()->value();
     
 
@@ -79,33 +82,35 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     //Memory copy
     //cudaMemcpyAsync(_supports_dev, _supports.data(), sizeof(SparseBitSet)*_supportSize, cudaMemcpyHostToDevice);
     //(_currTable_dev, &_currTable, sizeof(SparseBitSet), cudaMemcpyHostToDevice);
+    printf("%%%%%% copying for supportsize: %d, currTableSize %d\n",_supportSize*currTableSize, currTableSize);
+    //printing the supports_hosts
+    for(int i=0;i<_supportSize*currTableSize;i=i+currTableSize){
+        if(i%currTableSize==0)
+            printf("%%%%%% [%d] ", i);
+        for(int j=0;j<currTableSize;j++){
+            printBits(_supports_host[i+j]);
+        }
+        printf("\n");
+    }
     cudaMemcpyAsync(_supports_dev, _supports_host, sizeof(unsigned int)*_supportSize*currTableSize, cudaMemcpyHostToDevice);
     cudaMemcpyAsync(_currTable_dev, _currTable_host, sizeof(unsigned int)*currTableSize, cudaMemcpyHostToDevice);
     cudaMemcpyAsync(_supportSize_dev, &_supportSize, sizeof(int), cudaMemcpyHostToDevice);
     cudaMemcpyAsync(_variablesOffsets_dev, _variablesOffsets.data(), sizeof(int)*noVars, cudaMemcpyHostToDevice);
     cudaMemcpyAsync(_supportOffsetJmp_dev, _supportOffsetJmp.data(), sizeof(int)*noVars, cudaMemcpyHostToDevice);
+    cudaMemcpyAsync(&_supportOffsetJmp_dev[noVars], &_supportSize, sizeof(int), cudaMemcpyHostToDevice);
     cudaMemcpyAsync(_currTable_size_dev, &currTableSize, sizeof(int), cudaMemcpyHostToDevice);
     cudaMemcpyAsync(_vars_dev, _vars_host, sizeof(unsigned int)*((_supportSize/32)+1), cudaMemcpyHostToDevice);
     //printf("%%%%%% After mem cpy\n");
     //printGPUdata<<<1,1>>>(_supportSize_dev,_variablesOffsets_dev,_currTable_dev,_supports_dev,_supportOffsetJmp_dev,_currTable_size_dev);
     //cudaDeviceSynchronize();
 
-
-     //just printint
-    
-    int k=0;
-    int off=0;
-    for(int i=0;i<_supportSize;i++){
-        if(i==_supportOffsetJmp[k]){
-            printf("%%%%%% VAR\n");
-            k++;
-        }
-        for(int j=0;j<currTableSize;j++){
-            //we need to unwrap the bits
-            printf("%%%%%% [%d] ", _variablesOffsets[k]+i);
-            printBits(_supports_host[i*currTableSize+j]);
-        }   
+ 
+    printf("%%%%%% ----------------- CURR TABLE: -----------------\n\n");
+    for (int i = 0; i < _currTable._words.size(); i++){
+        printf("%%%%%% [%d] ", i);
+        printBits(_currTable._words[i].value());
     }
+    printf("%%%%%% --------------------------------------------------------\n");
 }
 void TableGPU::post(){
     //printf("%%%%%% post GPU\n");
@@ -120,7 +125,7 @@ void TableGPU::propagate(){
 
 void TableGPU::enfoceGAC(){
 
-    print();    
+       
     cudaMemcpyAsync(_currTable_dev, _currTable_host, sizeof(unsigned int)*currTableSize, cudaMemcpyHostToDevice);
     //reset var_host
     for(int i=0;i<((_supportSize/32)+1);i++){
@@ -134,11 +139,11 @@ void TableGPU::enfoceGAC(){
             //getting an unsigned int with the 32-dom[j]-_variablesOffsets[i] bit set
             unsigned int mask=1<<31-(dom[j]-_variablesOffsets[i]+_supportOffsetJmp[i]);
             //printing the domain
-            printf("%%%%%% redefining var[%d]: %u \n ",i,mask);
             int starting_word=(dom[j]-_variablesOffsets[i]+_supportOffsetJmp[i])/32;
             _vars_host[starting_word]=_vars_host[starting_word]|mask;
         }
     }
+
     cudaMemcpyAsync(_vars_dev, _vars_host, sizeof(unsigned int)*((_supportSize/32)+1), cudaMemcpyHostToDevice);
     cudaDeviceSynchronize();
             
@@ -159,7 +164,10 @@ void TableGPU::enfoceGAC(){
 	}
     
     int size=_s_val.size();
-    printf("%%%%%% HERE 2 printf sval size: %d, val 0: %d\n",size,_s_val[0]);
+    //printing the s_val
+    for(int i=0;i<size;i++){
+        printf("%%%%%% (changed vars) s_val[%d] = %d\n",i,_s_val[i]);
+    }
     cudaMemcpyAsync(_s_val_size_dev, &size, sizeof(int), cudaMemcpyHostToDevice);
     cudaMemcpyAsync(_s_val_dev, _s_val.data(), sizeof(int)*size, cudaMemcpyHostToDevice);
     int offset=0;
@@ -173,9 +181,18 @@ void TableGPU::enfoceGAC(){
     cudaDeviceSynchronize();
     //printGPUdata<<<1,1>>>(_supportSize_dev,_variablesOffsets_dev,_currTable_dev,_supports_dev,_supportOffsetJmp_dev,_currTable_size_dev);
     //cudaDeviceSynchronize();
+    //for each word of currTable launch a kernel
     
-	updateTableGPU<<<4,32,130*sizeof(unsigned int)>>>(_supports_dev,_s_val_size_dev,_s_val_dev,_supportSize_dev,_variablesOffsets_dev,_supportOffsetJmp_dev,_currTable_dev,_currTable_size_dev,_vars_dev,_currTable_reduction_dev,_output_dev, _offset);
-    
+    printf("%%%%%% currTableSize %d, launching %d blocks\n",currTableSize, (currTableSize/32)+1);
+    //print(); 
+    for(int i=0;i<currTableSize;i++){
+        _currTable_host[i]=_currTable._words[i].value();
+    }
+    cudaMemcpyAsync(_currTable_dev, _currTable_host, sizeof(unsigned int)*currTableSize, cudaMemcpyHostToDevice);
+    cudaDeviceSynchronize();
+    updateTableGPU<<<(currTableSize/32)+1,32,32*sizeof(unsigned int)>>>(_supports_dev,_s_val_size_dev,_s_val_dev,_supportSize_dev,_variablesOffsets_dev,_supportOffsetJmp_dev,_currTable_dev,_currTable_size_dev,_vars_dev,_currTable_reduction_dev,_output_dev, _offset, _noVars_dev);
+
+	
     cudaDeviceSynchronize();
     
     //retrieve the output from the device
@@ -200,13 +217,11 @@ void TableGPU::enfoceGAC(){
         _currTable.intersectWithMask();
         _currTable.clearMask();
         //printing the currTable
+        /*
         for(int i=0;i<currTableSize;i++){
             printf("%%%%%% [%d] ", i);
             printBits(_currTable._words[i].value());
-        }
-        //then we reput the mask on the device
-        cudaMemcpyAsync(_currTable_dev, _currTable_host, sizeof(unsigned int)*currTableSize, cudaMemcpyHostToDevice);
-        cudaDeviceSynchronize();
+        }*/
         if(_currTable.isEmpty()){
             failNow();
             printf("%%%%%% backtrack\n");
@@ -247,135 +262,68 @@ void TableGPU::filterDomains(){
     }
 }
 // 1 th per support row
-__global__ void updateTableGPU(unsigned int* _supports_dev,int * _s_val_size_dev, int *_s_val_dev, int *_supportSize_dev, int *_variablesOffsets_dev, int *_supportOffsetJmp_dev, unsigned int * _currTable_dev,int* _currTable_dev_size, unsigned int* _vars_dev, unsigned int* _currTable_reduction_dev, int* output, int *offset){
- 
+__global__ void updateTableGPU(unsigned int* _supports_dev,int * _s_val_size_dev, int *_s_val_dev, int *_supportSize_dev, int *_variablesOffsets_dev, int *_supportOffsetJmp_dev, unsigned int * _currTable_dev,int* _currTable_dev_size, unsigned int* _vars_dev, unsigned int* _currTable_reduction_dev, int* output, int *offset, int *varNoDev){
 
+
+    int thPos = blockIdx.x * blockDim.x + threadIdx.x; //which currTable word we are considering
+    int varIndex=0;
+    extern __shared__ unsigned int mask[]; //mask (32)
     
-
-    int thPos = blockIdx.x * blockDim.x + threadIdx.x;
-    int varIndex=-1;
-    extern __shared__ unsigned int mask[]; //mask 
     //clear mask TODO MANDATORY
-    mask[0]=0;
+
+    mask[threadIdx.x]=0;
     
-    if(thPos >=* _supportSize_dev){
+    //for each word in my column in supports
+    if(thPos>=*_currTable_dev_size){
         return;
     }
-     
-    
-    
     if(thPos==0){
-        printf("%%%%%% GPU: size: %d \n",*_s_val_size_dev);
-        for(int i=0;i<*_s_val_size_dev;i++){
-            printf("%%%%%% GPU: _s_val_dev[%d] = %d, offset jmp%d\n",i,_s_val_dev[i],_supportOffsetJmp_dev[i]);
-        }
+        printf("%%%%%% GPU th %d BEFORE, table[%d] %u\n",thPos,thPos,_currTable_dev[0]);
+        printf("%%%%%% GPU th %d BEFORE, table[%d] %u\n",thPos,thPos,_currTable_dev[1]);
     }
-    //every th checks which var it will be working on
-    //TODO add check on the size of _s_val_dev oppure non mettere if(_vars[i]->changed()){ e invece che 3 metti _s_val_dev.size()
-    for(int i=0; i<3; i++){ // 3 è var no
-        if(thPos >= _supportOffsetJmp_dev[i]){
-            varIndex++;
-        }else{
-            break;
-        }
-    }
-    int found=0;
-    for(int i=0; i<*_s_val_size_dev; i++){
-        if(varIndex==_s_val_dev[i]){
-            found=1;
-            break;
-        }
-    }
-    if(found==0){
-        return;
-    }
-
-    int thPosScaled=thPos-_supportOffsetJmp_dev[*offset];
-    printf("%%%%%% GPU: thPos %d, varIndex %d\n",thPos,varIndex);
-    //delete printing
-    if(thPosScaled==0){
-        for(int i=0;i<*_currTable_dev_size;i++){
-           
-            printf("\n%%%%%% GPU on  currTable: ");
-            int num=_currTable_dev[i];
-            char str[32] = {'0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0'};
-            for (int i = 31; i >= 0; i--) {
-                str[i] = (num >> i) & 1; 
-                printf("%d",str[i]);
-            }
-            printf("\n%%%%%% \n");
-            //end delete
-    }
-
-    }
-    __syncthreads();
-
-    int index=_s_val_dev[varIndex]; //index tells me which var to access
+    int varNo=0;
     
-    //check just _vars_dev[index]
-    int index_x_a=thPos;
-    //check if the bit at thPos of _vars_dev[index] is set to 1
-    int word=thPos/32;
-    int bit=thPos%32;
-    unsigned int mask2=1<<(31-bit);
-    //printf("%%%%%% i am thread %d and i am checking the bit %d of word %d of var %d, mask %u, the and value %d\n",thPos,bit,word,index,mask2, _vars_dev[word]&mask2);
-    //RESET BASED UPDATE
+    for(int i=0; i<*_s_val_size_dev; i++){
+        varIndex=_s_val_dev[i];
+        int loops=_supportOffsetJmp_dev[varIndex+1]-_supportOffsetJmp_dev[varIndex];    
+        int from=_supportOffsetJmp_dev[varIndex];
+        
+        //printf("%%%%%% GPU th %d var %d from %d to %d\n",thPos,varIndex,from,from+loops);
+        //checking if the var is in s_val
+        for(int j=0; j<loops; j++){
+            int wordIndex=(from+j)/32; //row
+            int maskContains=1<<(31-j-_supportOffsetJmp_dev[varIndex]+wordIndex*32);
 
-    //each th deals with one bit of the word (i.e. one var value in the domain)
-    if ((_vars_dev[word]&mask2)!=0) {
-       // printf("%%%%%% GPU: th %d, var %d, value %d\n",thPos,index,thPos);
-        for(int i=0;i<*_currTable_dev_size;i++){
-            printf("%%%%%% GPU: mask2[%d] = %u, _supports_dev = %u\n",i,mask2,_supports_dev[index_x_a*(*_currTable_dev_size)+i]);
-            atomicOr(&mask[i],_supports_dev[index_x_a*(*_currTable_dev_size)+i]);
-            printf("%%%%%% GPU: mask[%d] = %u\n",i,mask[i]);\
+            //printf("%%%%%% GPU th %d var %d, accessing word %d, maskContains: %u\n",thPos,varIndex,wordIndex, maskContains);
+            //printf("%%%%%% GPU th %d var %d maskContains %u\n",thPos,varIndex,maskContains);
+            if(_vars_dev[wordIndex] & maskContains){ //check if val in domain
+                //printf("%%%%%% GPU INSIDE th %d var %d contains %d\n",thPos,varIndex,j);
+                int off=j*(*_currTable_dev_size)+(_supportOffsetJmp_dev[varIndex]*(*_currTable_dev_size))+threadIdx.x; //1 -> the size of the currTable
+                //printf("%%%%%% GPU INSIDE th %d off %d, _currTable_dev_size: %u,_supportOffsetJmp_dev[varIndex]: %d\n",thPos,off,*_currTable_dev_size,_supportOffsetJmp_dev[varIndex]);
+                mask[threadIdx.x]=mask[threadIdx.x] | _supports_dev[off];
+                //printf("%%%%%% GPU INSIDE th %d mask related to var %d is %u, only the mask %u (accessing %d)\n",thPos,varIndex,mask[threadIdx.x],_supports_dev[off],off);
+            }
+            
+            __syncthreads();
         }
-    } 
-    //the fist th of the block will store the mask in the reduction matrix
-    if(threadIdx.x==0 || thPosScaled==0){ //FIX
-        printf("%%%%%% HEHE GPU th 0 of block %d, printing mask %u\n",blockIdx.x, mask[0]);
-        for(int i=0;i<*_currTable_dev_size;i++){
-            _currTable_reduction_dev[blockIdx.x*(*_currTable_dev_size)+i]=mask[i];
-        }
+        //printing complete mask
+        //printf("%%%%%% GPU th %d complete mask for var %d is %u, table before[%d] %u\n",thPos,varIndex,mask[threadIdx.x],thPos,_currTable_dev[thPos]);
+        _currTable_dev[thPos]=mask[threadIdx.x] & _currTable_dev[thPos];
+        mask[threadIdx.x]=0;
     }
+    
+    //printf("%%%%%% GPU th %d currTable[%d] %d\n",thPos,thPos,_currTable_dev[thPos]);
+    if(threadIdx.x==0){
+        for(int i=0; i<*_supportSize_dev*2; i++){
+            //printf("%%%%%% [%d] %u\n",i,_supports_dev[i]);
+        }
+        //Forall all the vars
+        for(int i=0; i<(*_s_val_size_dev)+1; i++){
+           int k=_supportOffsetJmp_dev[varIndex];
+           //printf("%%%%%% GPU th %d var %d offset %d\n",thPos,i,_supportOffsetJmp_dev[i]);
+        }
 
-    if(thPosScaled==0){
-        printf("%%%%%% GPU on  the vars squished together[0] : %u QUI QUI %d\n",_vars_dev[0],mask[0]);
-        //delete printing 
-        for(int i=0;i<*_currTable_dev_size;i++){
-           
-            printf("\n%%%%%% GPU on currTable: ");
-            int num=_currTable_dev[i];
-            char str[32] = {'0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0'};
-            for (int i = 31; i >= 0; i--) {
-                str[i] = (num >> i) & 1; 
-                printf("%d",str[i]);
-            }
-            printf("\n%%%%%% \n");
-            //end delete
-        }
-        for(int i=0;i<*_currTable_dev_size;i++){
-            for(int j=0; j<4; j++){
-                printf("\n%%%%%% GPU on  _currTable_reduction_dev[%d]: %u", i,_currTable_reduction_dev[j*(*_currTable_dev_size)+i]);
-                mask[i]=mask[i] | _currTable_reduction_dev[j*(*_currTable_dev_size)+i];
-            }
-            _currTable_dev[i] =_currTable_dev[i] & mask[i];
-        }
-        //print mask 0
-        printf("%%%%%% GPU GPU mask[0] HERE: %u\n",mask[0]);
-         //delete printing 
-        for(int i=0;i<*_currTable_dev_size;i++){
-           
-            printf("\n%%%%%% GPU currTable: ");
-            int num=_currTable_dev[i];
-            char str[32] = {'0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0'};
-            for (int i = 31; i >= 0; i--) {
-                str[i] = (num >> i) & 1; 
-                printf("%d",str[i]);
-            }
-            printf("\n%%%%%% \n");
-            //end delete
-        }
-        printf("%%%%%%GPU kernel over");
+        printf("%%%%%% GPU kernel over\n");
         int empty=1;
         for(int i=0;i<*_currTable_dev_size;i++){
             if(_currTable_dev[i]!=0){
@@ -426,7 +374,7 @@ void printBits(unsigned int num) {
         str[i] = (num >> i) & 1; 
         printf("%d",str[i]);
     }
-    printf("\n%%%%%% \n");
+    
 }
 __device__ void printBitsGPU(unsigned int num) {
     // Extracting each bit of the int and printing it
@@ -459,4 +407,5 @@ void TableGPU::print(){
         printf("%%%%%% [%d] ", i);
         printBits(_currTable._words[i].value());
     }
+    printf("%%%%%% --------------------------------------------------------\n");
 }
