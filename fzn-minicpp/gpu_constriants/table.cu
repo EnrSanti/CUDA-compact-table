@@ -35,7 +35,8 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     _s_val_dev=mallocDevice<int>(sizeof(int)*noVars);
     _vars_dev=mallocDevice<unsigned int>(sizeof(unsigned int)*((_supportSize/32)+1)); //matrix
     _currTable_reduction_dev=mallocDevice<unsigned int>(sizeof(unsigned int)*currTableSize*4); //matrix
-    _output_dev=mallocDevice<int>(sizeof(int));
+    _output_dev=mallocDevice<int>(sizeof(int)*(currTableSize/32)+1); //one for each block
+
     //printf("%%%%%% To store %d values i need %d words in my domains\n",_supportSize*currTableSize,((_supportSize/32)+1));
     
     //on host side we create simpler structures to then copy the data
@@ -112,7 +113,7 @@ void TableGPU::propagate(){
 
 void TableGPU::enfoceGAC(){
 
-       
+    int noBlocks=(currTableSize/32)+1;
     cudaMemcpyAsync(_currTable_dev, _currTable_host, sizeof(unsigned int)*currTableSize, cudaMemcpyHostToDevice);
     //reset var_host
     for(int i=0;i<((_supportSize/32)+1);i++){
@@ -138,6 +139,7 @@ void TableGPU::enfoceGAC(){
 
     _s_val.clear();
     _s_sup.clear();
+    int* outputArray=mallocHost<int>(sizeof(int)*noBlocks); 
     int output=0;
 	for (int i = 0; i < _vars.size(); i++){
 		//update s_val and the deltas
@@ -175,14 +177,24 @@ void TableGPU::enfoceGAC(){
     }
     cudaMemcpyAsync(_currTable_dev, _currTable_host, sizeof(unsigned int)*currTableSize, cudaMemcpyHostToDevice);
     cudaDeviceSynchronize();
-    updateTableGPU<<<(currTableSize/32)+1,32,32*sizeof(unsigned int)>>>(_supports_dev,_s_val_size_dev,_s_val_dev,_supportSize_dev,_variablesOffsets_dev,_supportOffsetJmp_dev,_currTable_dev,_currTable_size_dev,_vars_dev,_currTable_reduction_dev,_output_dev, _offset, _noVars_dev);
+    updateTableGPU<<<noBlocks,32,32*sizeof(unsigned int)>>>(_supports_dev,_s_val_size_dev,_s_val_dev,_supportSize_dev,_variablesOffsets_dev,_supportOffsetJmp_dev,_currTable_dev,_currTable_size_dev,_vars_dev,_currTable_reduction_dev,_output_dev, _offset, _noVars_dev);
 
 	
     cudaDeviceSynchronize();
     
     //retrieve the output from the device
-    cudaMemcpyAsync(&output, _output_dev, sizeof(int), cudaMemcpyDeviceToHost);
- 
+    cudaMemcpyAsync(outputArray, _output_dev, sizeof(int)*noBlocks, cudaMemcpyDeviceToHost);
+
+
+    //performed on host, the number of blocks usually is small (e.g. if we have 1280 rows in the table we have 2 blocks)
+    printf("%%%%%% ");
+    for(int i=0; i<noBlocks; i++){
+        if(outputArray[i]==1){
+            output=1;
+            break;
+        }
+    }
+    printf("\n%%%%%% \n");
     if(output==1){
         failNow();
         printf("%%%%%% fail now\n");
@@ -296,24 +308,24 @@ __global__ void updateTableGPU(unsigned int* _supports_dev,int * _s_val_size_dev
     
     //printf("%%%%%% GPU th %d currTable[%d] %d\n",thPos,thPos,_currTable_dev[thPos]);
     if(threadIdx.x==0){
+        /*
         for(int i=0; i<*_supportSize_dev*2; i++){
-            //printf("%%%%%% [%d] %u\n",i,_supports_dev[i]);
+            printf("%%%%%% [%d] %u\n",i,_supports_dev[i]);
         }
         //Forall all the vars
         for(int i=0; i<(*_s_val_size_dev)+1; i++){
            int k=_supportOffsetJmp_dev[varIndex];
-           //printf("%%%%%% GPU th %d var %d offset %d\n",thPos,i,_supportOffsetJmp_dev[i]);
+           printf("%%%%%% GPU th %d var %d offset %d\n",thPos,i,_supportOffsetJmp_dev[i]);
         }
-
+        */
         //printf("%%%%%% GPU kernel over\n");
-        int empty=1;
-        for(int i=0;i<*_currTable_dev_size;i++){
+        for(int i=blockIdx.x*32;i<(blockIdx.x+1)*32;i++){
             if(_currTable_dev[i]!=0){
-                *output=0;
+                output[blockIdx.x]=0;
                 return;
             }
         }
-        *output=1;
+        output[blockIdx.x]=1;
         //printf("%%%%%% GPU fail now GPU\n");
     }
    
