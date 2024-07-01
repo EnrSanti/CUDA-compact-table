@@ -34,6 +34,7 @@ class TableGPU : public Table{
         int *_vars_host;
         int *_offset;
         unsigned int *_currTable_host;
+        int* _outputArray;
 
     public:
         TableGPU(vector<var<int>::Ptr> & vars,  vector<vector<int>> & tuples);

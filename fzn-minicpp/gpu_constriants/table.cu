@@ -43,7 +43,7 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     _currTable_host = mallocHost<unsigned int>(sizeof(unsigned int)*currTableSize); 
     unsigned int *_supports_host = mallocHost<unsigned int>(sizeof(unsigned int)*_supportSize*currTableSize);
     _vars_host=mallocHost<int>(sizeof(unsigned int)*((_supportSize/32)+1)); //matrix
-
+    _outputArray=mallocHost<int>(sizeof(int)*(currTableSize/32)+1); 
 
     //get the vectors to arrays
     for(int i=0;i<_supportSize;i++){
@@ -139,7 +139,7 @@ void TableGPU::enfoceGAC(){
 
     _s_val.clear();
     _s_sup.clear();
-    int* outputArray=mallocHost<int>(sizeof(int)*noBlocks); 
+    
     int output=0;
 	for (int i = 0; i < _vars.size(); i++){
 		//update s_val and the deltas
@@ -183,18 +183,17 @@ void TableGPU::enfoceGAC(){
     cudaDeviceSynchronize();
     
     //retrieve the output from the device
-    cudaMemcpyAsync(outputArray, _output_dev, sizeof(int)*noBlocks, cudaMemcpyDeviceToHost);
+    cudaMemcpyAsync(_outputArray, _output_dev, sizeof(int)*noBlocks, cudaMemcpyDeviceToHost);
 
 
     //performed on host, the number of blocks usually is small (e.g. if we have 1280 rows in the table we have 2 blocks)
-    printf("%%%%%% ");
+
     for(int i=0; i<noBlocks; i++){
-        if(outputArray[i]==1){
+        if(_outputArray[i]==1){
             output=1;
             break;
         }
     }
-    printf("\n%%%%%% \n");
     if(output==1){
         failNow();
         printf("%%%%%% fail now\n");
