@@ -1,0 +1,2 @@
+The test are already in the proper SAT/UNSAT folders (solved with ortools). The instances in "UNCLASSIFIED" they where to big to solve with ortools.
+If you want to generate big instances, comment the code related with the solve of the model in testGenerator
