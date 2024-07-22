@@ -34,7 +34,6 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     _offset=mallocDevice<int>(sizeof(int));
     _s_val_dev=mallocDevice<int>(sizeof(int)*noVars);
     _vars_dev=mallocDevice<unsigned int>(sizeof(unsigned int)*((_supportSize/32)+1)); //matrix
-    _currTable_reduction_dev=mallocDevice<unsigned int>(sizeof(unsigned int)*currTableSize*4); //matrix
     _output_dev=mallocDevice<int>(sizeof(int)*(currTableSize/32)+1); //one for each block
 
     //printf("%%%%%% To store %d values i need %d words in my domains\n",_supportSize*currTableSize,((_supportSize/32)+1));
@@ -177,7 +176,7 @@ void TableGPU::enfoceGAC(){
     }
     cudaMemcpyAsync(_currTable_dev, _currTable_host, sizeof(unsigned int)*currTableSize, cudaMemcpyHostToDevice);
     cudaDeviceSynchronize();
-    updateTableGPU<<<noBlocks,32,32*sizeof(unsigned int)>>>(_supports_dev,_s_val_size_dev,_s_val_dev,_supportSize_dev,_variablesOffsets_dev,_supportOffsetJmp_dev,_currTable_dev,_currTable_size_dev,_vars_dev,_currTable_reduction_dev,_output_dev, _offset, _noVars_dev);
+    updateTableGPU<<<noBlocks,32,32*sizeof(unsigned int)>>>(_supports_dev,_s_val_size_dev,_s_val_dev,_supportSize_dev,_variablesOffsets_dev,_supportOffsetJmp_dev,_currTable_dev,_currTable_size_dev,_vars_dev,_output_dev, _offset, _noVars_dev);
 
 	
     cudaDeviceSynchronize();
@@ -258,7 +257,7 @@ void TableGPU::filterDomains(){
     }
 }
 // 1 th per support row
-__global__ void updateTableGPU(unsigned int* _supports_dev,int * _s_val_size_dev, int *_s_val_dev, int *_supportSize_dev, int *_variablesOffsets_dev, int *_supportOffsetJmp_dev, unsigned int * _currTable_dev,int* _currTable_dev_size, unsigned int* _vars_dev, unsigned int* _currTable_reduction_dev, int* output, int *offset, int *varNoDev){
+__global__ void updateTableGPU(unsigned int* _supports_dev,int * _s_val_size_dev, int *_s_val_dev, int *_supportSize_dev, int *_variablesOffsets_dev, int *_supportOffsetJmp_dev, unsigned int * _currTable_dev,int* _currTable_dev_size, unsigned int* _vars_dev, int* output, int *offset, int *varNoDev){
 
 
     int thPos = blockIdx.x * blockDim.x + threadIdx.x; //which currTable word we are considering
