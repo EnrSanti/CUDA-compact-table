@@ -30,6 +30,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/fzn-minicpp.dir/fzn_variables_helper.cpp.o.d"
   "CMakeFiles/fzn-minicpp.dir/global_constraints/cumulative.cpp.o"
   "CMakeFiles/fzn-minicpp.dir/global_constraints/cumulative.cpp.o.d"
+  "CMakeFiles/fzn-minicpp.dir/global_constraints/smart_table.cpp.o"
+  "CMakeFiles/fzn-minicpp.dir/global_constraints/smart_table.cpp.o.d"
   "CMakeFiles/fzn-minicpp.dir/global_constraints/stable_matching.cpp.o"
   "CMakeFiles/fzn-minicpp.dir/global_constraints/stable_matching.cpp.o.d"
   "CMakeFiles/fzn-minicpp.dir/global_constraints/table.cpp.o"

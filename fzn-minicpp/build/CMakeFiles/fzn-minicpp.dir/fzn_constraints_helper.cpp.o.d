@@ -289,6 +289,7 @@ CMakeFiles/fzn-minicpp.dir/fzn_constraints_helper.cpp.o: \
  /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/./libminicpp/varitf.hpp \
  /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/global_constraints/table.hpp \
  /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/./libminicpp/bitset.hpp \
+ /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/global_constraints/smart_table.hpp \
  /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/global_constraints/stable_matching.hpp \
  /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/gpu_constriants/cumulative.cuh \
  /home/enry/Desktop/CUDA-compact-table\ GIT/CUDA-compact-table/fzn-minicpp/./libfca/Types.hpp \

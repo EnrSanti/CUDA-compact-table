@@ -541,6 +541,30 @@ global_constraints/cumulative.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/fzn-minicpp.dir/build.make CMakeFiles/fzn-minicpp.dir/global_constraints/cumulative.cpp.s
 .PHONY : global_constraints/cumulative.cpp.s
 
+global_constraints/smart_table.o: global_constraints/smart_table.cpp.o
+.PHONY : global_constraints/smart_table.o
+
+# target to build an object file
+global_constraints/smart_table.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/fzn-minicpp.dir/build.make CMakeFiles/fzn-minicpp.dir/global_constraints/smart_table.cpp.o
+.PHONY : global_constraints/smart_table.cpp.o
+
+global_constraints/smart_table.i: global_constraints/smart_table.cpp.i
+.PHONY : global_constraints/smart_table.i
+
+# target to preprocess a source file
+global_constraints/smart_table.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/fzn-minicpp.dir/build.make CMakeFiles/fzn-minicpp.dir/global_constraints/smart_table.cpp.i
+.PHONY : global_constraints/smart_table.cpp.i
+
+global_constraints/smart_table.s: global_constraints/smart_table.cpp.s
+.PHONY : global_constraints/smart_table.s
+
+# target to generate assembly for a file
+global_constraints/smart_table.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/fzn-minicpp.dir/build.make CMakeFiles/fzn-minicpp.dir/global_constraints/smart_table.cpp.s
+.PHONY : global_constraints/smart_table.cpp.s
+
 global_constraints/stable_matching.o: global_constraints/stable_matching.cpp.o
 .PHONY : global_constraints/stable_matching.o
 
@@ -719,6 +743,9 @@ help:
 	@echo "... global_constraints/cumulative.o"
 	@echo "... global_constraints/cumulative.i"
 	@echo "... global_constraints/cumulative.s"
+	@echo "... global_constraints/smart_table.o"
+	@echo "... global_constraints/smart_table.i"
+	@echo "... global_constraints/smart_table.s"
 	@echo "... global_constraints/stable_matching.o"
 	@echo "... global_constraints/stable_matching.i"
 	@echo "... global_constraints/stable_matching.s"
