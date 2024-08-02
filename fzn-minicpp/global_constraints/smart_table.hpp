@@ -1,25 +1,48 @@
 #pragma once
 
 #include <libminicpp/varitf.hpp>
-
+using namespace std;
 class SmartTable : public Constraint {
 
     // Constraint private data structures
     protected:
-        std::vector<var<int>::Ptr> & _x;
-        std::vector<std::vector<int>> const & _t;
-        std::vector<std::vector<int>> const & _sto;
-        // Examples:
+        vector<var<int>::Ptr> & _vars;
+        vector<std::vector<int>> & _tuples;
+        vector<std::vector<int>>  & _signs;
+        
 
-        // Backtrackable int vector
 
-        //std::vector<trail<int>> biv;
+        SparseBitSet _currTable; 
+
+        int _supportSize; //the length (no of rows) of the supports bitset (CONSTANT)
+
+        vector<SparseBitSet> _supports; //table of which values for each variable are required in a constraint
+        vector<SparseBitSet> _supportsShort;
+        
+        vector<SparseBitSet>  _deltaXs; //deltaXs[i] is the delta of the ith variable 
+        vector<SparseBitSet> _lastVarsValues; //_lastVarsValues[i] is the snapshot of the domain of ith variable at the previous step
+        
+        //già l'abbiamo in var[i]->size()
+        //int* lastSizes; //current domain size of each var 
+
+        vector<int> _s_val; //indexes of the vars not yet instanciated whose domain changed from last iteration (could be replaced by a bitset)
+        vector<int> _s_sup; //indexes of the vars not yet inst. with at least one value in their domain for which no support has yet been found (could be replaced by a bitset)
+        vector<trail<int>> _residues; 
+
+        //già l'abbiamo in var[i]->InitialSize()
+        //vector<long> supportSizes; //for each var the size of it's domain (CONSTANT), the sizes are the actual sizes (i.e. var 5..7: y; has size 3 not 7 as if was starting from 0)
+        
+        vector<int> _supportOffsetJmp; //for each var the index of the row in "supports" in which such variable starts (CONSTANT)
+        
+        //c'è in vars[i]->initialMin(); 
+        vector<int> _variablesOffsets; //offset of the variables, used in accessing the support rows (not all variables start from 0, eg  90..120, variablesOffsets[i]=90) 
+       //doing things from scratch could have been easier...
 
     public:
 
-        SmartTable(std::vector<var<int>::Ptr> & x,  std::vector<std::vector<int>> const & t, std::vector<std::vector<int>> const & sto);
+        SmartTable(vector<var<int>::Ptr> & vars,  vector<std::vector<int>> & tuples, vector<std::vector<int>> & signs);
         void post() override;
         void propagate() override;
-
+    private:
+        void intializeTable(int, int);
 };
-

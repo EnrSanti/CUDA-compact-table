@@ -155,24 +155,30 @@ void SparseBitSet::addToMaskInt(unsigned int value){
 
 void SparseBitSet::print(int offset) {
 
-    if(_limit.value()>=0)
+   //if(_limit.value()>=0)
     	printf("\n%%%%%% Words (for value %d): \n",offset);
       
-    else{
-    	printf("\n%%%%%% *** Value %d never found in any tuple ***\n",offset);
-      return;
+   // else{
+   // 	printf("\n%%%%%% *** Value %d never found in any tuple ***\n",offset);
+   //   return;
+   // }
+   for (int i = 0; i <= _limit.value(); i++) {
+      printf("%%%%%% [%d] ", i);
+      printBits(_words[_index[i]].value());
    }
-    for (int i = 0; i <= _limit.value(); i++) {
-        printf("%%%%%% [%d] ", i);
-        printBits(_words[_index[i]].value());
-    }
-    if(_limit.value()>=0){
-	    printf("%%%%%% Mask: \n");
-	    for (int i = 0; i <= _limit.value(); i++) {
-	        printf("%%%%%% [%d] ", i);
-	        printBits(_mask[_index[i]]);
-	    }
-	}
+   if(_limit.value()==-1){
+      printf("%%%%%% [%d] ", 0);
+      printBits(0);
+   }
+   /*
+   if(_limit.value()>=0){
+      printf("%%%%%% Mask: \n");
+      for (int i = 0; i <= _limit.value(); i++) {
+         printf("%%%%%% [%d] ", i);
+         printBits(_mask[_index[i]]);
+      }
+   }  
+   */
 }
 
 

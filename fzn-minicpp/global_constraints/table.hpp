@@ -51,9 +51,6 @@ class Table : public Constraint{
         int _supportSize; //the length (no of rows) of the supports bitset (CONSTANT)
 
         vector<SparseBitSet> _supports; //table of which values for each variable are required in a constraint
-        vector<SparseBitSet> _supportsShort; //additional bitset to deal with short tables, bitset value to 1 iff (x,a) strictly accepted by the i-th tuple     //(in the paper they are supports*)
-        vector<SparseBitSet> _supportsMin; //additional bitset to deal with <= and < (smart tables)
-        vector<SparseBitSet> _supportsMax; //additional bitset to deal with >= and > (smart tables)
         
         vector<SparseBitSet>  _deltaXs; //deltaXs[i] is the delta of the ith variable 
         vector<SparseBitSet> _lastVarsValues; //_lastVarsValues[i] is the snapshot of the domain of ith variable at the previous step
@@ -70,7 +67,7 @@ class Table : public Constraint{
         
         vector<int> _supportOffsetJmp; //for each var the index of the row in "supports" in which such variable starts (CONSTANT)
         
-        //c'è in vars[i]->initialMin(); TODO LEVA
+        //c'è in vars[i]->initialMin();
         vector<int> _variablesOffsets; //offset of the variables, used in accessing the support rows (not all variables start from 0, eg  90..120, variablesOffsets[i]=90) 
        //doing things from scratch could have been easier...
     public:

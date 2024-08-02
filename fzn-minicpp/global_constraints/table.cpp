@@ -43,18 +43,12 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
 
     //we allocate and initialize the support bitsets
     _supports=vector<SparseBitSet>(_supportSize,SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),noTuples));
-    _supportsShort=vector<SparseBitSet>(_supportSize,SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),noTuples));
-    _supportsMin=vector<SparseBitSet>(_supportSize,SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),noTuples));
-    _supportsMax=vector<SparseBitSet>(_supportSize,SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),noTuples));
     _residues= vector<trail<int>>(_supportSize);
 
 
     //we allocate and initialize the support bitsets
     for (int i = 0; i < _supportSize; i++){
         _supports[i]=SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),noTuples);//the content doesn't make sense yet, later we need to update the mask and intersect it
-        _supportsShort[i]=SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),noTuples);
-        _supportsMax[i]=SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),noTuples);
-        _supportsMin[i]=SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),noTuples);
     }
 
     
@@ -71,18 +65,7 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
                 int offset=_supportOffsetJmp[v]+entryValue;
 
                 _supports[offset].addToMaskInt(t+1); 
-                _supportsShort[offset].addToMaskInt(t+1);
 
-                for (int varValue = 0; varValue <= entryValue; varValue++) {
-                    offset=_supportOffsetJmp[v]+varValue;
-                    //update supportsMin
-                    _supportsMin[offset].addToMaskInt(t+1);  
-                }
-                for (int varValue = entryValue; varValue < vars[v]->intialSize(); varValue++) {
-                    offset=_supportOffsetJmp[v]+varValue;
-                    //update supportsMax
-                    _supportsMax[offset].addToMaskInt(t+1);
-                }
                 found=true;
                 tuplesOfSingletons[v]=t;
             }else{
@@ -106,14 +89,8 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
 
     for (int i = 0; i < _supportSize; ++i){  
         _supports[i].intersectWithMask();
-        _supportsShort[i].intersectWithMask();
-        _supportsMin[i].intersectWithMask();
-        _supportsMax[i].intersectWithMask();
 
         _supports[i].clearMask();
-        _supportsShort[i].clearMask();
-        _supportsMin[i].clearMask();
-        _supportsMax[i].clearMask();
         
         //we initialize residues
         bool broken=false;
