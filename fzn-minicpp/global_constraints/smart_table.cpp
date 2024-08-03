@@ -77,10 +77,9 @@ void SmartTable::intializeTable(int noVars,int noTuples){
         tuplesOfSingletons[v]=-1;
         for (int t = 0; t < noTuples; t++){
 
-            if(_tuples[t][v]>=_vars[v]->min() && _tuples[t][v]<=_vars[v]->max()){
+            //if we have a * or an entry that is in the domain of the variable, we need to update the supports
+            if(_vars[v]->contains(_tuples[t][v])){
                 //classical entry (we update all the supports in the same way)
-                
-
                 if(_signs[t][v]==SmartTableOp::All){
                     printf("%%%%%% signs star: %d %d\n",t,v);
                     //set all the bits for the variable in support
@@ -99,8 +98,6 @@ void SmartTable::intializeTable(int noVars,int noTuples){
                 }
                 
 
-                
-
                 /*
                 for (int varValue = 0; varValue <= entryValue; varValue++) {
                     offset=_supportOffsetJmp[v]+varValue;
@@ -115,7 +112,17 @@ void SmartTable::intializeTable(int noVars,int noTuples){
                 found=true;
                 tuplesOfSingletons[v]=t;
             }else{
-                _currTable.addToMaskInt(t+1);
+                if(_signs[t][v]==SmartTableOp::All){
+                    //set all the bits for the variable in support
+                    int offset=_supportOffsetJmp[v];
+                    for(int i=0; i<_vars[v]->intialSize(); i++){
+                        _supports[offset+i].addToMaskInt(t+1);
+                        //don't set anything for supportsShort
+                    }
+                    //don't set anything for supportsShort
+                }else{
+                    _currTable.addToMaskInt(t+1);
+                }
             }
         }
         if (found==false){
@@ -191,18 +198,138 @@ void SmartTable::intializeTable(int noVars,int noTuples){
     }
 }
 void SmartTable::post(){
-
     for (auto const & v : _vars){
-        // v->propagateOnBoundChange(this);
-        // v->whenBoundsChange([this, v] {v->removeAbove(0);});
+       v->propagateOnBoundChange(this);
     }
-
-    propagate();
-
 }
 
 void SmartTable::propagate(){
-    printf("%%%%%% Smart Table propagation called.\n");
-    // Implement the propagation logic
+    enfoceGAC();
+}
 
+
+
+//---------------------------------------------
+//------- The three functions of alg. 2 -------
+//---------------------------------------------
+
+void SmartTable::updateTable(){
+    //forall var x in s_val
+    int index=0;
+    
+    for(int i=0; i < _s_val.size(); ++i){
+        _currTable.clearMask();
+        index=_s_val[i];
+        if(_deltaXs[index].countOnes() < _vars[index]->size()){//_deltaXs[index].countOnes() < _vars[index]->size()
+            //incremental update
+             //print the words of the delta
+          
+            for (int j = 0; j < _vars[index]->intialSize(); j++){
+                //printf("%%%%%% deltaXs[%d] contains 1 at pos %d? ",index,_vars[index]->initialMin()+j);  
+                if(_deltaXs[index].getIthBit(j+_vars[index]->initialMin())==1){     
+                    int index_x_a=_supportOffsetJmp[index]+j;
+                    _currTable.addToMaskVector(_supportsShort[index_x_a]._words);
+                }
+            }    
+
+            _currTable.reverseMask();
+
+            // TODO UNCOMMENT
+            //if(dom(i).minChanged()){
+            //	...	
+            //}
+            //if(dom(i).maxChanged()){
+            //	...
+            //}
+        }else{
+            //reset based update
+            //printf("%%%%%% reset based update \n");
+            vector<int> dom=_vars[index]->dumpDomainToVec();
+            
+            for (int j = 0; j < dom.size(); j++){ 
+                int index_x_a=_supportOffsetJmp[index]+dom[j]-_variablesOffsets[index];
+                _currTable.addToMaskVector(_supports[index_x_a]._words);
+            } 
+        }
+
+        _currTable.intersectWithMask();
+
+        if(_currTable.isEmpty()){
+            //printf("%%%%%% Table is empty, backtrack\n");
+            failNow();
+            return;
+		}
+    }
+
+}
+
+void SmartTable::filterDomains(){
+    for(int i=0; i < _s_sup.size(); ++i){
+        int index=_s_sup[i];
+        //printf("%%%%%% filtering domain for var %d\n",index);
+        for (int j = 0; j < _vars[index]->size(); j++){
+            if(_vars[index]->contains(j+_vars[index]->initialMin())){ //i.e. a \in dom(x)
+
+                int index_x_a=_supportOffsetJmp[index]+j;
+                int indexResidue=_residues[index_x_a].value();
+
+                if((_currTable._words[indexResidue] & _supports[index_x_a]._words[indexResidue] ) == 0x00000000){
+                
+                    indexResidue=_supports[index_x_a].intersectIndexSparse(_currTable);
+                    
+                    if(indexResidue!=-1){
+                        _residues[index_x_a].setValue(indexResidue); //ok setVal
+                    }else{
+                        _vars[index]->remove(j+_vars[index]->initialMin());                   
+                    }
+                  
+                }
+                
+            }
+        }
+        //printf("%%%%%% new domain for var %d\n",index);
+        _vars[index]->dumpInSparseBitSet(_vars[index]->min(),_vars[index]->max(),_lastVarsValues[index]);
+        //_lastVarsValues[index].printNoMask(0);
+    }
+}
+
+void SmartTable::enfoceGAC(){
+    //update the table
+    
+    _s_val.clear();
+    _s_sup.clear();
+	for (int i = 0; i < _vars.size(); i++){
+		//update s_val and the deltas
+        if(_vars[i]->changed()){
+            _s_val.push_back(i);
+            //printf("%%%%%% Var %d changed UPDATING DELTA\n",i);
+            updateDelta(i);
+        }
+		//update s_sup
+        if(_vars[i]->size()>1){
+            _s_sup.push_back(i);
+        }
+	}
+	updateTable();
+	
+	filterDomains();
+    
+}
+
+
+void SmartTable::updateDelta(int i){
+
+    _vars[i]->dumpInSparseBitSet(_vars[i]->min(),_vars[i]->max(),_deltaXs[i]);
+    /*
+    printf("%%%%%% curr domain for var %d \n",i);
+    _deltaXs[i].printNoMask(0);
+    printf("%%%%%% last var values for var %d \n",i);
+    _lastVarsValues[i].printNoMask(0);
+    */
+    //we calculate the delta by xoring the words
+    for (int j = 0; j < _vars[i]->getSizeOfBitSet(); j++){
+        _deltaXs[i]._words[j].setValue(_deltaXs[i]._words[j].value()^_lastVarsValues[i]._words[j].value()); //BEWARE, BROKEN THE DATA STRUCTURE can be replaced with x XOR y = (x AND (NOT y)) OR ((NOT x) AND y)
+    }
+    //printf("%%%%%% this DELTA contain the changes %d \n",i);
+    //_deltaXs[i].printNoMask(0);
 }

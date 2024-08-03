@@ -2,13 +2,16 @@
 
 #include <libminicpp/varitf.hpp>
 using namespace std;
+
+
 class SmartTable : public Constraint {
 
     // Constraint private data structures
     protected:
-        vector<var<int>::Ptr> & _vars;
-        vector<std::vector<int>> & _tuples;
-        vector<std::vector<int>>  & _signs;
+
+        vector<var<int>::Ptr> _vars;
+        vector<std::vector<int>> _tuples;
+        vector<std::vector<int>> _signs;
         
 
 
@@ -39,10 +42,14 @@ class SmartTable : public Constraint {
        //doing things from scratch could have been easier...
 
     public:
-
         SmartTable(vector<var<int>::Ptr> & vars,  vector<std::vector<int>> & tuples, vector<std::vector<int>> & signs);
         void post() override;
         void propagate() override;
     private:
         void intializeTable(int, int);
+        void enfoceGAC();
+        void filterDomains();
+        void updateDelta(int);
+        void updateTable();
+        
 };
