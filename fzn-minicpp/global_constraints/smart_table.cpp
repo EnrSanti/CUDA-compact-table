@@ -6,9 +6,7 @@ SmartTable::SmartTable(vector<var<int>::Ptr> & vars,  vector<vector<int>> & tupl
     Constraint(vars[0]->getSolver()), _vars(vars), _tuples(tuples), _signs(signs), _currTable(SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),tuples.size())){
 
     setPriority(CLOW);
-    
-
-    
+        
     int noTuples=_tuples.size();
     int noVars=_vars.size();
 
@@ -56,14 +54,14 @@ SmartTable::SmartTable(vector<var<int>::Ptr> & vars,  vector<vector<int>> & tupl
     //we allocate and initialize the supports bitsets
 
     _supportsShort=vector<SparseBitSet>(_supportSize,SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),noTuples));
-    //_supportsMin=vector<SparseBitSet>(_supportSize,SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),noTuples));
-    //_supportsMax=vector<SparseBitSet>(_supportSize,SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),noTuples));
+    _supportsMin=vector<SparseBitSet>(_supportSize,SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),noTuples));
+    _supportsMax=vector<SparseBitSet>(_supportSize,SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),noTuples));
    
     //we allocate and initialize the support bitsets
     for (int i = 0; i < _supportSize; i++){
         _supportsShort[i]=SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),noTuples);
-        //_supportsMax[i]=SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),noTuples);
-        //_supportsMin[i]=SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),noTuples);
+        _supportsMax[i]=SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),noTuples);
+        _supportsMin[i]=SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),noTuples);
     }
 
     intializeTable(noVars,noTuples);
@@ -79,49 +77,68 @@ void SmartTable::intializeTable(int noVars,int noTuples){
 
             //if we have a * or an entry that is in the domain of the variable, we need to update the supports
             if(_vars[v]->contains(_tuples[t][v])){
-                //classical entry (we update all the supports in the same way)
-                if(_signs[t][v]==SmartTableOp::All){
-                    printf("%%%%%% signs star: %d %d\n",t,v);
-                    //set all the bits for the variable in support
-                    int offset=_supportOffsetJmp[v];
-                    for(int i=0; i<_vars[v]->intialSize(); i++){
-                        _supports[offset+i].addToMaskInt(t+1);
+                switch(_signs[t][v]) {
+                //* entry (we update all the supports in the same way)                
+                    case SmartTableOp::All:{
+                        printf("%%%%%% signs star: %d %d\n",t,v);
+
+                        //set all the bits for the variable in support
+                        int offset=_supportOffsetJmp[v];
+                        for(int i=0; i<_vars[v]->intialSize(); i++){
+                            _supports[offset+i].addToMaskInt(t+1);
+                            _supportsMax[offset+i].addToMaskInt(t+1);
+                            _supportsMin[offset+i].addToMaskInt(t+1);
+                            //don't set anything for supportsShort
+                        }
                         //don't set anything for supportsShort
+                        break;
                     }
-                    //don't set anything for supportsShort
-                }else{
-                    int entryValue=_tuples[t][v]-_variablesOffsets[v];   
-                    int offset=_supportOffsetJmp[v]+entryValue;
-                    //if it's not a *, add one bit to both supports
-                    _supports[offset].addToMaskInt(t+1); 
-                    _supportsShort[offset].addToMaskInt(t+1);
+                    //classical entry
+                    default:{
+                        int entryValue=_tuples[t][v]-_variablesOffsets[v];   
+                        int offset=_supportOffsetJmp[v]+entryValue;
+                        //if it's not a *, add one bit to both supports
+                        _supports[offset].addToMaskInt(t+1); 
+                        _supportsShort[offset].addToMaskInt(t+1);
+
+                        //if the value is not the maximum we need to set the bits in supportsMin
+                        for(int i=0; i<_vars[v]->intialSize()-entryValue; i++){
+                            _supportsMin[offset+i].addToMaskInt(t+1);
+                            //don't set anything for supportsShort
+                        }
+                        
+                        //if the value is not the minimum we need to set the bits in supportsMax
+                        for(int i=0; i<=entryValue; i++){
+                            _supportsMax[_supportOffsetJmp[v]+i].addToMaskInt(t+1);
+                            //don't set anything for supportsShort
+                        }
+                        
+                    }
                 }
                 
-
-                /*
-                for (int varValue = 0; varValue <= entryValue; varValue++) {
-                    offset=_supportOffsetJmp[v]+varValue;
-                    //update supportsMin
-                    _supportsMin[offset].addToMaskInt(t+1);  
-                }
-                for (int varValue = entryValue; varValue < _vars[v]->intialSize(); varValue++) {
-                    offset=_supportOffsetJmp[v]+varValue;
-                    //update supportsMax
-                    _supportsMax[offset].addToMaskInt(t+1);
-                }*/
                 found=true;
                 tuplesOfSingletons[v]=t;
             }else{
-                if(_signs[t][v]==SmartTableOp::All){
-                    //set all the bits for the variable in support
-                    int offset=_supportOffsetJmp[v];
-                    for(int i=0; i<_vars[v]->intialSize(); i++){
-                        _supports[offset+i].addToMaskInt(t+1);
+                switch(_signs[t][v]) {
+                    //* entry (we update all the supports in the same way)                
+                    case SmartTableOp::All:{
+                        //set all the bits for the variable in support
+                        int offset=_supportOffsetJmp[v];
+
+                        for(int i=0; i<_vars[v]->intialSize(); i++){
+                            _supports[offset+i].addToMaskInt(t+1);
+                            _supportsMax[offset+i].addToMaskInt(t+1);
+                            _supportsMin[offset+i].addToMaskInt(t+1);
+                            //don't set anything for supportsShort
+                        }
+
+
                         //don't set anything for supportsShort
+                        break;
                     }
-                    //don't set anything for supportsShort
-                }else{
-                    _currTable.addToMaskInt(t+1);
+                    default:{
+                        _currTable.addToMaskInt(t+1);
+                    }
                 }
             }
         }
@@ -146,13 +163,13 @@ void SmartTable::intializeTable(int noVars,int noTuples){
     for (int i = 0; i < _supportSize; ++i){  
         _supports[i].intersectWithMask();
         _supportsShort[i].intersectWithMask();
-        //_supportsMin[i].intersectWithMask();
-        //_supportsMax[i].intersectWithMask();
+        _supportsMin[i].intersectWithMask();
+        _supportsMax[i].intersectWithMask();
 
         _supports[i].clearMask();
         _supportsShort[i].clearMask();
-        //_supportsMin[i].clearMask();
-        //_supportsMax[i].clearMask();
+        _supportsMin[i].clearMask();
+        _supportsMax[i].clearMask();
         
         //we initialize residues
         bool broken=false;
@@ -167,14 +184,23 @@ void SmartTable::intializeTable(int noVars,int noTuples){
     }
    
 
-    //printing the supports
-
+    //printing the supports //to remove
+    printf("%%%%%% supportSize: %d\n",_supportSize);
     for (int i = 0; i < _supportSize; ++i){  
         _supports[i].print(i);
     }
     printf("%%%%%% supportShort:\n");
     for (int i = 0; i < _supportSize; ++i){
         _supportsShort[i].print(i);
+    }
+    
+    printf("%%%%%% supportMin:\n");
+    for (int i = 0; i < _supportSize; ++i){
+        _supportsMin[i].print(i);
+    }
+    printf("%%%%%% supportMax:\n");
+    for (int i = 0; i < _supportSize; ++i){
+        _supportsMax[i].print(i);
     }
    
    

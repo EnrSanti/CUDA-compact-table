@@ -21,6 +21,8 @@ class SmartTable : public Constraint {
 
         vector<SparseBitSet> _supports; //table of which values for each variable are required in a constraint
         vector<SparseBitSet> _supportsShort;
+        vector<SparseBitSet> _supportsMax;
+        vector<SparseBitSet> _supportsMin;
         
         vector<SparseBitSet>  _deltaXs; //deltaXs[i] is the delta of the ith variable 
         vector<SparseBitSet> _lastVarsValues; //_lastVarsValues[i] is the snapshot of the domain of ith variable at the previous step
