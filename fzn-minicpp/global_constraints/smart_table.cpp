@@ -1,6 +1,6 @@
 #include "smart_table.hpp"
 
-enum SmartTableOp {Eq=1, All=2 ,LtInt=3, LtVar=4, GtInt=5, GtVat=6};
+enum SmartTableOp {Eq=1, All=2 ,LtInt=3, LtVar=4, GtInt=5, GtVar=6};
 
 SmartTable::SmartTable(vector<var<int>::Ptr> & vars,  vector<vector<int>> & tuples, vector<vector<int>> & signs) :
     Constraint(vars[0]->getSolver()), _vars(vars), _tuples(tuples), _signs(signs), _currTable(SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),tuples.size())){
@@ -91,6 +91,50 @@ void SmartTable::intializeTable(int noVars,int noTuples){
                             //don't set anything for supportsShort
                         }
                         //don't set anything for supportsShort
+                        break;
+                    }
+
+                    case SmartTableOp::LtInt:{
+                        //populate the supports
+                        int entryValue=_tuples[t][v]-_variablesOffsets[v];   
+                        int offset=_supportOffsetJmp[v];
+                        for(int i=0; i<entryValue; i++){
+                            _supports[offset+i].addToMaskInt(t+1);
+                            //don't set anything for supportsShort
+                        }
+
+                        //if the value is not the minimum we need to set the bits in supportsMin
+                        for(int i=0; i<entryValue; i++){
+                            _supportsMin[_supportOffsetJmp[v]+i].addToMaskInt(t+1);
+                            //don't set anything for supportsShort
+                        }
+                        //We need to set all the bits in supportsMax
+                        for(int i=0; i<_vars[v]->intialSize(); i++){
+                            _supportsMax[offset+i].addToMaskInt(t+1);
+                            //don't set anything for supportsShort
+                        }
+                        break;
+                    }
+                    case SmartTableOp::GtInt:{
+                        //populate the supports
+                        int entryValue=_tuples[t][v]-_variablesOffsets[v];   
+                        int offset=_supportOffsetJmp[v];
+                        for(int i=entryValue+1; i<_vars[v]->intialSize(); i++){
+                            _supports[offset+i].addToMaskInt(t+1);
+                            //don't set anything for supportsShort
+                        }
+                        //We need to set all the bits in supportsMax
+                        for(int i=0; i<_vars[v]->intialSize(); i++){
+                            _supportsMin[offset+i].addToMaskInt(t+1);
+                            //don't set anything for supportsShort
+                        }
+                        //if the value is not the minimum we need to set the bits in supportsMin
+                        for(int i=_vars[v]->intialSize()-1; i>entryValue; i--){
+                            _supportsMax[_supportOffsetJmp[v]+i].addToMaskInt(t+1);
+                            //don't set anything for supportsShort
+                        }
+                        
+
                         break;
                     }
                     //classical entry
