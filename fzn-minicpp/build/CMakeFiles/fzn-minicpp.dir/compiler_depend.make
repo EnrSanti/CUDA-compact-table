@@ -5041,7 +5041,8 @@ CMakeFiles/fzn-minicpp.dir/global_constraints/smart_table.cpp.o: ../global_const
   /usr/include/c++/11/tr1/modified_bessel_func.tcc \
   /usr/include/c++/11/tr1/poly_hermite.tcc \
   /usr/include/c++/11/tr1/poly_laguerre.tcc \
-  /usr/include/c++/11/tr1/riemann_zeta.tcc
+  /usr/include/c++/11/tr1/riemann_zeta.tcc \
+  ../libminicpp/bitset.hpp
 
 CMakeFiles/fzn-minicpp.dir/global_constraints/stable_matching.cpp.o: ../global_constraints/stable_matching.cpp \
   /usr/include/stdc-predef.h \

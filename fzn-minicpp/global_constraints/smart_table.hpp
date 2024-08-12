@@ -1,6 +1,7 @@
 #pragma once
 
 #include <libminicpp/varitf.hpp>
+#include <libminicpp/bitset.hpp>
 using namespace std;
 
 

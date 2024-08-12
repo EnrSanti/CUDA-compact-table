@@ -103,7 +103,9 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
             }
         }
     }
-   
+    for (int i = 0; i < _supportSize; ++i){  
+        _supports[i].print(i);
+    }
     //print();
     //forall vars
     for (int i = 0; i < noVars; i++){

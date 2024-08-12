@@ -287,16 +287,16 @@ void SmartTable::updateTable(){
     //forall var x in s_val
     int index=0;
     
-    for(int i=0; i < _s_val.size(); ++i){
+    for(int i=0; i < _s_val.size(); ++i){ 
         _currTable.clearMask();
         index=_s_val[i];
-        if(_deltaXs[index].countOnes() < _vars[index]->size()){//_deltaXs[index].countOnes() < _vars[index]->size()
+        if(_deltaXs[index].countOnes()+2 < _vars[index]->size() && 1==0){//_deltaXs[index].countOnes() < _vars[index]->size()
             //incremental update
-             //print the words of the delta
           
             for (int j = 0; j < _vars[index]->intialSize(); j++){
-                //printf("%%%%%% deltaXs[%d] contains 1 at pos %d? ",index,_vars[index]->initialMin()+j);  
-                if(_deltaXs[index].getIthBit(j+_vars[index]->initialMin())==1){     
+                //printf("%%%%%% deltaXs[%d] contains 1 at pos %d? ",index,_vars[index]->initialMin()+j);
+                //now, the value must be  dom(index).min < < dom(index).max   
+                if(_deltaXs[index].getIthBit(j+_vars[index]->initialMin())==1 && _vars[index]->min()<j+_vars[index]->initialMin() && j+_vars[index]->initialMin()<_vars[index]->max()){     
                     int index_x_a=_supportOffsetJmp[index]+j;
                     _currTable.addToMaskVector(_supportsShort[index_x_a]._words);
                 }
@@ -304,13 +304,21 @@ void SmartTable::updateTable(){
 
             _currTable.reverseMask();
 
-            // TODO UNCOMMENT
-            //if(dom(i).minChanged()){
-            //	...	
-            //}
-            //if(dom(i).maxChanged()){
-            //	...
-            //}
+            if(_vars[index]->changedMin()){
+                int offset=0;
+                if(index>0)
+                    offset=_supportOffsetJmp[index-1];
+                int minIndex=(_vars[index]->min()-_vars[index]->initialMin()+offset)/32;
+                _currTable.addToMaskVector(_supportsMax[minIndex]._words);
+            }
+            if(_vars[index]->changedMax()){
+                int offset=0;
+                if(index>0)
+                    offset=_supportOffsetJmp[index-1];
+                int maxIndex=(_vars[index]->max()-_vars[index]->initialMin()+offset)/32;
+                _currTable.addToMaskVector(_supportsMax[maxIndex]._words);
+            }
+
         }else{
             //reset based update
             //printf("%%%%%% reset based update \n");
