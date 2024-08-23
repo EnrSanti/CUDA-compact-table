@@ -253,7 +253,7 @@ void TableGPU::filterDomains(){
                 
             }
         }
-        _vars[index]->dumpInSparseBitSet(_vars[index]->min(),_vars[index]->max(),_lastVarsValues[index]);
+        _vars[index]->dumpInSparseBitSet(index,_vars[index]->min(),_vars[i]->initialMin(),_vars[index]->max(),_lastVarsValues[index]);
     }
 }
 // 1 th per support row

@@ -336,25 +336,29 @@ void BitDomain::dump(int min, int max, unsigned int * dump) const
         }
     }
 }
-void BitDomain::dumpInSparseBitSet(int min, int max, SparseBitSet & dump) const {
-    assert(min <= _min);
-    assert(_max <= max);
+void BitDomain::dumpInSparseBitSet(int varNo, int min, int intialMin, int max, SparseBitSet & dump) const {
 
-    int min_dom_offset = _min - _imin;
+
+    int min_dom_offset = min - intialMin;
     int min_dom_word_idx = min_dom_offset / 32;
     int min_dom_bit_idx = min_dom_offset % 32;
     unsigned int min_word_mask = getRightFilledMask32(min_dom_bit_idx);
-    int max_dom_offset = _max - _imin;
+
+    int max_dom_offset = max - intialMin;
     int max_dom_word_idx = max_dom_offset / 32;
     int max_dom_bit_idx = max_dom_offset % 32;
     unsigned int max_word_mask = getLeftFilledMask32(max_dom_bit_idx);
 
-    int dom_dump_offset = _imin - min;
-    int dom_dump_offset_words = dom_dump_offset / 32;
+
+    int dom_dump_offset_words = min_dom_offset / 32;
+
+    //printing
+    printf("%%%%%% varno: %d, min: %d, max %d, min_dom_offset: %d, min_dom_word_idx %d, dom_dump_offset_words %d,  dom_dump_offset_words %d, min_dom_bit_idx %d \n",varNo, min, max,min_dom_offset,min_dom_word_idx,dom_dump_offset_words,dom_dump_offset_words,min_dom_bit_idx);
 
     if(min_dom_word_idx == max_dom_word_idx)
     {
-        dump._words[dom_dump_offset_words + min_dom_word_idx].setValue(_dom[min_dom_word_idx].value() & min_word_mask & max_word_mask);
+        printf("%%%%%% hereee %d\n", _dom[min_dom_word_idx].value());
+        dump._words[dom_dump_offset_words + min_dom_word_idx].setValue(_dom[min_dom_word_idx].value() & min_word_mask );
     }
     else
     {
@@ -365,6 +369,14 @@ void BitDomain::dumpInSparseBitSet(int min, int max, SparseBitSet & dump) const 
             dump._words[dom_dump_offset_words + dom_word_idx].setValue(_dom[dom_word_idx].value());
         }
     }
+
+
+
+    for (int i = min_dom_word_idx; i <= max_dom_word_idx; i++)
+    {
+        printf("%%%%%% varno: %d, word %d, value %d \n",varNo,i,dump._words[i].value());
+    }
+    
 }
 int BitDomain::getIthVal(int index) const
 {

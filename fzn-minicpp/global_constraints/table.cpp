@@ -6,6 +6,8 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     _currTable(SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),tuples.size())){
     
 
+
+
     
     int noTuples=tuples.size();
     int noVars=vars.size();
@@ -27,13 +29,15 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
         _variablesOffsets[i]=vars[i]->min();
         //we allocate the delta and lastVarsValues
         _deltaXs[i]=SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),_vars[i]->size()+1);
+        
+        printf("%%%%%% Here Var %d, _vars[i]->size()+1: %d,  len: %d of bitset, initialMin %d\n",i,_vars[i]->size()+1,_deltaXs[i]._words.size(), _vars[i]->initialMin());
         _lastVarsValues[i]=SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),_vars[i]->size()+1);
 
         //initialize lastVarsValues
-        vars[i]->dumpInSparseBitSet(vars[i]->min(),vars[i]->max(),_lastVarsValues[i]);
-        //printf("%%%%%% intial var values for var %d \n",i);
-        //_lastVarsValues[i].printNoMask(0);
+        vars[i]->dumpInSparseBitSet(i,vars[i]->min(),vars[i]->initialMin(),vars[i]->max(),_lastVarsValues[i]);
+        
     }
+
 
     //calculating the offset of the variables, used in accessing the support rows    
     _supportOffsetJmp[0]=0;
@@ -103,6 +107,7 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
             }
         }
     }
+    
     for (int i = 0; i < _supportSize; ++i){  
         _supports[i].print(i);
     }
@@ -154,9 +159,9 @@ void Table::updateTable(){
     for(int i=0; i < _s_val.size(); ++i){
         _currTable.clearMask();
         index=_s_val[i];
-        if(_deltaXs[index].countOnes() < _vars[index]->size()){//_deltaXs[index].countOnes() < _vars[index]->size()
+        if(_deltaXs[index].countOnes() < _vars[index]->size() && false){//_deltaXs[index].countOnes() < _vars[index]->size()
             //incremental update
-             //print the words of the delta
+            //print the words of the delta
           
             for (int j = 0; j < _vars[index]->intialSize(); j++){
                 //printf("%%%%%% deltaXs[%d] contains 1 at pos %d? ",index,_vars[index]->initialMin()+j);  
@@ -168,13 +173,6 @@ void Table::updateTable(){
 
             _currTable.reverseMask();
 
-            // TODO UNCOMMENT
-            //if(dom(i).minChanged()){
-            //	...	
-            //}
-            //if(dom(i).maxChanged()){
-            //	...
-            //}
         }else{
             //reset based update
             //printf("%%%%%% reset based update \n");
@@ -222,7 +220,7 @@ void Table::filterDomains(){
             }
         }
         //printf("%%%%%% new domain for var %d\n",index);
-        _vars[index]->dumpInSparseBitSet(_vars[index]->min(),_vars[index]->max(),_lastVarsValues[index]);
+        _vars[index]->dumpInSparseBitSet(index,_vars[index]->min(),_vars[index]->initialMin(),_vars[index]->max(),_lastVarsValues[index]);
         //_lastVarsValues[index].printNoMask(0);
     }
 }
@@ -232,13 +230,17 @@ void Table::enfoceGAC(){
     
     _s_val.clear();
     _s_sup.clear();
+    
 	for (int i = 0; i < _vars.size(); i++){
 		//update s_val and the deltas
+        
         if(_vars[i]->changed()){
+            printf("%%%%%% Var %d changed, [%d,%d]\n",i,_vars[i]->min(),_vars[i]->max());
             _s_val.push_back(i);
             //printf("%%%%%% Var %d changed UPDATING DELTA\n",i);
             updateDelta(i);
         }
+        
 		//update s_sup
         if(_vars[i]->size()>1){
             _s_sup.push_back(i);
@@ -253,7 +255,7 @@ void Table::enfoceGAC(){
 
 void Table::updateDelta(int i){
 
-    _vars[i]->dumpInSparseBitSet(_vars[i]->min(),_vars[i]->max(),_deltaXs[i]);
+    _vars[i]->dumpInSparseBitSet(i,_vars[i]->min(),_vars[i]->initialMin(),_vars[i]->max(),_deltaXs[i]);
     /*
     printf("%%%%%% curr domain for var %d \n",i);
     _deltaXs[i].printNoMask(0);
@@ -261,9 +263,16 @@ void Table::updateDelta(int i){
     _lastVarsValues[i].printNoMask(0);
     */
     //we calculate the delta by xoring the words
+   
+   
+    
     for (int j = 0; j < _vars[i]->getSizeOfBitSet(); j++){
         _deltaXs[i]._words[j].setValue(_deltaXs[i]._words[j].value()^_lastVarsValues[i]._words[j].value()); //BEWARE, BROKEN THE DATA STRUCTURE can be replaced with x XOR y = (x AND (NOT y)) OR ((NOT x) AND y)
+        printf("%%%%%% var %d, %d %d \n",i,_lastVarsValues[i]._words[j].value(),_deltaXs[i]._words[j]);
     }
+    
+
+
     //printf("%%%%%% this DELTA contain the changes %d \n",i);
     //_deltaXs[i].printNoMask(0);
 }
