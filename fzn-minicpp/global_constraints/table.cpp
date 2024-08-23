@@ -6,8 +6,6 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     _currTable(SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),tuples.size())){
     
 
-
-
     
     int noTuples=tuples.size();
     int noVars=vars.size();
@@ -28,13 +26,27 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
         //we store the offset
         _variablesOffsets[i]=vars[i]->min();
         //we allocate the delta and lastVarsValues
-        _deltaXs[i]=SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),_vars[i]->size()+1);
+        _deltaXs[i]=SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),_vars[i]->max()+1);
         
         printf("%%%%%% Here Var %d, _vars[i]->size()+1: %d,  len: %d of bitset, initialMin %d\n",i,_vars[i]->size()+1,_deltaXs[i]._words.size(), _vars[i]->initialMin());
-        _lastVarsValues[i]=SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),_vars[i]->size()+1);
+        _lastVarsValues[i]=SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),_vars[i]->max()+1);
 
         //initialize lastVarsValues
-        vars[i]->dumpInSparseBitSet(i,vars[i]->min(),vars[i]->initialMin(),vars[i]->max(),_lastVarsValues[i]);
+        vars[i]->dumpInSparseBitSet(i,_variablesOffsets[i],vars[i]->min(),vars[i]->initialMin(),vars[i]->max(),_lastVarsValues[i]);
+        
+
+
+        //_vars[i]->dump(_vars[i]->min(),_vars[i]->max(),_deltaXs[i]);
+            
+        printf("%%%%%% Var %d dump: %d \n",i,_lastVarsValues[i]._words[0].value());
+
+        try
+        {
+           printf("%%%%%% Var %d dump: %d \n",i,_lastVarsValues[i]._words[1].value());
+        }
+        catch(const std::exception& e)
+        {
+        }
         
     }
 
@@ -220,7 +232,7 @@ void Table::filterDomains(){
             }
         }
         //printf("%%%%%% new domain for var %d\n",index);
-        _vars[index]->dumpInSparseBitSet(index,_vars[index]->min(),_vars[index]->initialMin(),_vars[index]->max(),_lastVarsValues[index]);
+        _vars[index]->dumpInSparseBitSet(index,_variablesOffsets[index],_vars[index]->min(),_vars[index]->initialMin(),_vars[index]->max(),_lastVarsValues[index]);
         //_lastVarsValues[index].printNoMask(0);
     }
 }
@@ -255,7 +267,7 @@ void Table::enfoceGAC(){
 
 void Table::updateDelta(int i){
 
-    _vars[i]->dumpInSparseBitSet(i,_vars[i]->min(),_vars[i]->initialMin(),_vars[i]->max(),_deltaXs[i]);
+    _vars[i]->dumpInSparseBitSet(i,_variablesOffsets[i],_vars[i]->min(),_vars[i]->initialMin(),_vars[i]->max(),_deltaXs[i]);
     /*
     printf("%%%%%% curr domain for var %d \n",i);
     _deltaXs[i].printNoMask(0);

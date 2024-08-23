@@ -336,37 +336,36 @@ void BitDomain::dump(int min, int max, unsigned int * dump) const
         }
     }
 }
-void BitDomain::dumpInSparseBitSet(int varNo, int min, int intialMin, int max, SparseBitSet & dump) const {
+void BitDomain::dumpInSparseBitSet(int varNo,int offset, int min, int intialMin, int max, SparseBitSet & dump) const {
 
 
-    int min_dom_offset = min - intialMin;
-    int min_dom_word_idx = min_dom_offset / 32;
-    int min_dom_bit_idx = min_dom_offset % 32;
-    unsigned int min_word_mask = getRightFilledMask32(min_dom_bit_idx);
+    //int min_dom_offset = min - intialMin;
+    int min_dom_word_idx = (int) min / 32;
+    //int min_dom_bit_idx = min_dom_offset % 32;
+    //unsigned int min_word_mask = getRightFilledMask32(min_dom_bit_idx);
 
-    int max_dom_offset = max - intialMin;
-    int max_dom_word_idx = max_dom_offset / 32;
-    int max_dom_bit_idx = max_dom_offset % 32;
-    unsigned int max_word_mask = getLeftFilledMask32(max_dom_bit_idx);
+    //int max_dom_offset = max;
+    int max_dom_word_idx = (int) max / 32;
+    //int max_dom_bit_idx = max_dom_offset % 32;
+    //unsigned int max_word_mask = getLeftFilledMask32(max_dom_bit_idx);
 
 
-    int dom_dump_offset_words = min_dom_offset / 32;
+    //int dom_dump_offset_words = min_dom_offset / 32;
 
     //printing
-    printf("%%%%%% varno: %d, min: %d, max %d, min_dom_offset: %d, min_dom_word_idx %d, dom_dump_offset_words %d,  dom_dump_offset_words %d, min_dom_bit_idx %d \n",varNo, min, max,min_dom_offset,min_dom_word_idx,dom_dump_offset_words,dom_dump_offset_words,min_dom_bit_idx);
+    //  printf("%%%%%% varno: %d, min: %d, max %d, min_dom_offset: %d, min_dom_word_idx %d, dom_dump_offset_words %d,  dom_dump_offset_words %d, min_dom_bit_idx %d \n",varNo, min, max,min_dom_offset,min_dom_word_idx,dom_dump_offset_words,dom_dump_offset_words,min_dom_bit_idx);
 
     if(min_dom_word_idx == max_dom_word_idx)
     {
-        printf("%%%%%% hereee %d\n", _dom[min_dom_word_idx].value());
-        dump._words[dom_dump_offset_words + min_dom_word_idx].setValue(_dom[min_dom_word_idx].value() & min_word_mask );
+        dump._words[min_dom_word_idx].setValue(_dom[min_dom_word_idx].value());
     }
     else
     {
-        dump._words[dom_dump_offset_words + min_dom_word_idx].setValue(_dom[min_dom_word_idx].value() & min_word_mask);
-        dump._words[dom_dump_offset_words + max_dom_word_idx].setValue(_dom[max_dom_word_idx].value() & max_word_mask);
+        dump._words[ min_dom_word_idx].setValue(_dom[min_dom_word_idx].value());
+        dump._words[ max_dom_word_idx].setValue(_dom[max_dom_word_idx].value());
         for(int dom_word_idx = min_dom_word_idx + 1; dom_word_idx < max_dom_word_idx; dom_word_idx += 1)
         {
-            dump._words[dom_dump_offset_words + dom_word_idx].setValue(_dom[dom_word_idx].value());
+            dump._words[dom_word_idx].setValue(_dom[dom_word_idx].value());
         }
     }
 
