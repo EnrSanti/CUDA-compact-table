@@ -26,27 +26,27 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
         //we store the offset
         _variablesOffsets[i]=vars[i]->min();
         //we allocate the delta and lastVarsValues
+
         _deltaXs[i]=SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),_vars[i]->max()+1);
         
-        printf("%%%%%% Here Var %d, _vars[i]->size()+1: %d,  len: %d of bitset, initialMin %d\n",i,_vars[i]->size()+1,_deltaXs[i]._words.size(), _vars[i]->initialMin());
+         for (int j = 0; j < _deltaXs[i]._words.size(); j++)
+        {
+            _deltaXs[i]._words[j].setValue(0x00000000); 
+           // printf("%%%%%% delta iniziale: %d,value %d \n",j,_deltaXs[i]._words[j].value());
+        }
+        printf("%%%%%%-----------------------------------\n %%%%%% Here Var %d, _vars[i]->size()+1: %d,  len: %d of bitset, initialMin %d\n",i,_vars[i]->size()+1,_deltaXs[i]._words.size(), _vars[i]->initialMin());
         _lastVarsValues[i]=SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),_vars[i]->max()+1);
-
+         for (int j = 0; j < _deltaXs[i]._words.size(); j++)
+        {
+            _deltaXs[i]._words[j].setValue(0x00000000); 
+            _lastVarsValues[i]._words[j].setValue(0x00000000);
+        }
         //initialize lastVarsValues
-        vars[i]->dumpInSparseBitSet(i,_variablesOffsets[i],vars[i]->min(),vars[i]->initialMin(),vars[i]->max(),_lastVarsValues[i]);
-        
+        printf("%%%%%% lastVar size: %d, delta size: %d\n",_lastVarsValues[i]._words.size(),_deltaXs[i]._words.size());
+        _vars[i]->dumpInSparseBitSet(i,_variablesOffsets[i],vars[i]->min(),vars[i]->initialMin(),vars[i]->initialMax(),_lastVarsValues[i]);
+       
 
-
-        //_vars[i]->dump(_vars[i]->min(),_vars[i]->max(),_deltaXs[i]);
-            
-        printf("%%%%%% Var %d dump: %d \n",i,_lastVarsValues[i]._words[0].value());
-
-        try
-        {
-           printf("%%%%%% Var %d dump: %d \n",i,_lastVarsValues[i]._words[1].value());
-        }
-        catch(const std::exception& e)
-        {
-        }
+       
         
     }
 
@@ -177,9 +177,14 @@ void Table::updateTable(){
           
             for (int j = 0; j < _vars[index]->intialSize(); j++){
                 //printf("%%%%%% deltaXs[%d] contains 1 at pos %d? ",index,_vars[index]->initialMin()+j);  
-                if(_deltaXs[index].getIthBit(j+_vars[index]->initialMin())==1){     
+                if(_deltaXs[index].getIthBit(j+_vars[index]->initialMin())==1){  
+                    printf("%%%%%% checking[%d]=1 for var %d\n", j+_vars[index]->initialMin(),index);
+
                     int index_x_a=_supportOffsetJmp[index]+j;
                     _currTable.addToMaskVector(_supports[index_x_a]._words);
+                }else{
+
+                    printf("%%%%%% checking[%d]=0 for var %d\n", j+_vars[index]->initialMin(),index);
                 }
             }    
 
@@ -232,7 +237,7 @@ void Table::filterDomains(){
             }
         }
         //printf("%%%%%% new domain for var %d\n",index);
-        _vars[index]->dumpInSparseBitSet(index,_variablesOffsets[index],_vars[index]->min(),_vars[index]->initialMin(),_vars[index]->max(),_lastVarsValues[index]);
+        _vars[index]->dumpInSparseBitSet(index,_variablesOffsets[index],_vars[index]->min(),_vars[index]->initialMin(),_vars[index]->initialMax(),_lastVarsValues[index]);
         //_lastVarsValues[index].printNoMask(0);
     }
 }

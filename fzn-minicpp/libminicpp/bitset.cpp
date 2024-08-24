@@ -205,7 +205,7 @@ int SparseBitSet::countOnes(){
 }
 //to fix (optimize a lot)
 int SparseBitSet::getIthBit(int index){
-   int wordIndex=floor(index/32);
+   int wordIndex=(index/32);
    int bitIndex=index%32;
    if(_words[wordIndex].value() & (1<<(31-bitIndex))){
       return 1;

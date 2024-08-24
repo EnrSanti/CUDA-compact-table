@@ -290,7 +290,7 @@ void SmartTable::updateTable(){
     for(int i=0; i < _s_val.size(); ++i){ 
         _currTable.clearMask();
         index=_s_val[i];
-        if(_deltaXs[index].countOnes()+2 < _vars[index]->size() && 1==0){//_deltaXs[index].countOnes() < _vars[index]->size()
+        if(_deltaXs[index].countOnes()+2 < _vars[index]->size() && false){//_deltaXs[index].countOnes() < _vars[index]->size()
             //incremental update
           
             for (int j = 0; j < _vars[index]->intialSize(); j++){
