@@ -78,6 +78,7 @@
         "queue": "c",
         "stack": "c",
         "cpp": "c",
-        "hpp": "c"
+        "hpp": "c",
+        "__node_handle": "cpp"
     }
 }

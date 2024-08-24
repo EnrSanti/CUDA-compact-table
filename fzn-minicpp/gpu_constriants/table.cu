@@ -253,9 +253,10 @@ void TableGPU::filterDomains(){
                 
             }
         }
-        _vars[index]->dumpInSparseBitSet(index,_variablesOffsets[index],_vars[index]->min(),_vars[i]->initialMin(),_vars[index]->max(),_lastVarsValues[index]);
+        //_vars[index]->dumpInSparseBitSet(index,_variablesOffsets[index],_vars[index]->min(),_vars[i]->initialMin(),_vars[index]->max(),_lastVarsValues[index]);
     }
 }
+
 // 1 th per support row
 __global__ void updateTableGPU(unsigned int* _supports_dev,int * _s_val_size_dev, int *_s_val_dev, int *_supportSize_dev, int *_variablesOffsets_dev, int *_supportOffsetJmp_dev, unsigned int * _currTable_dev,int* _currTable_dev_size, unsigned int* _vars_dev, int* output, int *offset, int *varNoDev){
 
@@ -378,12 +379,12 @@ __device__ void printBitsGPU(unsigned int num) {
     }
     printf("\n%%%%%% \n");
 }
+/*
 void TableGPU::print(){    
     
     printf("%%%%%% ----------------- VARS: -----------------\n\n");
     for (int i = 0; i < _vars.size(); i++){
         printf("%%%%%% Var %d: %d\n",i,_vars[i]->getId());      
-        printf("%%%%%% Var %d dump: %d \n",i,_lastVarsValues[i]._words[0].value());
     }
     for (int i = 0; i < _vars.size(); i++){
         //checking the contained values
@@ -400,4 +401,4 @@ void TableGPU::print(){
         printBits(_currTable._words[i].value());
     }
     printf("%%%%%% --------------------------------------------------------\n");
-}
+}*/

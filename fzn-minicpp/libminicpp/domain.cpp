@@ -353,7 +353,7 @@ void BitDomain::dumpInSparseBitSet(int varNo,int offset, int min, int initialMin
     int dom_dump_offset = initialMin;
     int dom_dump_offset_words = dom_dump_offset / 32;
 
-    printf("%%%%%% initialMin: %d,min_dom_word_idx: %d,min_dom_bit_idx: %d,mask: %d, dom_dump_offset_words: %d\n",initialMin,min_dom_word_idx,min_dom_bit_idx,min_word_mask,dom_dump_offset_words);
+    printf("%%%%%% initialMin: %d, min: %d,min_dom_word_idx: %d,min_dom_bit_idx: %d,mask: %d, dom_dump_offset_words: %d\n",initialMin,min,min_dom_word_idx,min_dom_bit_idx,min_word_mask,dom_dump_offset_words);
     if(min_dom_word_idx == max_dom_word_idx)
     {
         for (int i = 0; i < min_dom_word_idx; i++)
@@ -364,10 +364,12 @@ void BitDomain::dumpInSparseBitSet(int varNo,int offset, int min, int initialMin
         //dump[dom_dump_offset_words + min_dom_word_idx] = _dom[min_dom_word_idx] & min_word_mask & max_word_mask;
     } else {
         printf("%%%%%% more words\n");
+        
         for (int i = 0; i < min_dom_word_idx; i++)
         {
             dump._words[i].setValue(0);
         }
+
         dump._words[dom_dump_offset_words + min_dom_word_idx].setValue(_dom[min_dom_word_idx].value() & min_word_mask);
         dump._words[dom_dump_offset_words + max_dom_word_idx].setValue(_dom[max_dom_word_idx].value() & max_word_mask);
        

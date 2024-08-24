@@ -205,8 +205,10 @@ int SparseBitSet::countOnes(){
 }
 //to fix (optimize a lot)
 int SparseBitSet::getIthBit(int index){
+   
    int wordIndex=(index/32);
    int bitIndex=index%32;
+   printf("%%%%%% wordIndex: %d, bitIndex: %d, _words[wordIndex]: %d, mask: %d\n",wordIndex,bitIndex,_words[wordIndex].value(),1<<(31-bitIndex));
    if(_words[wordIndex].value() & (1<<(31-bitIndex))){
       return 1;
    }

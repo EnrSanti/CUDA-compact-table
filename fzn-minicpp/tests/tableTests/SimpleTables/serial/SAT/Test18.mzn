@@ -1,4 +1,4 @@
-include "table.mzn";
+  include "table.mzn";
 include "minicpp.mzn";
 
 var 1..10: x0;
