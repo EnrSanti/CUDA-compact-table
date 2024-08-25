@@ -1,7 +1,4 @@
 #include "gpu_constriants/table.cuh"
-using namespace std;
-using namespace Fca;
-using namespace Gpu::Memory;
 
 TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) : Table(vars,tuples){
     setPriority(CLOW);

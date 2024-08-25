@@ -15,6 +15,8 @@
 #include "global_constraints/stable_matching.hpp"
 #include "gpu_constriants/cumulative.cuh"
 #include "gpu_constriants/table.cuh"
+#include "gpu_constriants/smart_table.cuh"
+
 using backward_implication_t = std::function<void()>;
 
 FznConstraintHelper::FznConstraintHelper(CPSolver::Ptr solver, FznVariablesHelper & fvh) :
@@ -869,14 +871,14 @@ void FznConstraintHelper::addGlobalConstraintsBuilders()
             _t.emplace_back(tBegin, tEnd);
         }
 
-        bool const uniud = count_if(anns.begin(), anns.end(), [](Fzn::annotation_t const & ann) -> bool {return ann.first == "uniud";});
-        if (uniud)
+        bool const gpu = count_if(anns.begin(), anns.end(), [](Fzn::annotation_t const & ann) -> bool {return ann.first == "gpu";});
+        if (gpu)
         {
-            return new (solver) Table(x, _t);
+            return new (solver) TableGPU(x, _t);
         }
         else
         {
-            return new (solver) TableGPU(x, _t);
+            return new (solver) Table(x, _t);
         }
     });
     
@@ -900,8 +902,16 @@ void FznConstraintHelper::addGlobalConstraintsBuilders()
             auto const tEnd = tBegin + tuple_size;
             _sto.emplace_back(tBegin, tEnd);
         }
-
-        return new (solver) SmartTable(x, _t, _sto);
+        bool const gpu = count_if(anns.begin(), anns.end(), [](Fzn::annotation_t const & ann) -> bool {return ann.first == "gpu";});
+        if (gpu)
+        {
+            return new (solver) SmartTableGPU(x, _t, _sto);
+        }
+        else
+        {
+            return new (solver) SmartTable(x, _t, _sto);
+        }
+        
     });
 
 

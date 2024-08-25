@@ -9,7 +9,7 @@ var 10..20 : xNotInTable;
 
 array [int,int] of 1..50: t = [|1,30,8|2,32,9|4,32,9|2,31,9|4,36,9|5,36,9|];
 
-constraint table([x0,x1,x2], t) ::uniud;
+constraint table([x0,x1,x2], t) ;
 constraint xNotInTable>15;
 constraint x1>35;
 constraint x0=5;

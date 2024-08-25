@@ -25,12 +25,9 @@ class SmartTable : public Constraint {
         vector<SparseBitSet> _supportsMax;
         vector<SparseBitSet> _supportsMin;
         
-        vector<SparseBitSet>  _deltaXs; //deltaXs[i] is the delta of the ith variable 
-        vector<SparseBitSet> _lastVarsValues; //_lastVarsValues[i] is the snapshot of the domain of ith variable at the previous step
+        //vector<SparseBitSet>  _deltaXs; //deltaXs[i] is the delta of the ith variable 
+        //vector<SparseBitSet> _lastVarsValues; //_lastVarsValues[i] is the snapshot of the domain of ith variable at the previous step
         
-        //già l'abbiamo in var[i]->size()
-        //int* lastSizes; //current domain size of each var 
-
         vector<int> _s_val; //indexes of the vars not yet instanciated whose domain changed from last iteration (could be replaced by a bitset)
         vector<int> _s_sup; //indexes of the vars not yet inst. with at least one value in their domain for which no support has yet been found (could be replaced by a bitset)
         vector<trail<int>> _residues; 

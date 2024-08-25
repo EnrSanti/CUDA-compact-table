@@ -6,7 +6,7 @@ var 1..10 : x0;
 var 30..50 : x1;
 var 5..50 : x2;
 array [int,int] of 1..50: t1 = [|1,30,8|1,36,9|4,33,9|2,50,9|4,36,9|4,45,9|];
-constraint table([x0,x1,x2], t1) :: uniud;
+constraint table([x0,x1,x2], t1) ;
 constraint x1>30;
 constraint x1<40;
 solve satisfy;

@@ -1,6 +1,6 @@
 #include "smart_table.hpp"
 
-enum SmartTableOp {Eq=1, All=2 ,LtInt=3, LtVar=4, GtInt=5, GtVar=6};
+enum SmartTableOp {Eq=1, All=2 ,LtInt=3, GtInt=5 /*, LtVar=4 /*, GtVar=6*/};
 
 SmartTable::SmartTable(vector<var<int>::Ptr> & vars,  vector<vector<int>> & tuples, vector<vector<int>> & signs) :
     Constraint(vars[0]->getSolver()), _vars(vars), _tuples(tuples), _signs(signs), _currTable(SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),tuples.size())){

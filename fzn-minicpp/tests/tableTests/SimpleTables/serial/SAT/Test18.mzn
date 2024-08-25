@@ -7,6 +7,6 @@ var 34..100 : x1;
 
 array [int,int] of 1..100: t = [|1,39,81|2,38,91|4,37,91|];
 
-constraint table([x0,x1,x2], t) ::uniud;
+constraint table([x0,x1,x2], t) ;
 constraint x1>36;
 solve satisfy;

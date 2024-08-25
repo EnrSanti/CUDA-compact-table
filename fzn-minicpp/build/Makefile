@@ -637,6 +637,30 @@ gpu_constriants/cumulative.cu.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/fzn-minicpp.dir/build.make CMakeFiles/fzn-minicpp.dir/gpu_constriants/cumulative.cu.s
 .PHONY : gpu_constriants/cumulative.cu.s
 
+gpu_constriants/smart_table.o: gpu_constriants/smart_table.cu.o
+.PHONY : gpu_constriants/smart_table.o
+
+# target to build an object file
+gpu_constriants/smart_table.cu.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/fzn-minicpp.dir/build.make CMakeFiles/fzn-minicpp.dir/gpu_constriants/smart_table.cu.o
+.PHONY : gpu_constriants/smart_table.cu.o
+
+gpu_constriants/smart_table.i: gpu_constriants/smart_table.cu.i
+.PHONY : gpu_constriants/smart_table.i
+
+# target to preprocess a source file
+gpu_constriants/smart_table.cu.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/fzn-minicpp.dir/build.make CMakeFiles/fzn-minicpp.dir/gpu_constriants/smart_table.cu.i
+.PHONY : gpu_constriants/smart_table.cu.i
+
+gpu_constriants/smart_table.s: gpu_constriants/smart_table.cu.s
+.PHONY : gpu_constriants/smart_table.s
+
+# target to generate assembly for a file
+gpu_constriants/smart_table.cu.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/fzn-minicpp.dir/build.make CMakeFiles/fzn-minicpp.dir/gpu_constriants/smart_table.cu.s
+.PHONY : gpu_constriants/smart_table.cu.s
+
 gpu_constriants/table.o: gpu_constriants/table.cu.o
 .PHONY : gpu_constriants/table.o
 
@@ -755,6 +779,9 @@ help:
 	@echo "... gpu_constriants/cumulative.o"
 	@echo "... gpu_constriants/cumulative.i"
 	@echo "... gpu_constriants/cumulative.s"
+	@echo "... gpu_constriants/smart_table.o"
+	@echo "... gpu_constriants/smart_table.i"
+	@echo "... gpu_constriants/smart_table.s"
 	@echo "... gpu_constriants/table.o"
 	@echo "... gpu_constriants/table.i"
 	@echo "... gpu_constriants/table.s"

@@ -297,4 +297,5 @@ CMakeFiles/fzn-minicpp.dir/fzn_constraints_helper.cpp.o: \
  /usr/local/cuda/include/texture_types.h \
  /usr/local/cuda/include/cuda_device_runtime_api.h \
  /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/./libgpu/LinearAllocator.cuh \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/gpu_constriants/table.cuh
+ /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/gpu_constriants/table.cuh \
+ /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/gpu_constriants/smart_table.cuh
