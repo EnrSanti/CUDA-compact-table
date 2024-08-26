@@ -21,6 +21,9 @@ class SmartTable : public Constraint {
         int _supportSize; //the length (no of rows) of the supports bitset (CONSTANT)
 
         vector<SparseBitSet> _supports; //table of which values for each variable are required in a constraint
+        //************************************
+        //if no incremental update is used the following three vectors are USELESS
+        //************************************
         vector<SparseBitSet> _supportsShort;
         vector<SparseBitSet> _supportsMax;
         vector<SparseBitSet> _supportsMin;
@@ -32,9 +35,7 @@ class SmartTable : public Constraint {
         vector<int> _s_sup; //indexes of the vars not yet inst. with at least one value in their domain for which no support has yet been found (could be replaced by a bitset)
         vector<trail<int>> _residues; 
 
-        //già l'abbiamo in var[i]->InitialSize()
-        //vector<long> supportSizes; //for each var the size of it's domain (CONSTANT), the sizes are the actual sizes (i.e. var 5..7: y; has size 3 not 7 as if was starting from 0)
-        
+  
         vector<int> _supportOffsetJmp; //for each var the index of the row in "supports" in which such variable starts (CONSTANT)
         
         //c'è in vars[i]->initialMin(); 

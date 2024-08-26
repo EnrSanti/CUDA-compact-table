@@ -12,8 +12,8 @@ array [int,int] of SmartTableOp: signs = [|Int,Int,Int|All,Int,Int|Int,Int,Int|]
 
 array [int,int] of 1..50: t2 = [|30,8|37,9|];
 
-constraint table([x1,x2], t2) ;
-constraint smart_table([x0,x1,x2], t, signs);
+constraint table([x1,x2], t2) :: gpu;
+constraint smart_table([x0,x1,x2], t, signs) :: gpu;
 
 constraint x1>35;
 

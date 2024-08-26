@@ -12,7 +12,7 @@ array [int,int] of SmartTableOp: signs = [|All,All,Int|Int,All,Int|Int,Int,Int|]
 
 array [int,int] of 1..50: t2 = [|30,8|37,9|];
 
-constraint table([x1,x2], t2) ::uniud;
+constraint table([x1,x2], t2) ;
 constraint smart_table([x0,x1,x2], t, signs);
 
 constraint xNotInTable>15;

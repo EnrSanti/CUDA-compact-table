@@ -18,9 +18,13 @@ class SmartTableGPU : public SmartTable {
         u32 sm_count;
 
         unsigned int *_supports_dev; //array of arrays linearized
+        //************************************
+        //if no incremental update is used the following three arrays are USELESS
+        //************************************
         unsigned int *_supportsShort_dev;
         unsigned int *_supportsMin_dev;
         unsigned int *_supportsMax_dev;
+
         //int *_supports_mask_dev; //not neeeded, never used 
         unsigned int  * _currTable_dev; //array
         unsigned int  * _currTable_mask_dev; //array
@@ -44,6 +48,7 @@ class SmartTableGPU : public SmartTable {
         SmartTableGPU(vector<var<int>::Ptr> & vars,  vector<std::vector<int>> & tuples, vector<std::vector<int>> & signs);
         void post() override;
         void propagate() override;
-    
-        
+        void enfoceGAC() ;
+        void filterDomains();
 };
+__global__ void updateSmartTableGPU(unsigned int* _supports_dev,int * _s_val_size_dev, int *_s_val_dev, int *_supportSize_dev, int *_variablesOffsets_dev, int *_supportOffsetJmp_dev, unsigned int * _currTable_dev,int* cur_currTable_dev_size, unsigned int* _vars_dev,int* out, int* offset, int* noVars);

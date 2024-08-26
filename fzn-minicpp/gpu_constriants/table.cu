@@ -72,18 +72,7 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
 
 
     //Memory copy
-    //cudaMemcpyAsync(_supports_dev, _supports.data(), sizeof(SparseBitSet)*_supportSize, cudaMemcpyHostToDevice);
-    //(_currTable_dev, &_currTable, sizeof(SparseBitSet), cudaMemcpyHostToDevice);
-    //printf("%%%%%% copying for supportsize: %d, currTableSize %d\n",_supportSize*currTableSize, currTableSize);
-    //printing the supports_hosts
-    /*for(int i=0;i<_supportSize*currTableSize;i=i+currTableSize){
-        if(i%currTableSize==0)
-            printf("%%%%%% [%d] ", i);
-        for(int j=0;j<currTableSize;j++){
-            printBits(_supports_host[i+j]);
-        }
-        printf("\n");
-    }*/
+
     cudaMemcpyAsync(_supports_dev, _supports_host, sizeof(unsigned int)*_supportSize*currTableSize, cudaMemcpyHostToDevice);
     cudaMemcpyAsync(_currTable_dev, _currTable_host, sizeof(unsigned int)*currTableSize, cudaMemcpyHostToDevice);
     cudaMemcpyAsync(_supportSize_dev, &_supportSize, sizeof(int), cudaMemcpyHostToDevice);
@@ -94,7 +83,7 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     cudaMemcpyAsync(_vars_dev, _vars_host, sizeof(unsigned int)*((_supportSize/32)+1), cudaMemcpyHostToDevice);
 
 
- 
+    cudaFree(_supports_host);
 }
 void TableGPU::post(){
     //printf("%%%%%% post GPU\n");
@@ -262,7 +251,7 @@ __global__ void updateTableGPU(unsigned int* _supports_dev,int * _s_val_size_dev
     int varIndex=0;
     extern __shared__ unsigned int mask[]; //mask (32)
     
-    //clear mask TODO MANDATORY
+    //clear mask MANDATORY
 
     mask[threadIdx.x]=0;
     
