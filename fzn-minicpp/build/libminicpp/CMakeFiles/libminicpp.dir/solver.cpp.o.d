@@ -1,7 +1,7 @@
 libminicpp/CMakeFiles/libminicpp.dir/solver.cpp.o: \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/libminicpp/solver.cpp \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/libminicpp/solver.cpp \
  /usr/include/stdc-predef.h \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/libminicpp/solver.hpp \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/libminicpp/solver.hpp \
  /usr/include/c++/11/list /usr/include/c++/11/bits/stl_algobase.h \
  /usr/include/x86_64-linux-gnu/c++/11/bits/c++config.h \
  /usr/include/x86_64-linux-gnu/c++/11/bits/os_defines.h \
@@ -106,9 +106,9 @@ libminicpp/CMakeFiles/libminicpp.dir/solver.cpp.o: \
  /usr/include/setjmp.h /usr/include/x86_64-linux-gnu/bits/setjmp.h \
  /usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h \
  /usr/include/x86_64-linux-gnu/bits/setjmp2.h \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/libminicpp/cont.hpp \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/libminicpp/context.hpp \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/libminicpp/handle.hpp \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/libminicpp/cont.hpp \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/libminicpp/context.hpp \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/libminicpp/handle.hpp \
  /usr/include/c++/11/memory \
  /usr/include/c++/11/bits/stl_raw_storage_iter.h \
  /usr/include/c++/11/bits/align.h /usr/include/c++/11/bit \
@@ -151,7 +151,7 @@ libminicpp/CMakeFiles/libminicpp.dir/solver.cpp.o: \
  /usr/include/c++/11/backward/auto_ptr.h \
  /usr/include/c++/11/pstl/glue_memory_defs.h \
  /usr/include/c++/11/pstl/execution_defs.h \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/libminicpp/fail.hpp \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/libminicpp/fail.hpp \
  /usr/include/stdio.h /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
@@ -159,12 +159,12 @@ libminicpp/CMakeFiles/libminicpp.dir/solver.cpp.o: \
  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
  /usr/include/x86_64-linux-gnu/bits/stdio.h \
  /usr/include/x86_64-linux-gnu/bits/stdio2.h \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/libminicpp/store.hpp \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/libminicpp/trail.hpp \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/libminicpp/store.hpp \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/libminicpp/trail.hpp \
  /usr/include/c++/11/stack /usr/include/c++/11/bits/stl_stack.h \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/libminicpp/state.hpp \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/libminicpp/trailable.hpp \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/libminicpp/stlAllocAdapter.hpp \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/libminicpp/state.hpp \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/libminicpp/trailable.hpp \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/libminicpp/stlAllocAdapter.hpp \
  /usr/include/c++/11/iostream /usr/include/c++/11/ostream \
  /usr/include/c++/11/ios /usr/include/c++/11/bits/char_traits.h \
  /usr/include/c++/11/cstdint /usr/include/c++/11/bits/localefwd.h \
@@ -200,9 +200,9 @@ libminicpp/CMakeFiles/libminicpp.dir/solver.cpp.o: \
  /usr/include/c++/11/bits/basic_ios.tcc \
  /usr/include/c++/11/bits/ostream.tcc /usr/include/c++/11/istream \
  /usr/include/c++/11/bits/istream.tcc /usr/include/assert.h \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/libminicpp/avar.hpp \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/libminicpp/acstr.hpp \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/libminicpp/controller.hpp \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/libminicpp/avar.hpp \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/libminicpp/acstr.hpp \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/libminicpp/controller.hpp \
  /usr/include/c++/11/iomanip /usr/include/c++/11/locale \
  /usr/include/c++/11/bits/locale_facets_nonio.h /usr/include/c++/11/ctime \
  /usr/include/x86_64-linux-gnu/c++/11/bits/time_members.h \

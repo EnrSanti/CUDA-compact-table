@@ -1,7 +1,7 @@
 libminicpp/CMakeFiles/libminicpp.dir/cont.cpp.o: \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/libminicpp/cont.cpp \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/libminicpp/cont.cpp \
  /usr/include/stdc-predef.h \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/libminicpp/cont.hpp \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/libminicpp/cont.hpp \
  /usr/include/c++/11/stdlib.h /usr/include/c++/11/cstdlib \
  /usr/include/x86_64-linux-gnu/c++/11/bits/c++config.h \
  /usr/include/x86_64-linux-gnu/c++/11/bits/os_defines.h \
@@ -52,7 +52,7 @@ libminicpp/CMakeFiles/libminicpp.dir/cont.cpp.o: \
  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
  /usr/include/x86_64-linux-gnu/bits/stdlib.h \
  /usr/include/c++/11/bits/std_abs.h \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/libminicpp/context.hpp \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/libminicpp/context.hpp \
  /usr/include/pthread.h /usr/include/sched.h \
  /usr/include/x86_64-linux-gnu/bits/sched.h \
  /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h \

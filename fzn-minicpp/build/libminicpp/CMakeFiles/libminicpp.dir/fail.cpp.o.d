@@ -1,7 +1,7 @@
 libminicpp/CMakeFiles/libminicpp.dir/fail.cpp.o: \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/libminicpp/fail.cpp \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/libminicpp/fail.cpp \
  /usr/include/stdc-predef.h \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/libminicpp/fail.hpp \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/libminicpp/fail.hpp \
  /usr/include/stdio.h \
  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
  /usr/include/features.h /usr/include/features-time64.h \

@@ -1,7 +1,7 @@
 CMakeFiles/fzn-minicpp.dir/main.cpp.o: \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/main.cpp \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/main.cpp \
  /usr/include/stdc-predef.h \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/./libfzn/Parser.h \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/./libfzn/Parser.h \
  /usr/include/c++/11/any /usr/include/c++/11/typeinfo \
  /usr/include/c++/11/bits/exception.h \
  /usr/include/x86_64-linux-gnu/c++/11/bits/c++config.h \
@@ -149,12 +149,12 @@ CMakeFiles/fzn-minicpp.dir/main.cpp.o: \
  /usr/include/c++/11/bits/stl_vector.h \
  /usr/include/c++/11/bits/stl_bvector.h \
  /usr/include/c++/11/bits/vector.tcc \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/./libfzn/Model.h \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/./libfzn/Model.h \
  /usr/include/c++/11/unordered_map \
  /usr/include/c++/11/bits/unordered_map.h /usr/include/c++/11/variant \
  /usr/include/c++/11/bits/parse_numbers.h \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/./libfzn/Types.h \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/./libfzn/peglib/peglib.h \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/./libfzn/Types.h \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/./libfzn/peglib/peglib.h \
  /usr/include/c++/11/algorithm /usr/include/c++/11/bits/stl_algo.h \
  /usr/include/c++/11/bits/algorithmfwd.h \
  /usr/include/c++/11/bits/stl_heap.h \
@@ -210,26 +210,26 @@ CMakeFiles/fzn-minicpp.dir/main.cpp.o: \
  /usr/include/c++/11/bits/stl_set.h \
  /usr/include/c++/11/bits/stl_multiset.h /usr/include/c++/11/sstream \
  /usr/include/c++/11/bits/sstream.tcc \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/./libfzn/Printer.h \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/./libminicpp/solver.hpp \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/./libfzn/Printer.h \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/./libminicpp/solver.hpp \
  /usr/include/c++/11/list /usr/include/c++/11/bits/stl_list.h \
  /usr/include/c++/11/bits/list.tcc /usr/include/c++/11/deque \
  /usr/include/c++/11/bits/stl_deque.h /usr/include/c++/11/bits/deque.tcc \
  /usr/include/c++/11/stdlib.h /usr/include/setjmp.h \
  /usr/include/x86_64-linux-gnu/bits/setjmp2.h \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/./libminicpp/cont.hpp \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/./libminicpp/context.hpp \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/./libminicpp/handle.hpp \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/./libminicpp/fail.hpp \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/./libminicpp/store.hpp \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/./libminicpp/trail.hpp \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/./libminicpp/cont.hpp \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/./libminicpp/context.hpp \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/./libminicpp/handle.hpp \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/./libminicpp/fail.hpp \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/./libminicpp/store.hpp \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/./libminicpp/trail.hpp \
  /usr/include/c++/11/stack /usr/include/c++/11/bits/stl_stack.h \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/./libminicpp/state.hpp \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/./libminicpp/trailable.hpp \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/./libminicpp/stlAllocAdapter.hpp \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/./libminicpp/avar.hpp \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/./libminicpp/acstr.hpp \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/./libminicpp/search.hpp \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/./libminicpp/state.hpp \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/./libminicpp/trailable.hpp \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/./libminicpp/stlAllocAdapter.hpp \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/./libminicpp/avar.hpp \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/./libminicpp/acstr.hpp \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/./libminicpp/search.hpp \
  /usr/include/c++/11/iomanip /usr/include/c++/11/locale \
  /usr/include/c++/11/bits/locale_facets_nonio.h \
  /usr/include/x86_64-linux-gnu/c++/11/bits/time_members.h \
@@ -259,15 +259,15 @@ CMakeFiles/fzn-minicpp.dir/main.cpp.o: \
  /usr/include/c++/11/tr1/poly_hermite.tcc \
  /usr/include/c++/11/tr1/poly_laguerre.tcc \
  /usr/include/c++/11/tr1/riemann_zeta.tcc \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/./libminicpp/solver.hpp \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/./libminicpp/constraint.hpp \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/./libminicpp/matrix.hpp \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/./libminicpp/intvar.hpp \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/./libminicpp/varitf.hpp \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/./libminicpp/trailList.hpp \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/./libminicpp/bitset.hpp \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/./libminicpp/domain.hpp \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/./libminicpp/bitsUtils.h \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/./libminicpp/solver.hpp \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/./libminicpp/constraint.hpp \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/./libminicpp/matrix.hpp \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/./libminicpp/intvar.hpp \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/./libminicpp/varitf.hpp \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/./libminicpp/trailList.hpp \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/./libminicpp/bitset.hpp \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/./libminicpp/domain.hpp \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/./libminicpp/bitsUtils.h \
  /usr/include/c++/11/climits \
  /usr/lib/gcc/x86_64-linux-gnu/11/include/limits.h \
  /usr/lib/gcc/x86_64-linux-gnu/11/include/syslimits.h \
@@ -277,11 +277,11 @@ CMakeFiles/fzn-minicpp.dir/main.cpp.o: \
  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
  /usr/include/x86_64-linux-gnu/bits/xopen_lim.h \
  /usr/include/x86_64-linux-gnu/bits/uio_lim.h \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/./libminicpp/matching.hpp \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/./libminicpp/RuntimeMonitor.hpp \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/./libfca/Timer.hpp \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/fzn_cli_helper.h \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/cxxopts/cxxopts.hpp \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/./libminicpp/matching.hpp \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/./libminicpp/RuntimeMonitor.hpp \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/./libfca/Timer.hpp \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/fzn_cli_helper.h \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/cxxopts/cxxopts.hpp \
  /usr/include/c++/11/regex /usr/include/c++/11/bitset \
  /usr/include/c++/11/iterator /usr/include/c++/11/bits/stream_iterator.h \
  /usr/include/c++/11/bits/regex_constants.h \
@@ -295,10 +295,10 @@ CMakeFiles/fzn-minicpp.dir/main.cpp.o: \
  /usr/include/c++/11/bits/regex.h /usr/include/c++/11/bits/regex.tcc \
  /usr/include/c++/11/bits/regex_executor.h \
  /usr/include/c++/11/bits/regex_executor.tcc /usr/include/c++/11/optional \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/fzn_constraints_helper.h \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/fzn_variables_helper.h \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/./libminicpp/intvar.hpp \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/fzn_output_helper.h \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/./cxxopts/cxxopts.hpp \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/fzn_search_helper.h \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/fzn_statistics_helper.h
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/fzn_constraints_helper.h \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/fzn_variables_helper.h \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/./libminicpp/intvar.hpp \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/fzn_output_helper.h \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/./cxxopts/cxxopts.hpp \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/fzn_search_helper.h \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/fzn_statistics_helper.h

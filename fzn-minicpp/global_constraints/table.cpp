@@ -14,20 +14,13 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     _s_sup= vector<int>();
     _supportOffsetJmp=vector<int>(noVars);
     _variablesOffsets=vector<int>(noVars);
-
-
     _currTable=SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),tuples.size());
 
-    for (int i = 0; i < noVars; i++){        
-        //_deltaXs[i]=SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),_vars[i]->max()+1);
-        //_lastVarsValues[i]=SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),_vars[i]->max()+1);
-
+    for (int i = 0; i < noVars; i++){      
         //calculating the number of rows in the support bitset
         _supportSize+=vars[i]->intialSize();
         //we store the offset
         _variablesOffsets[i]=vars[i]->min();      
-        //vars[i]->dumpInSparseBitSet(i,_variablesOffsets[i],vars[i]->min(),vars[i]->initialMin(),vars[i]->max(),_lastVarsValues[i]);
-
     }
 
 
@@ -39,7 +32,7 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
 
     //we allocate and initialize the support bitsets
     _supports=vector<SparseBitSet>(_supportSize,SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),noTuples));
-    _residues= vector<trail<int>>(_supportSize);
+    _residues=vector<trail<int>>(_supportSize);
 
 
     //we allocate and initialize the support bitsets
@@ -119,7 +112,6 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
         }
     }
     if(_currTable.isEmpty()){
-        //printf("%%%%%% EMPTY DOMAIN 3\n");
         failNow();
         return;
     }
@@ -152,28 +144,13 @@ void Table::updateTable(){
     for(int i=0; i < _s_val.size(); ++i){
         _currTable.clearMask();
         index=_s_val[i];
-        /*if(_deltaXs[index].countOnes() < _vars[index]->size()){//_deltaXs[index].countOnes() < _vars[index]->size()
-            //incremental update
-            
-            for (int j = 0; j < _vars[index]->intialSize(); j++){
-                //printf("%%%%%% deltaXs[%d] contains 1 at pos %d? ",index,_vars[index]->initialMin()+j);  
-                if(_deltaXs[index].getIthBit(j+_vars[index]->initialMin())==1){     
-                    int index_x_a=_supportOffsetJmp[index]+j;
-                    _currTable.addToMaskVector(_supports[index_x_a]._words);
-                }
-            }    
-
-            _currTable.reverseMask();
-
-        }else{ */
-            //reset based update
-            vector<int> dom=_vars[index]->dumpDomainToVec();
-            
-            for (int j = 0; j < dom.size(); j++){ 
-                int index_x_a=_supportOffsetJmp[index]+dom[j]-_variablesOffsets[index];
-                _currTable.addToMaskVector(_supports[index_x_a]._words);
-            } 
-        //}
+        
+        //reset based update
+        vector<int> dom=_vars[index]->dumpDomainToVec();
+        for (int j = 0; j < dom.size(); j++){ 
+            int index_x_a=_supportOffsetJmp[index]+dom[j]-_variablesOffsets[index];
+            _currTable.addToMaskVector(_supports[index_x_a]._words);
+        } 
 
         _currTable.intersectWithMask();
 
@@ -188,7 +165,6 @@ void Table::updateTable(){
 void Table::filterDomains(){
     for(int i=0; i < _s_sup.size(); ++i){
         int index=_s_sup[i];
-        //printf("%%%%%% filtering domain for var %d\n",index);
         for (int j = 0; j < _vars[index]->size(); j++){
             if(_vars[index]->contains(j+_vars[index]->initialMin())){ //i.e. a \in dom(x)
 
@@ -209,9 +185,6 @@ void Table::filterDomains(){
                 
             }
         }
-        //printf("%%%%%% new domain for var %d\n",index);
-        //_vars[index]->dumpInSparseBitSet(index,_variablesOffsets[index],_vars[index]->min(),_vars[index]->initialMin(),_vars[index]->max(),_lastVarsValues[index]);
-        //_lastVarsValues[index].printNoMask(0);
     }
 }
 
@@ -225,10 +198,7 @@ void Table::enfoceGAC(){
 		//update s_val and the deltas
         
         if(_vars[i]->changed()){
-            //printf("%%%%%% Var %d changed, [%d,%d]\n",i,_vars[i]->min(),_vars[i]->max());
             _s_val.push_back(i);
-            //printf("%%%%%% Var %d changed UPDATING DELTA\n",i);
-            //updateDelta(i);
         }
         
 		//update s_sup
@@ -242,20 +212,3 @@ void Table::enfoceGAC(){
     
 }
 
-/*
-void Table::updateDelta(int i){
-
-    _vars[i]->dumpInSparseBitSet(i,_variablesOffsets[i],_vars[i]->min(),_vars[i]->initialMin(),_vars[i]->max(),_deltaXs[i]);
-
-    //we calculate the delta by xoring the words
-   
-   
-    
-    for (int j = 0; j < _vars[i]->getSizeOfBitSet(); j++){
-        _deltaXs[i]._words[j].setValue(_deltaXs[i]._words[j].value()^_lastVarsValues[i]._words[j].value()); //BEWARE, BROKEN THE DATA STRUCTURE can be replaced with x XOR y = (x AND (NOT y)) OR ((NOT x) AND y)
-        printf("%%%%%% var %d, %d %d \n",i,_lastVarsValues[i]._words[j].value(),_deltaXs[i]._words[j]);
-    }
-    
-
-}
-*/

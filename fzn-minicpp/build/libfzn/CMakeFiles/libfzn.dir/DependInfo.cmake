@@ -8,8 +8,8 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/libfzn/Parser.cpp" "libfzn/CMakeFiles/libfzn.dir/Parser.cpp.o" "gcc" "libfzn/CMakeFiles/libfzn.dir/Parser.cpp.o.d"
-  "/home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/libfzn/Printer.cpp" "libfzn/CMakeFiles/libfzn.dir/Printer.cpp.o" "gcc" "libfzn/CMakeFiles/libfzn.dir/Printer.cpp.o.d"
+  "/home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/libfzn/Parser.cpp" "libfzn/CMakeFiles/libfzn.dir/Parser.cpp.o" "gcc" "libfzn/CMakeFiles/libfzn.dir/Parser.cpp.o.d"
+  "/home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/libfzn/Printer.cpp" "libfzn/CMakeFiles/libfzn.dir/Printer.cpp.o" "gcc" "libfzn/CMakeFiles/libfzn.dir/Printer.cpp.o.d"
   )
 
 # Targets to which this target links.

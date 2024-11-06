@@ -34729,7 +34729,7 @@ return require;
 } 
 
 # 1 "CMakeCUDACompilerId.compute_80.cudafe1.stub.c"
-#define _NV_ANON_NAMESPACE _GLOBAL__N__5d41ab28_22_CMakeCUDACompilerId_cu_bd57c623
+#define _NV_ANON_NAMESPACE _GLOBAL__N__16383652_22_CMakeCUDACompilerId_cu_bd57c623
 #ifdef _NV_ANON_NAMESPACE
 #endif
 # 1 "CMakeCUDACompilerId.compute_80.cudafe1.stub.c"

@@ -1,7 +1,7 @@
 libfzn/CMakeFiles/libfzn.dir/Printer.cpp.o: \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/libfzn/Printer.cpp \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/libfzn/Printer.cpp \
  /usr/include/stdc-predef.h \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/libfzn/Utils.h \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/libfzn/Utils.h \
  /usr/include/c++/11/any /usr/include/c++/11/typeinfo \
  /usr/include/c++/11/bits/exception.h \
  /usr/include/x86_64-linux-gnu/c++/11/bits/c++config.h \
@@ -156,7 +156,7 @@ libfzn/CMakeFiles/libfzn.dir/Printer.cpp.o: \
  /usr/include/x86_64-linux-gnu/bits/types/error_t.h \
  /usr/include/c++/11/bits/charconv.h \
  /usr/include/c++/11/bits/basic_string.tcc \
- /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/libfzn/Printer.h \
+ /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/libfzn/Printer.h \
  /usr/include/c++/11/functional /usr/include/c++/11/bits/std_function.h \
  /usr/include/c++/11/unordered_map /usr/include/c++/11/bits/hashtable.h \
  /usr/include/c++/11/bits/hashtable_policy.h \

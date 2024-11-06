@@ -8,12 +8,12 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/libfzn/Demo.cpp" "libfzn/CMakeFiles/libfzn-demo.dir/Demo.cpp.o" "gcc" "libfzn/CMakeFiles/libfzn-demo.dir/Demo.cpp.o.d"
+  "/home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/libfzn/Demo.cpp" "libfzn/CMakeFiles/libfzn-demo.dir/Demo.cpp.o" "gcc" "libfzn/CMakeFiles/libfzn-demo.dir/Demo.cpp.o.d"
   )
 
 # Targets to which this target links.
 set(CMAKE_TARGET_LINKED_INFO_FILES
-  "/home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/build/libfzn/CMakeFiles/libfzn.dir/DependInfo.cmake"
+  "/home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/build/libfzn/CMakeFiles/libfzn.dir/DependInfo.cmake"
   )
 
 # Fortran module output directory.

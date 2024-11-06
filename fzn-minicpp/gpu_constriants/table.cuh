@@ -15,25 +15,26 @@ class TableGPU : public Table{
     private:
         u32 sm_count;
 
-        unsigned int *_supports_dev; //array of arrays linearized
+        unsigned int *supports_dev; //array of arrays linearized
         //int *_supports_mask_dev; //not neeeded, never used 
-        unsigned int  * _currTable_dev; //array
-        unsigned int  * _currTable_mask_dev; //array
-        int * _currTable_size_dev; //just a pointer to a single element
-        int * _supportSize_dev; //just a pointer to a single element
-        int * _supportOffsetJmp_dev; //array
-        int * _variablesOffsets_dev; //array
-        int * _s_val_size_dev; //pointer
-        int * _s_val_dev; //array
-        unsigned int * _vars_dev; //array (matrix) (the domains)
-        int * _output_dev; //pointer
+        unsigned int  * currTable_dev; //array
+        unsigned int  * currTable_mask_dev; //array
+        int * currTable_size_dev; //just a pointer to a single element
+        int * supportSize_dev; //just a pointer to a single element
+        int * supportOffsetJmp_dev; //array
+        int * variablesOffsets_dev; //array
+        int * s_val_size_dev; //pointer
+        int * s_val_dev; //array
+        unsigned int *vars_dev; //array (matrix) (the domains)
+        int *output_dev; //pointer
         int currTableSize;
+        int noBlocks;
         int noVars;
-        int *_noVars_dev;
-        int *_vars_host;
-        int *_offset;
-        unsigned int *_currTable_host;
-        int* _outputArray;
+        int *noVars_dev;
+        int *vars_host;
+        int *offset;
+        unsigned int *currTable_host;
+        int*outputArray;
 
     public:
         TableGPU(vector<var<int>::Ptr> & vars,  vector<vector<int>> & tuples);

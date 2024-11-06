@@ -5,13 +5,13 @@
 # compile CXX with /usr/bin/c++
 CUDA_DEFINES = 
 
-CUDA_INCLUDES = -I/home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/. -I/usr/local/cuda/include -I/home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp
+CUDA_INCLUDES = -I/home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/. -I/usr/local/cuda/include -I/home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp
 
 CUDA_FLAGS =  --diag-suppress 177 --diag-suppress 550 --diag-suppress 815 --diag-suppress 830 --diag-suppress 997 -O3 -DNDEBUG --generate-code=arch=compute_60,code=[compute_60,sm_60] --generate-code=arch=compute_70,code=[compute_70,sm_70] --generate-code=arch=compute_80,code=[compute_80,sm_80] -std=c++17
 
 CXX_DEFINES = 
 
-CXX_INCLUDES = -I/home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/. -I/usr/local/cuda/include -I/home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp
+CXX_INCLUDES = -I/home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/. -I/usr/local/cuda/include -I/home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp
 
 CXX_FLAGS = -O3 -DNDEBUG -std=gnu++17
 

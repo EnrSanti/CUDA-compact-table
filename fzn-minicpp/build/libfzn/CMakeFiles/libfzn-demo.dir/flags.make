@@ -4,7 +4,7 @@
 # compile CXX with /usr/bin/c++
 CXX_DEFINES = 
 
-CXX_INCLUDES = -I/home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/. -I/usr/local/cuda/include -I/home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp
+CXX_INCLUDES = -I/home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/. -I/usr/local/cuda/include -I/home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp
 
 CXX_FLAGS = -O3 -DNDEBUG -std=gnu++17
 

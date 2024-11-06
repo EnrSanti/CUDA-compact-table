@@ -1,4 +1,4 @@
-# Install script for directory: /home/enry/Scrivania/Projects/CUDA-compact-table/fzn-minicpp/libfzn
+# Install script for directory: /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/libfzn
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
