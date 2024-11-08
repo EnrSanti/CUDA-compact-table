@@ -321,10 +321,24 @@ CMakeFiles/fzn-minicpp.dir/global_constraints/smart_table.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/fzn-minicpp.dir/global_constraints/smart_table.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/global_constraints/smart_table.cpp -o CMakeFiles/fzn-minicpp.dir/global_constraints/smart_table.cpp.s
 
+CMakeFiles/fzn-minicpp.dir/global_constraints/myBitSet.cpp.o: CMakeFiles/fzn-minicpp.dir/flags.make
+CMakeFiles/fzn-minicpp.dir/global_constraints/myBitSet.cpp.o: ../global_constraints/myBitSet.cpp
+CMakeFiles/fzn-minicpp.dir/global_constraints/myBitSet.cpp.o: CMakeFiles/fzn-minicpp.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_19) "Building CXX object CMakeFiles/fzn-minicpp.dir/global_constraints/myBitSet.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/fzn-minicpp.dir/global_constraints/myBitSet.cpp.o -MF CMakeFiles/fzn-minicpp.dir/global_constraints/myBitSet.cpp.o.d -o CMakeFiles/fzn-minicpp.dir/global_constraints/myBitSet.cpp.o -c /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/global_constraints/myBitSet.cpp
+
+CMakeFiles/fzn-minicpp.dir/global_constraints/myBitSet.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/fzn-minicpp.dir/global_constraints/myBitSet.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/global_constraints/myBitSet.cpp > CMakeFiles/fzn-minicpp.dir/global_constraints/myBitSet.cpp.i
+
+CMakeFiles/fzn-minicpp.dir/global_constraints/myBitSet.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/fzn-minicpp.dir/global_constraints/myBitSet.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/global_constraints/myBitSet.cpp -o CMakeFiles/fzn-minicpp.dir/global_constraints/myBitSet.cpp.s
+
 CMakeFiles/fzn-minicpp.dir/global_constraints/stable_matching.cpp.o: CMakeFiles/fzn-minicpp.dir/flags.make
 CMakeFiles/fzn-minicpp.dir/global_constraints/stable_matching.cpp.o: ../global_constraints/stable_matching.cpp
 CMakeFiles/fzn-minicpp.dir/global_constraints/stable_matching.cpp.o: CMakeFiles/fzn-minicpp.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_19) "Building CXX object CMakeFiles/fzn-minicpp.dir/global_constraints/stable_matching.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_20) "Building CXX object CMakeFiles/fzn-minicpp.dir/global_constraints/stable_matching.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/fzn-minicpp.dir/global_constraints/stable_matching.cpp.o -MF CMakeFiles/fzn-minicpp.dir/global_constraints/stable_matching.cpp.o.d -o CMakeFiles/fzn-minicpp.dir/global_constraints/stable_matching.cpp.o -c /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/global_constraints/stable_matching.cpp
 
 CMakeFiles/fzn-minicpp.dir/global_constraints/stable_matching.cpp.i: cmake_force
@@ -338,7 +352,7 @@ CMakeFiles/fzn-minicpp.dir/global_constraints/stable_matching.cpp.s: cmake_force
 CMakeFiles/fzn-minicpp.dir/gpu_constriants/cumulative.cu.o: CMakeFiles/fzn-minicpp.dir/flags.make
 CMakeFiles/fzn-minicpp.dir/gpu_constriants/cumulative.cu.o: ../gpu_constriants/cumulative.cu
 CMakeFiles/fzn-minicpp.dir/gpu_constriants/cumulative.cu.o: CMakeFiles/fzn-minicpp.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_20) "Building CUDA object CMakeFiles/fzn-minicpp.dir/gpu_constriants/cumulative.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_21) "Building CUDA object CMakeFiles/fzn-minicpp.dir/gpu_constriants/cumulative.cu.o"
 	/usr/local/cuda/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/fzn-minicpp.dir/gpu_constriants/cumulative.cu.o -MF CMakeFiles/fzn-minicpp.dir/gpu_constriants/cumulative.cu.o.d -x cu -dc /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/gpu_constriants/cumulative.cu -o CMakeFiles/fzn-minicpp.dir/gpu_constriants/cumulative.cu.o
 
 CMakeFiles/fzn-minicpp.dir/gpu_constriants/cumulative.cu.i: cmake_force
@@ -352,7 +366,7 @@ CMakeFiles/fzn-minicpp.dir/gpu_constriants/cumulative.cu.s: cmake_force
 CMakeFiles/fzn-minicpp.dir/gpu_constriants/table.cu.o: CMakeFiles/fzn-minicpp.dir/flags.make
 CMakeFiles/fzn-minicpp.dir/gpu_constriants/table.cu.o: ../gpu_constriants/table.cu
 CMakeFiles/fzn-minicpp.dir/gpu_constriants/table.cu.o: CMakeFiles/fzn-minicpp.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_21) "Building CUDA object CMakeFiles/fzn-minicpp.dir/gpu_constriants/table.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_22) "Building CUDA object CMakeFiles/fzn-minicpp.dir/gpu_constriants/table.cu.o"
 	/usr/local/cuda/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/fzn-minicpp.dir/gpu_constriants/table.cu.o -MF CMakeFiles/fzn-minicpp.dir/gpu_constriants/table.cu.o.d -x cu -dc /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/gpu_constriants/table.cu -o CMakeFiles/fzn-minicpp.dir/gpu_constriants/table.cu.o
 
 CMakeFiles/fzn-minicpp.dir/gpu_constriants/table.cu.i: cmake_force
@@ -366,7 +380,7 @@ CMakeFiles/fzn-minicpp.dir/gpu_constriants/table.cu.s: cmake_force
 CMakeFiles/fzn-minicpp.dir/gpu_constriants/smart_table.cu.o: CMakeFiles/fzn-minicpp.dir/flags.make
 CMakeFiles/fzn-minicpp.dir/gpu_constriants/smart_table.cu.o: ../gpu_constriants/smart_table.cu
 CMakeFiles/fzn-minicpp.dir/gpu_constriants/smart_table.cu.o: CMakeFiles/fzn-minicpp.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_22) "Building CUDA object CMakeFiles/fzn-minicpp.dir/gpu_constriants/smart_table.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_23) "Building CUDA object CMakeFiles/fzn-minicpp.dir/gpu_constriants/smart_table.cu.o"
 	/usr/local/cuda/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/fzn-minicpp.dir/gpu_constriants/smart_table.cu.o -MF CMakeFiles/fzn-minicpp.dir/gpu_constriants/smart_table.cu.o.d -x cu -dc /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/gpu_constriants/smart_table.cu -o CMakeFiles/fzn-minicpp.dir/gpu_constriants/smart_table.cu.o
 
 CMakeFiles/fzn-minicpp.dir/gpu_constriants/smart_table.cu.i: cmake_force
@@ -397,6 +411,7 @@ fzn__minicpp_OBJECTS = \
 "CMakeFiles/fzn-minicpp.dir/global_constraints/cumulative.cpp.o" \
 "CMakeFiles/fzn-minicpp.dir/global_constraints/table.cpp.o" \
 "CMakeFiles/fzn-minicpp.dir/global_constraints/smart_table.cpp.o" \
+"CMakeFiles/fzn-minicpp.dir/global_constraints/myBitSet.cpp.o" \
 "CMakeFiles/fzn-minicpp.dir/global_constraints/stable_matching.cpp.o" \
 "CMakeFiles/fzn-minicpp.dir/gpu_constriants/cumulative.cu.o" \
 "CMakeFiles/fzn-minicpp.dir/gpu_constriants/table.cu.o" \
@@ -423,6 +438,7 @@ CMakeFiles/fzn-minicpp.dir/cmake_device_link.o: CMakeFiles/fzn-minicpp.dir/fzn_c
 CMakeFiles/fzn-minicpp.dir/cmake_device_link.o: CMakeFiles/fzn-minicpp.dir/global_constraints/cumulative.cpp.o
 CMakeFiles/fzn-minicpp.dir/cmake_device_link.o: CMakeFiles/fzn-minicpp.dir/global_constraints/table.cpp.o
 CMakeFiles/fzn-minicpp.dir/cmake_device_link.o: CMakeFiles/fzn-minicpp.dir/global_constraints/smart_table.cpp.o
+CMakeFiles/fzn-minicpp.dir/cmake_device_link.o: CMakeFiles/fzn-minicpp.dir/global_constraints/myBitSet.cpp.o
 CMakeFiles/fzn-minicpp.dir/cmake_device_link.o: CMakeFiles/fzn-minicpp.dir/global_constraints/stable_matching.cpp.o
 CMakeFiles/fzn-minicpp.dir/cmake_device_link.o: CMakeFiles/fzn-minicpp.dir/gpu_constriants/cumulative.cu.o
 CMakeFiles/fzn-minicpp.dir/cmake_device_link.o: CMakeFiles/fzn-minicpp.dir/gpu_constriants/table.cu.o
@@ -431,7 +447,7 @@ CMakeFiles/fzn-minicpp.dir/cmake_device_link.o: CMakeFiles/fzn-minicpp.dir/build
 CMakeFiles/fzn-minicpp.dir/cmake_device_link.o: libfzn/libfzn.a
 CMakeFiles/fzn-minicpp.dir/cmake_device_link.o: libminicpp/libminicpp.a
 CMakeFiles/fzn-minicpp.dir/cmake_device_link.o: CMakeFiles/fzn-minicpp.dir/dlink.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_23) "Linking CUDA device code CMakeFiles/fzn-minicpp.dir/cmake_device_link.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_24) "Linking CUDA device code CMakeFiles/fzn-minicpp.dir/cmake_device_link.o"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/fzn-minicpp.dir/dlink.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
@@ -458,6 +474,7 @@ fzn__minicpp_OBJECTS = \
 "CMakeFiles/fzn-minicpp.dir/global_constraints/cumulative.cpp.o" \
 "CMakeFiles/fzn-minicpp.dir/global_constraints/table.cpp.o" \
 "CMakeFiles/fzn-minicpp.dir/global_constraints/smart_table.cpp.o" \
+"CMakeFiles/fzn-minicpp.dir/global_constraints/myBitSet.cpp.o" \
 "CMakeFiles/fzn-minicpp.dir/global_constraints/stable_matching.cpp.o" \
 "CMakeFiles/fzn-minicpp.dir/gpu_constriants/cumulative.cu.o" \
 "CMakeFiles/fzn-minicpp.dir/gpu_constriants/table.cu.o" \
@@ -484,6 +501,7 @@ fzn-minicpp: CMakeFiles/fzn-minicpp.dir/fzn_constraints/int_tern.cpp.o
 fzn-minicpp: CMakeFiles/fzn-minicpp.dir/global_constraints/cumulative.cpp.o
 fzn-minicpp: CMakeFiles/fzn-minicpp.dir/global_constraints/table.cpp.o
 fzn-minicpp: CMakeFiles/fzn-minicpp.dir/global_constraints/smart_table.cpp.o
+fzn-minicpp: CMakeFiles/fzn-minicpp.dir/global_constraints/myBitSet.cpp.o
 fzn-minicpp: CMakeFiles/fzn-minicpp.dir/global_constraints/stable_matching.cpp.o
 fzn-minicpp: CMakeFiles/fzn-minicpp.dir/gpu_constriants/cumulative.cu.o
 fzn-minicpp: CMakeFiles/fzn-minicpp.dir/gpu_constriants/table.cu.o
@@ -493,7 +511,7 @@ fzn-minicpp: libfzn/libfzn.a
 fzn-minicpp: libminicpp/libminicpp.a
 fzn-minicpp: CMakeFiles/fzn-minicpp.dir/cmake_device_link.o
 fzn-minicpp: CMakeFiles/fzn-minicpp.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_24) "Linking CXX executable fzn-minicpp"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_25) "Linking CXX executable fzn-minicpp"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/fzn-minicpp.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

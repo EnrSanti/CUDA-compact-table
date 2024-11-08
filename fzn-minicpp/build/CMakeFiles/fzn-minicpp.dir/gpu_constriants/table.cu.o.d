@@ -345,6 +345,10 @@ CMakeFiles/fzn-minicpp.dir/gpu_constriants/table.cu.o : /home/enry/Scrivania/UNI
     /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/./libminicpp/acstr.hpp \
     /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/./libminicpp/trailList.hpp \
     /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/./libminicpp/bitset.hpp \
+    /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/./global_constraints/myBitSet.hpp \
+    /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/./global_constraints/../libminicpp/trailable.hpp \
+    /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/./global_constraints/../libminicpp/handle.hpp \
+    /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/./global_constraints/../libminicpp/store.hpp \
     /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/./libfca/Types.hpp \
     /home/enry/Scrivania/UNI/CUDA_ct/CUDA-compact-table/fzn-minicpp/./libgpu/Memory.cuh \
     /usr/include/c++/11/cstddef \

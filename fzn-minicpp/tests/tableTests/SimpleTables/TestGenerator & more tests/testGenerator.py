@@ -94,18 +94,18 @@ def generateConstraints(varsInTable,domainsMin,domainsMax,noTuples,tableNo):
 filesToCreate=40
 
 #how many clauses we want in an instance (max and min)
-minNoVars=10
-maxNoVars=80
+minNoVars=4
+maxNoVars=10
 
-minDomain=10
-maxDomain=500
+minDomain=20
+maxDomain=400
 maxOffset=200
 
 #minNoTables=1 #not yet used only 1 table
 #maxNoTables=1
 
-minTuples=50
-maxTuples=500
+minTuples=5
+maxTuples=200
 
 osType="linux"; # "windows" or "linux" #used just to specify the directory format
 
@@ -135,10 +135,10 @@ if(osType=="windows"):
 	directoryPathUNSAT_CUDA="testsUNSAT_CUDA\\"
 	directoryPathSAT_CUDA="testsSAT_CUDA\\"
 else:
-	directoryPathUNSAT="testsUNSAT/"
-	directoryPathSAT="testsSAT/"
-	directoryPathUNSAT_CUDA="testsUNSAT_CUDA/"
-	directoryPathSAT_CUDA="testsSAT_CUDA/"
+	directoryPathUNSAT="testsUNSAT2/"
+	directoryPathSAT="testsSAT2/"
+	directoryPathUNSAT_CUDA="testsUNSAT_CUDA2/"
+	directoryPathSAT_CUDA="testsSAT_CUDA2/"
 
 #check if folders exist else create them
 if not os.path.isdir(directoryPathSAT):

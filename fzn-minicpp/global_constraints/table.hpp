@@ -1,8 +1,8 @@
 #pragma once
 
 #include <libminicpp/varitf.hpp>
-#include <libminicpp/bitset.hpp>
 
+#include "myBitSet.hpp"
 
 using namespace std;
 
@@ -46,15 +46,11 @@ class Table : public Constraint{
         vector<var<int>::Ptr> _vars;
         vector<vector<int>> _tuples;
 
-        SparseBitSet _currTable; 
+        myBitSet _currTable; 
 
         int _supportSize; //the length (no of rows) of the supports bitset (CONSTANT)
 
-        vector<SparseBitSet> _supports; //table of which values for each variable are required in a constraint
-        
-    
-        //vector<SparseBitSet>  _deltaXs; //deltaXs[i] is the delta of the ith variable 
-        //vector<SparseBitSet> _lastVarsValues; //_lastVarsValues[i] is the snapshot of the domain of ith variable at the previous step
+        vector<myBitSet> _supports; //table of which values for each variable are required in a constraint
         
         //già l'abbiamo in var[i]->size()
         //int* lastSizes; //current domain size of each var 

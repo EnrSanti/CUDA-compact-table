@@ -874,7 +874,7 @@ void FznConstraintHelper::addGlobalConstraintsBuilders()
         bool const gpu = count_if(anns.begin(), anns.end(), [](Fzn::annotation_t const & ann) -> bool {return ann.first == "gpu";});
         if (gpu)
         {
-            return new (solver) TableGPU(x, _t);
+            return new (solver) Table(x, _t);
         }
         else
         {
@@ -905,7 +905,7 @@ void FznConstraintHelper::addGlobalConstraintsBuilders()
         bool const gpu = count_if(anns.begin(), anns.end(), [](Fzn::annotation_t const & ann) -> bool {return ann.first == "gpu";});
         if (gpu)
         {
-            return new (solver) SmartTableGPU(x, _t, _sto);
+            return new (solver) SmartTable(x, _t, _sto);
         }
         else
         {
