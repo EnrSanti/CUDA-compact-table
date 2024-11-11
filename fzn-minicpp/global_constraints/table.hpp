@@ -46,11 +46,11 @@ class Table : public Constraint{
         vector<var<int>::Ptr> _vars;
         vector<vector<int>> _tuples;
 
-        myBitSet _currTable; 
+        SparseBitSet _currTable; 
 
         int _supportSize; //the length (no of rows) of the supports bitset (CONSTANT)
 
-        vector<myBitSet> _supports; //table of which values for each variable are required in a constraint
+        vector<SparseBitSet> _supports; //table of which values for each variable are required in a constraint
         
         //già l'abbiamo in var[i]->size()
         //int* lastSizes; //current domain size of each var 

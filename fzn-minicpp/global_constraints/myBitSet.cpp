@@ -73,7 +73,7 @@ void myBitSet::addToMaskInt(unsigned int value){
 	mask[wordIndex]=mask[wordIndex] | wordToOr;
 }
 
-void myBitSet::print(int offset) {
+void myBitSet::print() {
 
    int wordsNo=words.size();
    for (int i = 0; i < wordsNo; i++) {
@@ -108,16 +108,7 @@ int myBitSet::countOnes(){
    return count;
 
 }
-//to fix (optimize a lot)
-int myBitSet::getIthBit(int index){
-   
-   int wordIndex=(index/32);
-   int bitIndex=index%32;
-   if(words[wordIndex].value() & (1<<(31-bitIndex))){
-      return 1;
-   }
-   return 0;
-}
+
 bool myBitSet::isEmpty(){
    int wordsNo=words.size();
    for (int i = 0; i < wordsNo; i++) {

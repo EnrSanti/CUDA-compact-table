@@ -3,7 +3,7 @@
 Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     Constraint(vars[0]->getSolver()), 
     _vars(vars), _tuples(tuples), 
-    _currTable(myBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),tuples.size())){
+    _currTable(SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),tuples.size())){
     
 
     
@@ -14,7 +14,7 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     _s_sup= vector<int>();
     _supportOffsetJmp=vector<int>(noVars);
     _variablesOffsets=vector<int>(noVars);
-    _currTable=myBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),tuples.size());
+    _currTable=SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),tuples.size());
 
 
     for (int i = 0; i < noVars; i++){      
@@ -25,30 +25,29 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
         printf("%%%%%% offsets: %d\n",_variablesOffsets[i]);
 
     }
-    printf("%%%%%% supportSize: %d\n",_supportSize);
+    printf("%%%%%% supportSize (sum of the vars dom): %d\n",_supportSize);
 
 
     //calculating the offset of the variables, used in accessing the support rows    
     _supportOffsetJmp[0]=0;
     for (int i = 1; i < noVars; i++){
         _supportOffsetJmp[i]=_supportOffsetJmp[i-1]+vars[i-1]->intialSize();
+        //print 
+        printf("%%%%%% supportOffsetJmp[%d]: %d\n",i,_supportOffsetJmp[i]);
     }
+
     //we allocate and initialize the support bitsets
-    _supports=vector<myBitSet>(_supportSize,myBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),noTuples));
+    printf("%%%%%% creating _supports (%d of them) of size %d\n",_supportSize,noTuples);
+    _supports=vector<SparseBitSet>(_supportSize,SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),noTuples));
     _residues=vector<trail<int>>(_supportSize);
 
-
-    //we allocate and initialize the support bitsets
-    for (int i = 0; i < _supportSize; i++){
-        _supports[i]=myBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),noTuples);//the content doesn't make sense yet, later we need to update the mask and intersect it
-    }
 
     
     
     bool found=false;
+    //-1 means that no value in the domain of the variable is in any table row
     int tuplesOfSingletons[noVars];
 
-    _currTable.print(0);
     for (int v = 0; v < noVars; v++){
         tuplesOfSingletons[v]=-1;
         for (int t = 0; t < noTuples; t++){
@@ -88,7 +87,7 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
         //we initialize residues
         bool broken=false;
         for(int j=0; j<noTuples; j++){
-            if(_supports[i].words[j/bitsPerWord].value()!=0x00000000 && !broken){
+            if(_supports[i]._words[j/bitsPerWord].value()!=0x00000000 && !broken){
                 _residues[i]=trail<int>(vars[0]->getSolver()->getStateManager(), j); 
                 broken=true;
             }else{
@@ -96,9 +95,10 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
             }
         }
     }
-    
-    //qui non è empty
-    _currTable.print(0);
+
+    printf("%%%%%% FIN QUI C'ARRIVO\n");
+
+    //_currTable.print(0);
     for (int i = 0; i < noVars; i++){
         if(_vars[i]->size()==1){
             //tuplesOfSingletons[v]=-1 SSE NESSUN VALORE nel dominio per la var v è nella tbl
@@ -107,11 +107,10 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
                 failNow();
                 return;
             }
-            _currTable.addToMaskInt(tuplesOfSingletons[i]+1);
-            _currTable.intersectWithMask();
-            _currTable.clearMask();
         }
     }
+
+    printf("%%%%%% FIN QUI C'ARRIVO 2\n");
     if(_currTable.isEmpty()){
         failNow();
         return;
@@ -128,7 +127,9 @@ void Table::post()
 
 void Table::propagate()
 {
-    printf("%%%%%% propagate\n");
+    printf("%%%%%% ******** propagating: ********\n");
+    printf("%%%%%% _currTable: \n");
+    //_currTable.print(0);
     enfoceGAC();
 }
 
@@ -151,7 +152,7 @@ void Table::updateTable(){
         vector<int> dom=_vars[index]->dumpDomainToVec();
         for (int j = 0; j < dom.size(); j++){ 
             int index_x_a=_supportOffsetJmp[index]+dom[j]-_variablesOffsets[index];
-            _currTable.addToMaskVector(_supports[index_x_a].words);
+            _currTable.addToMaskVector(_supports[index_x_a]._words);
         } 
 
         _currTable.intersectWithMask();
@@ -173,9 +174,9 @@ void Table::filterDomains(){
                 int index_x_a=_supportOffsetJmp[index]+j;
                 int indexResidue=_residues[index_x_a].value();
 
-                if((_currTable.words[indexResidue] & _supports[index_x_a].words[indexResidue] ) == 0x00000000){
+                if((_currTable._words[indexResidue] & _supports[index_x_a]._words[indexResidue] ) == 0x00000000){
                 
-                    indexResidue=_supports[index_x_a].intersectIndex(_currTable);
+                    indexResidue=_supports[index_x_a].intersectIndexSparse(_currTable);
                     
                     if(indexResidue!=-1){
                         _residues[index_x_a].setValue(indexResidue); //ok setVal
@@ -198,8 +199,15 @@ void Table::enfoceGAC(){
     
 	for (int i = 0; i < _vars.size(); i++){
 		//update s_val and the deltas
-        
         if(_vars[i]->changed()){
+            printf("%%%%%% var %d changed\n",i);
+            //for each val of the var print it
+            vector<int> dom=_vars[i]->dumpDomainToVec();
+            /*
+            for (int j = 0; j < dom.size(); j++){
+                if(dom[j]!=0)
+                    printf("%%%%%% var[%d] contains %d\n",i,dom[j]);
+            }*/
             _s_val.push_back(i);
         }
         

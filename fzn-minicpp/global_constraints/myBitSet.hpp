@@ -28,9 +28,8 @@ public:
    int intersectIndex(myBitSet& m);
    trail<int>& operator[] (int i) { return words[i];}
    int operator[] (int i) const { return words[i].value();}
-   void print(int offset);
+   void print();
    int countOnes(); //"size"
-   int getIthBit(int index);
 };
 
 #endif
