@@ -40,9 +40,6 @@ public:
 
 class SparseBitSet {
    
-   
-   
-   
    int                         _sz;
    int                         _nbWords;
    void printBits(unsigned int num);

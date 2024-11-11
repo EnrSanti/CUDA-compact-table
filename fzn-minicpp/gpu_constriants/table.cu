@@ -3,6 +3,7 @@
 TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) : Table(vars,tuples){
     setPriority(CLOW);
     
+    printf("%%%%%% TableGPU constructor\n");
     //get the number of tuples and vars in the table
     int noTuples=tuples.size();
     noVars=vars.size();

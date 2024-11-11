@@ -238,9 +238,6 @@ void SmartTable::intializeTable(int noVars,int noTuples){
                 failNow();
                 return;
             }
-            _currTable.addToMaskInt(tuplesOfSingletons[i]+1);
-            _currTable.intersectWithMask();
-            _currTable.clearMask();
         }
     }
     if(_currTable.isEmpty()){

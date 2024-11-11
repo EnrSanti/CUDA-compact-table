@@ -541,6 +541,30 @@ global_constraints/cumulative.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/fzn-minicpp.dir/build.make CMakeFiles/fzn-minicpp.dir/global_constraints/cumulative.cpp.s
 .PHONY : global_constraints/cumulative.cpp.s
 
+global_constraints/myBitSet.o: global_constraints/myBitSet.cpp.o
+.PHONY : global_constraints/myBitSet.o
+
+# target to build an object file
+global_constraints/myBitSet.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/fzn-minicpp.dir/build.make CMakeFiles/fzn-minicpp.dir/global_constraints/myBitSet.cpp.o
+.PHONY : global_constraints/myBitSet.cpp.o
+
+global_constraints/myBitSet.i: global_constraints/myBitSet.cpp.i
+.PHONY : global_constraints/myBitSet.i
+
+# target to preprocess a source file
+global_constraints/myBitSet.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/fzn-minicpp.dir/build.make CMakeFiles/fzn-minicpp.dir/global_constraints/myBitSet.cpp.i
+.PHONY : global_constraints/myBitSet.cpp.i
+
+global_constraints/myBitSet.s: global_constraints/myBitSet.cpp.s
+.PHONY : global_constraints/myBitSet.s
+
+# target to generate assembly for a file
+global_constraints/myBitSet.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/fzn-minicpp.dir/build.make CMakeFiles/fzn-minicpp.dir/global_constraints/myBitSet.cpp.s
+.PHONY : global_constraints/myBitSet.cpp.s
+
 global_constraints/smart_table.o: global_constraints/smart_table.cpp.o
 .PHONY : global_constraints/smart_table.o
 
@@ -767,6 +791,9 @@ help:
 	@echo "... global_constraints/cumulative.o"
 	@echo "... global_constraints/cumulative.i"
 	@echo "... global_constraints/cumulative.s"
+	@echo "... global_constraints/myBitSet.o"
+	@echo "... global_constraints/myBitSet.i"
+	@echo "... global_constraints/myBitSet.s"
 	@echo "... global_constraints/smart_table.o"
 	@echo "... global_constraints/smart_table.i"
 	@echo "... global_constraints/smart_table.s"

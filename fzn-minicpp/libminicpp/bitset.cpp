@@ -156,17 +156,17 @@ void SparseBitSet::addToMaskInt(unsigned int value){
 void SparseBitSet::print(int offset) {
 
    //if(_limit.value()>=0)
-    	printf("\n%%%%%% Words (for value %d): \n",offset);
+    	printf("\n%%%%%% Words (for value %d): \n",_limit.value()); 
       
    // else{
    // 	printf("\n%%%%%% *** Value %d never found in any tuple ***\n",offset);
    //   return;
    // }
-   for (int i = 0; i <= _limit.value(); i++) {
+   for (int i = 0; i <= _limit; i++) {
       printf("%%%%%% [%d] ", i);
       printBits(_words[_index[i]].value());
    }
-   if(_limit.value()==-1){
+   if(_limit==-1){
       printf("%%%%%% [%d] ", 0);
       printBits(0);
    }

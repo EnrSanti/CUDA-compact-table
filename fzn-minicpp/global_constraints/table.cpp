@@ -16,33 +16,36 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     _variablesOffsets=vector<int>(noVars);
     _currTable=SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),tuples.size());
 
+
     for (int i = 0; i < noVars; i++){      
         //calculating the number of rows in the support bitset
         _supportSize+=vars[i]->intialSize();
         //we store the offset
         _variablesOffsets[i]=vars[i]->min();      
+        //printf("%%%%%% offsets: %d\n",_variablesOffsets[i]);
+
     }
+    //printf("%%%%%% supportSize (sum of the vars dom): %d\n",_supportSize);
 
 
     //calculating the offset of the variables, used in accessing the support rows    
     _supportOffsetJmp[0]=0;
     for (int i = 1; i < noVars; i++){
-        _supportOffsetJmp[i]=_supportOffsetJmp[i-1]+vars[i-1]->size();
+        _supportOffsetJmp[i]=_supportOffsetJmp[i-1]+vars[i-1]->intialSize();
+        //print 
+        //printf("%%%%%% supportOffsetJmp[%d]: %d\n",i,_supportOffsetJmp[i]);
     }
 
     //we allocate and initialize the support bitsets
+    //printf("%%%%%% creating _supports (%d of them) of size %d\n",_supportSize,noTuples);
     _supports=vector<SparseBitSet>(_supportSize,SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),noTuples));
     _residues=vector<trail<int>>(_supportSize);
 
 
-    //we allocate and initialize the support bitsets
-    for (int i = 0; i < _supportSize; i++){
-        _supports[i]=SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),noTuples);//the content doesn't make sense yet, later we need to update the mask and intersect it
-    }
-
     
     
     bool found=false;
+    //-1 means that no value in the domain of the variable is in any table row
     int tuplesOfSingletons[noVars];
 
     for (int v = 0; v < noVars; v++){
@@ -63,7 +66,6 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
             }
         }
         if (found==false){
-            //printf("%%%%%% EMPTY DOMAIN\n");
             failNow();
             return;
         }
@@ -73,7 +75,7 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     _currTable.intersectWithMask();
     _currTable.clearMask();
 
-    
+    //qui non è e,mpty
     
     int bitsPerWord=32;
 
@@ -93,29 +95,23 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
             }
         }
     }
-    
-    /*for (int i = 0; i < _supportSize; ++i){  
-        _supports[i].print(i);
-    }*/
-    //print();
-    //forall vars
+
+
+    //_currTable.print(0);
     for (int i = 0; i < noVars; i++){
         if(_vars[i]->size()==1){
+            //tuplesOfSingletons[v]=-1 SSE NESSUN VALORE nel dominio per la var v è nella tbl
+            //printf("%%%%%% tuplesOfSingletons[i]: %d\n",tuplesOfSingletons[i]);
             if(tuplesOfSingletons[i]==-1){
-                //printf("%%%%%% EMPTY DOMAIN 2\n");
                 failNow();
                 return;
             }
-            _currTable.addToMaskInt(tuplesOfSingletons[i]+1);
-            _currTable.intersectWithMask();
-            _currTable.clearMask();
         }
     }
     if(_currTable.isEmpty()){
         failNow();
         return;
     }
-
 }
 
 void Table::post()
@@ -127,6 +123,9 @@ void Table::post()
 
 void Table::propagate()
 {
+    //printf("%%%%%% ******** propagating: ********\n");
+    //printf("%%%%%% _currTable: \n");
+    //_currTable.print(0);
     enfoceGAC();
 }
 
@@ -196,8 +195,15 @@ void Table::enfoceGAC(){
     
 	for (int i = 0; i < _vars.size(); i++){
 		//update s_val and the deltas
-        
         if(_vars[i]->changed()){
+            //printf("%%%%%% var %d changed\n",i);
+            //for each val of the var print it
+            vector<int> dom=_vars[i]->dumpDomainToVec();
+            /*
+            for (int j = 0; j < dom.size(); j++){
+                if(dom[j]!=0)
+                    printf("%%%%%% var[%d] contains %d\n",i,dom[j]);
+            }*/
             _s_val.push_back(i);
         }
         
@@ -206,9 +212,6 @@ void Table::enfoceGAC(){
             _s_sup.push_back(i);
         }
 	}
-	updateTable();
-	
+	updateTable();	
 	filterDomains();
-    
 }
-
