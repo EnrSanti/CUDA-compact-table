@@ -2,7 +2,305 @@
 
 SmartTableGPU::SmartTableGPU(vector<var<int>::Ptr> & vars,  vector<std::vector<int>> & tuples, vector<std::vector<int>> & signs) : SmartTable(vars,tuples,signs){
    setPriority(CLOW);
+    printf("%%%%%% Hola, I'm on GPU\n");
+
+    int noTuples=tuples.size();
+    noVars=vars.size();
+    currTableSize=(noTuples/32)+1;
+    _noVars_dev=mallocDevice<int>(sizeof(int));
+    cudaMemcpyAsync(_noVars_dev, &noVars, sizeof(int), cudaMemcpyHostToDevice);
+    cudaDeviceProp device_prop;
+    cudaGetDeviceProperties(&device_prop, 0);
+    sm_count = device_prop.multiProcessorCount;
+    int cores_per_SM = 128;
+
+    // Memory allocation
+    _currTable_dev = mallocDevice<unsigned int >(sizeof(unsigned int)*currTableSize); 
+    _currTable_mask_dev = mallocDevice<unsigned int >(sizeof(unsigned int)*currTableSize); 
+    _supports_dev = mallocDevice<unsigned int >(sizeof(unsigned int)*_supportSize*currTableSize);
+    _supportSize_dev = mallocDevice<int>(sizeof(int));
+    _variablesOffsets_dev = mallocDevice<int>(sizeof(int)*noVars);
+    _supportOffsetJmp_dev = mallocDevice<int>(sizeof(int)*(noVars+1));
+    _currTable_size_dev=mallocDevice<int>(sizeof(int));
+    _s_val_size_dev=mallocDevice<int>(sizeof(int));
+    _offset=mallocDevice<int>(sizeof(int));
+    _s_val_dev=mallocDevice<int>(sizeof(int)*noVars);
+    _vars_dev=mallocDevice<unsigned int>(sizeof(unsigned int)*((_supportSize/32)+1)); //matrix
+    _output_dev=mallocDevice<int>(sizeof(int)*(currTableSize/32)+1); //one for each block
+
+    //printf("%%%%%% To store %d values i need %d words in my domains\n",_supportSize*currTableSize,((_supportSize/32)+1));
+    
+    //on host side we create simpler structures to then copy the data
+    _currTable_host = mallocHost<unsigned int>(sizeof(unsigned int)*currTableSize); 
+    unsigned int *_supports_host = mallocHost<unsigned int>(sizeof(unsigned int)*_supportSize*currTableSize);
+    unsigned int *_supportsShort_host = mallocHost<unsigned int>(sizeof(unsigned int)*_supportSize*currTableSize);
+    unsigned int *_supportsMin_host = mallocHost<unsigned int>(sizeof(unsigned int)*_supportSize*currTableSize);
+    unsigned int *_supportsMax_host = mallocHost<unsigned int>(sizeof(unsigned int)*_supportSize*currTableSize);
+   
+    _vars_host=mallocHost<int>(sizeof(unsigned int)*((_supportSize/32)+1)); //matrix
+    _outputArray=mallocHost<int>(sizeof(int)*(currTableSize/32)+1); 
+
+    //get the vectors to arrays
+    for(int i=0;i<_supportSize;i++){
+        for(int j=0; j<currTableSize;j++){
+            _supports_host[i*currTableSize+j]=_supports[i]._words[j].value();
+            _supportsShort_host[i*currTableSize+j]=_supportsShort[i]._words[j].value();
+            _supportsMin_host[i*currTableSize+j]=_supportsMin[i]._words[j].value();
+            _supportsMax_host[i*currTableSize+j]=_supportsMax[i]._words[j].value();
+        }
+    }
+
+    for(int i=0;i<((_supportSize/32)+1);i++){
+        _vars_host[i]=0;
+    }
+
+    //can be done much better but for now it's ok
+    for(int i=0;i<noVars;i++){
+        vector<int> dom=_vars[i]->dumpDomainToVec();
+        for(int j=0;j<dom.size();j++){
+            //getting an unsigned int with the 32-dom[j]-_variablesOffsets[i] bit set
+            unsigned int mask=1<<31-(dom[j]-_variablesOffsets[i]+_supportOffsetJmp[i]);
+            int starting_word=(dom[j]-_variablesOffsets[i]+_supportOffsetJmp[i])/32;
+            _vars_host[starting_word]=_vars_host[starting_word]|mask;
+            //prinitng bits of _vars_host
+        }
+    }
+
+            
+    //end of could be done better
+    *_currTable_host=_currTable._words.data()->value();
+    
+
+    cudaMemcpyAsync(_supports_dev, _supports_host, sizeof(unsigned int)*_supportSize*currTableSize, cudaMemcpyHostToDevice);
+    cudaMemcpyAsync(_supportsShort_dev, _supportsShort_host, sizeof(unsigned int)*_supportSize*currTableSize, cudaMemcpyHostToDevice);
+    cudaMemcpyAsync(_supportsMin_dev, _supportsMin_host, sizeof(unsigned int)*_supportSize*currTableSize, cudaMemcpyHostToDevice);
+    cudaMemcpyAsync(_supportsMax_dev, _supportsMax_host, sizeof(unsigned int)*_supportSize*currTableSize, cudaMemcpyHostToDevice);
+    cudaMemcpyAsync(_currTable_dev, _currTable_host, sizeof(unsigned int)*currTableSize, cudaMemcpyHostToDevice);
+    cudaMemcpyAsync(_supportSize_dev, &_supportSize, sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemcpyAsync(_variablesOffsets_dev, _variablesOffsets.data(), sizeof(int)*noVars, cudaMemcpyHostToDevice);
+    cudaMemcpyAsync(_supportOffsetJmp_dev, _supportOffsetJmp.data(), sizeof(int)*noVars, cudaMemcpyHostToDevice);
+    cudaMemcpyAsync(&_supportOffsetJmp_dev[noVars], &_supportSize, sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemcpyAsync(_currTable_size_dev, &currTableSize, sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemcpyAsync(_vars_dev, _vars_host, sizeof(unsigned int)*((_supportSize/32)+1), cudaMemcpyHostToDevice);
+
+    cudaFreeHost(_supports_host);
+    cudaFreeHost(_supportsShort_host);
+    cudaFreeHost(_supportsMax_host);
+    cudaFreeHost(_supportsMin_host);
  
 }
-void SmartTableGPU::post(){}
-void SmartTableGPU::propagate(){};
+
+void SmartTableGPU::post(){
+    //printf("%%%%%% post GPU\n");
+    for (auto const & v : _vars){
+       v->propagateOnBoundChange(this);
+    }
+}
+void SmartTableGPU::propagate(){
+    //printf("%%%%%% propagate on GPU\n");
+    enfoceGAC();
+}
+
+void SmartTableGPU::enfoceGAC(){
+
+    int noBlocks=(currTableSize/32)+1;
+    cudaMemcpyAsync(_currTable_dev, _currTable_host, sizeof(unsigned int)*currTableSize, cudaMemcpyHostToDevice);
+    //reset var_host
+    for(int i=0;i<((_supportSize/32)+1);i++){
+        _vars_host[i]=0;
+    }
+    //can be done much better but for now it's ok
+    for(int i=0;i<noVars;i++){
+        vector<int> dom=_vars[i]->dumpDomainToVec();
+        
+        for(int j=0;j<dom.size();j++){
+            //getting an unsigned int with the 32-dom[j]-_variablesOffsets[i] bit set
+            unsigned int mask=1<<31-(dom[j]-_variablesOffsets[i]+_supportOffsetJmp[i]);
+            //printing the domain
+            int starting_word=(dom[j]-_variablesOffsets[i]+_supportOffsetJmp[i])/32;
+            _vars_host[starting_word]=_vars_host[starting_word]|mask;
+        }
+    }
+
+    cudaMemcpyAsync(_vars_dev, _vars_host, sizeof(unsigned int)*((_supportSize/32)+1), cudaMemcpyHostToDevice);
+    cudaDeviceSynchronize();
+            
+    //end of could be done better
+
+    _s_val.clear();
+    _s_sup.clear();
+    
+    int output=0;
+	for (int i = 0; i < _vars.size(); i++){
+		//update s_val and the deltas
+        if(_vars[i]->changed()){
+            _s_val.push_back(i);
+        }
+        //update s_sup
+        if(_vars[i]->size()>1){
+            _s_sup.push_back(i);
+        }
+	}
+    
+    int size=_s_val.size();
+    //printing the s_val
+
+    cudaMemcpyAsync(_s_val_size_dev, &size, sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemcpyAsync(_s_val_dev, _s_val.data(), sizeof(int)*size, cudaMemcpyHostToDevice);
+    int offset=0;
+    int min=noVars;
+    for(int i=0;i<size;i++){
+        if(_s_val[i]<min){
+            offset=_s_val[i];
+        }
+    }
+    cudaMemcpyAsync(_offset, &offset, sizeof(int), cudaMemcpyHostToDevice);
+    cudaDeviceSynchronize();
+    //for each word of currTable launch a kernel
+  
+    for(int i=0;i<currTableSize;i++){
+        _currTable_host[i]=_currTable._words[i].value();
+    }
+    cudaMemcpyAsync(_currTable_dev, _currTable_host, sizeof(unsigned int)*currTableSize, cudaMemcpyHostToDevice);
+    cudaDeviceSynchronize();
+    updateSmartTableGPU<<<noBlocks,32,32*sizeof(unsigned int)>>>(_supports_dev,_s_val_size_dev,_s_val_dev,_supportSize_dev,_variablesOffsets_dev,_supportOffsetJmp_dev,_currTable_dev,_currTable_size_dev,_vars_dev,_output_dev, _offset, _noVars_dev);
+
+	
+    cudaDeviceSynchronize();
+    
+    //retrieve the output from the device
+    cudaMemcpyAsync(_outputArray, _output_dev, sizeof(int)*noBlocks, cudaMemcpyDeviceToHost);
+
+
+    //performed on host, the number of blocks usually is small (e.g. if we have 1280 rows in the table we have 2 blocks)
+
+    for(int i=0; i<noBlocks; i++){
+        if(_outputArray[i]==1){
+            output=1;
+            break;
+        }
+    }
+    if(output==1){
+        failNow();
+        printf("%%%%%% fail now\n");
+    }else{
+        //we retrieve current table
+        //getting back the current table
+       
+        cudaMemcpyAsync(_currTable_host, _currTable_dev, sizeof(unsigned int)*(currTableSize), cudaMemcpyDeviceToHost);
+        cudaDeviceSynchronize();
+
+        //we need to update the current table
+
+        for(int i=0;i<currTableSize;i++){
+            _currTable._mask[i]=_currTable_host[i];
+        }
+        
+        _currTable.intersectWithMask();
+        _currTable.clearMask();
+        //printing the currTable
+        /*
+        for(int i=0;i<currTableSize;i++){
+            printf("%%%%%% [%d] ", i);
+            printBits(_currTable._words[i].value());
+        }*/
+        if(_currTable.isEmpty()){
+            failNow();
+            //printf("%%%%%% backtrack\n");
+        }
+    }
+    
+    
+	filterDomains();
+}
+
+void SmartTableGPU::filterDomains(){
+    for(int i=0; i < _s_sup.size(); ++i){
+        int index=_s_sup[i];
+        //printf("%%%%%% filtering domain for var %d\n",index);
+        for (int j = 0; j < _vars[index]->size(); j++){
+            if(_vars[index]->contains(j+_vars[index]->initialMin())){ //i.e. a \in dom(x)
+
+                int index_x_a=_supportOffsetJmp[index]+j;
+                int indexResidue=_residues[index_x_a].value();
+
+                if((_currTable._words[indexResidue] & _supports[index_x_a]._words[indexResidue] ) == 0x00000000){
+                
+                    indexResidue=_supports[index_x_a].intersectIndexSparse(_currTable);
+                    
+                    if(indexResidue!=-1){
+                        _residues[index_x_a].setValue(indexResidue); //ok setVal
+                    }else{
+                        _vars[index]->remove(j+_vars[index]->initialMin());                   
+                    }
+                  
+                }
+                
+            }
+        }
+        //_vars[index]->dumpInSparseBitSet(index,_variablesOffsets[index],_vars[index]->min(),_vars[i]->initialMin(),_vars[index]->max(),_lastVarsValues[index]);
+    }
+}
+// 1 th per support row
+__global__ void updateSmartTableGPU(unsigned int* _supports_dev,int * _s_val_size_dev, int *_s_val_dev, int *_supportSize_dev, int *_variablesOffsets_dev, int *_supportOffsetJmp_dev, unsigned int * _currTable_dev,int* _currTable_dev_size, unsigned int* _vars_dev, int* output, int *offset, int *varNoDev){
+
+    int thPos = blockIdx.x * blockDim.x + threadIdx.x; //which currTable word we are considering
+    int varIndex=0;
+    extern __shared__ unsigned int mask[]; //mask (32)
+    
+    //clear mask MANDATORY
+
+    mask[threadIdx.x]=0;
+    
+    //for each word in my column in supports
+    if(thPos>=*_currTable_dev_size){
+        return;
+    }
+
+    int varNo=0;
+    
+    for(int i=0; i<*_s_val_size_dev; i++){
+        varIndex=_s_val_dev[i];
+        int loops=_supportOffsetJmp_dev[varIndex+1]-_supportOffsetJmp_dev[varIndex];    
+        int from=_supportOffsetJmp_dev[varIndex];
+        
+        //printf("%%%%%% GPU th %d var %d from %d to %d\n",thPos,varIndex,from,from+loops);
+        //checking if the var is in s_val
+        for(int j=0; j<loops; j++){
+            int wordIndex=(from+j)/32; //row
+            int maskContains=1<<(31-j-_supportOffsetJmp_dev[varIndex]+wordIndex*32);
+
+            //printf("%%%%%% GPU th %d var %d, accessing word %d, maskContains: %u\n",thPos,varIndex,wordIndex, maskContains);
+            //printf("%%%%%% GPU th %d var %d maskContains %u\n",thPos,varIndex,maskContains);
+            if(_vars_dev[wordIndex] & maskContains){ //check if val in domain
+                //printf("%%%%%% GPU INSIDE th %d var %d contains %d\n",thPos,varIndex,j);
+                int off=j*(*_currTable_dev_size)+(_supportOffsetJmp_dev[varIndex]*(*_currTable_dev_size))+threadIdx.x; //1 -> the size of the currTable
+                //printf("%%%%%% GPU INSIDE th %d off %d, _currTable_dev_size: %u,_supportOffsetJmp_dev[varIndex]: %d\n",thPos,off,*_currTable_dev_size,_supportOffsetJmp_dev[varIndex]);
+                mask[threadIdx.x]=mask[threadIdx.x] | _supports_dev[off];
+                //printf("%%%%%% GPU INSIDE th %d mask related to var %d is %u, only the mask %u (accessing %d)\n",thPos,varIndex,mask[threadIdx.x],_supports_dev[off],off);
+            }
+            
+            __syncthreads();
+        }
+        //printing complete mask
+        //printf("%%%%%% GPU th %d complete mask for var %d is %u, table before[%d] %u\n",thPos,varIndex,mask[threadIdx.x],thPos,_currTable_dev[thPos]);
+        _currTable_dev[thPos]=mask[threadIdx.x] & _currTable_dev[thPos];
+        mask[threadIdx.x]=0;
+    }
+    
+    //printf("%%%%%% GPU th %d currTable[%d] %d\n",thPos,thPos,_currTable_dev[thPos]);
+    if(threadIdx.x==0){
+
+        //printf("%%%%%% GPU kernel over\n");
+        for(int i=blockIdx.x*32;i<(blockIdx.x+1)*32;i++){
+            if(_currTable_dev[i]!=0){
+                output[blockIdx.x]=0;
+                return;
+            }
+        }
+        output[blockIdx.x]=1;
+        //printf("%%%%%% GPU fail now GPU\n");
+    }
+   
+
+}

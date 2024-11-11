@@ -874,7 +874,7 @@ void FznConstraintHelper::addGlobalConstraintsBuilders()
         bool const gpu = count_if(anns.begin(), anns.end(), [](Fzn::annotation_t const & ann) -> bool {return ann.first == "gpu";});
         if (gpu)
         {
-            return new (solver) Table(x, _t);
+            return new (solver) TableGPU(x, _t);
         }
         else
         {

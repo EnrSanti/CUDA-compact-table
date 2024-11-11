@@ -25,7 +25,7 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
         //printf("%%%%%% offsets: %d\n",_variablesOffsets[i]);
 
     }
-    printf("%%%%%% supportSize (sum of the vars dom): %d\n",_supportSize);
+    //printf("%%%%%% supportSize (sum of the vars dom): %d\n",_supportSize);
 
 
     //calculating the offset of the variables, used in accessing the support rows    
@@ -37,7 +37,7 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     }
 
     //we allocate and initialize the support bitsets
-    printf("%%%%%% creating _supports (%d of them) of size %d\n",_supportSize,noTuples);
+    //printf("%%%%%% creating _supports (%d of them) of size %d\n",_supportSize,noTuples);
     _supports=vector<SparseBitSet>(_supportSize,SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),noTuples));
     _residues=vector<trail<int>>(_supportSize);
 
@@ -96,26 +96,22 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
         }
     }
 
-    printf("%%%%%% FIN QUI C'ARRIVO\n");
 
     //_currTable.print(0);
     for (int i = 0; i < noVars; i++){
         if(_vars[i]->size()==1){
             //tuplesOfSingletons[v]=-1 SSE NESSUN VALORE nel dominio per la var v è nella tbl
-            printf("%%%%%% tuplesOfSingletons[i]: %d\n",tuplesOfSingletons[i]);
+            //printf("%%%%%% tuplesOfSingletons[i]: %d\n",tuplesOfSingletons[i]);
             if(tuplesOfSingletons[i]==-1){
                 failNow();
                 return;
             }
         }
     }
-
-    printf("%%%%%% FIN QUI C'ARRIVO 2\n");
     if(_currTable.isEmpty()){
         failNow();
         return;
     }
-    _currTable.print(0);
 }
 
 void Table::post()
