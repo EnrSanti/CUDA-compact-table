@@ -22,7 +22,7 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
         _supportSize+=vars[i]->intialSize();
         //we store the offset
         _variablesOffsets[i]=vars[i]->min();      
-        printf("%%%%%% offsets: %d\n",_variablesOffsets[i]);
+        //printf("%%%%%% offsets: %d\n",_variablesOffsets[i]);
 
     }
     printf("%%%%%% supportSize (sum of the vars dom): %d\n",_supportSize);
@@ -33,7 +33,7 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     for (int i = 1; i < noVars; i++){
         _supportOffsetJmp[i]=_supportOffsetJmp[i-1]+vars[i-1]->intialSize();
         //print 
-        printf("%%%%%% supportOffsetJmp[%d]: %d\n",i,_supportOffsetJmp[i]);
+        //printf("%%%%%% supportOffsetJmp[%d]: %d\n",i,_supportOffsetJmp[i]);
     }
 
     //we allocate and initialize the support bitsets
@@ -127,8 +127,8 @@ void Table::post()
 
 void Table::propagate()
 {
-    printf("%%%%%% ******** propagating: ********\n");
-    printf("%%%%%% _currTable: \n");
+    //printf("%%%%%% ******** propagating: ********\n");
+    //printf("%%%%%% _currTable: \n");
     //_currTable.print(0);
     enfoceGAC();
 }
@@ -200,7 +200,7 @@ void Table::enfoceGAC(){
 	for (int i = 0; i < _vars.size(); i++){
 		//update s_val and the deltas
         if(_vars[i]->changed()){
-            printf("%%%%%% var %d changed\n",i);
+            //printf("%%%%%% var %d changed\n",i);
             //for each val of the var print it
             vector<int> dom=_vars[i]->dumpDomainToVec();
             /*

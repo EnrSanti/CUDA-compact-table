@@ -2,8 +2,13 @@
 
 import os 
 import random
+import time
 from random import choice
+from ortools.constraint_solver import pywrapcp	
 from ortools.sat.python import cp_model
+from datetime import datetime
+import gc
+
 
 #WARNING: THIS PROGRAM ISN't OPTIMIZED 
 #could be done much better, anyway, it's just to create instances
@@ -72,9 +77,17 @@ def generateConstraints(varsInTable,domainsMin,domainsMax,noTuples,tableNo):
 			constraints+="constraint x"+ str(varsInTable[i])+"="+str(valueC)+";\n"
 		
 	solver = cp_model.CpSolver()
-
-
+	#set time limit 5 min
+	search_parameters = pywrapcp.DefaultRoutingSearchParameters()
+	search_parameters.local_search_operators.use_shortest_path_swap_active = "BOOL_FALSE"
+	solver.parameters.num_search_workers = 2
+	solver.parameters.max_time_in_seconds = 60*5
+	t0=time.time()
+	print("Solving model (t0="+str(datetime.fromtimestamp(t0))+")...")
 	status = solver.solve(model)
+	t1=time.time()
+
+	print("Over (time elapsed: "+str(t1-t0)+").")
 	retStat=""
 	if(status==cp_model.OPTIMAL or status==cp_model.FEASIBLE):
 		print("SAT")
@@ -83,29 +96,33 @@ def generateConstraints(varsInTable,domainsMin,domainsMax,noTuples,tableNo):
 		print("UNSAT")
 		retStat="UNSAT"
 	else:
-		print("...SOMETHING'S WRONG\n")
+		retStat="TIMEOUT"
+		print("...TIMEOUT\n")
 	
+	del model
+	del solver
+	gc.collect()
 	return retStat,table,constraints
 
 ############################  MODIFIABLE VARIABLES  ################################
 ####################################################################################
 
 #note, it doesn't create n sat instances and n unsat instances, but it create n instances, then they are solved via cp_model and put in the right (SAT or NOT folder)
-filesToCreate=40
+filesToCreate=100
 
 #how many clauses we want in an instance (max and min)
-minNoVars=4
-maxNoVars=10
+minNoVars=10
+maxNoVars=300
 
 minDomain=20
-maxDomain=400
-maxOffset=200
+maxDomain=900
+maxOffset=600
 
 #minNoTables=1 #not yet used only 1 table
 #maxNoTables=1
 
 minTuples=5
-maxTuples=200
+maxTuples=1200
 
 osType="linux"; # "windows" or "linux" #used just to specify the directory format
 
@@ -119,7 +136,7 @@ include \"minicpp.mzn\";\n\n"""
 
 
 #we set the seed so we always generate that instances
-random.seed(500)
+random.seed(400)
 
 
 
@@ -135,10 +152,10 @@ if(osType=="windows"):
 	directoryPathUNSAT_CUDA="testsUNSAT_CUDA\\"
 	directoryPathSAT_CUDA="testsSAT_CUDA\\"
 else:
-	directoryPathUNSAT="testsUNSAT2/"
-	directoryPathSAT="testsSAT2/"
-	directoryPathUNSAT_CUDA="testsUNSAT_CUDA2/"
-	directoryPathSAT_CUDA="testsSAT_CUDA2/"
+	directoryPathUNSAT="testsUNSAT/"
+	directoryPathSAT="testsSAT/"
+	directoryPathUNSAT_CUDA="testsUNSAT_CUDA/"
+	directoryPathSAT_CUDA="testsSAT_CUDA/"
 
 #check if folders exist else create them
 if not os.path.isdir(directoryPathSAT):
@@ -180,6 +197,9 @@ for i in range(1,filesToCreate+1):
 
 	print(varsInTable)
 	status,table,otherConstraint=generateConstraints(varsInTable,domainsMin,domainsMax,noTuples,0)
+	if(status=="TIMEOUT"):
+		print("skipping instnace")
+		continue
 	fileStr+=table
 
 	constraintLine="constraint table(["
@@ -221,3 +241,6 @@ for i in range(1,filesToCreate+1):
 	with open(folder_cuda+'test_'+str(counter)+'.mzn', 'w') as f_CUDA:
 		f_CUDA.write(fileStrCUDA)
 
+	del fileStr
+	del fileStrCUDA
+	gc.collect()
