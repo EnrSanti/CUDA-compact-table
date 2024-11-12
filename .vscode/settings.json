@@ -79,6 +79,7 @@
         "stack": "c",
         "cpp": "c",
         "hpp": "c",
-        "__node_handle": "cpp"
+        "__node_handle": "cpp",
+        "filesystem": "cpp"
     }
 }

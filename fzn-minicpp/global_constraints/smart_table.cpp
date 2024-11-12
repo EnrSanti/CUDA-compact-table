@@ -24,6 +24,8 @@ SmartTable::SmartTable(vector<var<int>::Ptr> & vars,  vector<vector<int>> & tupl
     for (int i = 0; i < noVars; i++){        
         //calculating the number of rows in the support bitset
         _supportSize+=vars[i]->intialSize();
+        printf("%%%%%% vars[%d] has size %d\n",i,vars[i]->intialSize());
+        printf("%%%%%% supportSize: %d\n",_supportSize);
         //we store the offset
         _variablesOffsets[i]=vars[i]->min();
 
@@ -134,26 +136,12 @@ void SmartTable::intializeTable(int noVars,int noTuples){
                     if(_tuples[t][v]>_vars[v]->min()){
                         
                         int entryValue=_tuples[t][v]-_variablesOffsets[v];   //value of the entry-initial min  
-                        
+                        if(entryValue>_vars[v]->initialMax())
+                            entryValue=_vars[v]->initialMax();
                         int offset=_supportOffsetJmp[v]; //starting point of the supports 
                       
-                        bool borken=false;
-                        printf("%%%%%% ------------------------------------\n");
-                        for(int i=0; i<entryValue; i++){
-                            if(offset+i>_supportSize || offset+i<0){
-                                printf("%%%%%% checking %d up to %d\n",i, entryValue);
-                                printf("%%%%%% offset+i %d\n",offset+i);
-                                printf("%%%%%% in tuple %d var %d\n",t,v);
-                                borken=true;
-                            }else{
-                                  printf("%%%%%% checking %d up to %d\n",i, entryValue);
-                                printf("%%%%%% offset+i %d\n",offset+i);
-                                printf("%%%%%% in tuple %d var %d\n",t,v);
-                            }
-                            //don't set anything for supportsShort
-                        }
-                        if (borken)
-                            failNow();
+                        
+                            
                         for(int i=0; i<entryValue; i++){
                             _supports[offset+i].addToMaskInt(t+1);
                             //don't set anything for supportsShort
