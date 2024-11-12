@@ -13,20 +13,6 @@ import gc
 
 #WARNING: THIS PROGRAM ISN't OPTIMIZED 
 
-def export_model_to_text(model, filename="model.txt"):
-    """Export variables and constraints of a CpModel to a text file."""
-    with open(filename, "w") as file:
-        file.write("Model Variables:\n")
-        for var in model.Proto().variables:
-            var_name = var.name
-            var_domain = var.domain
-            file.write(f"Variable {var_name} with domain {var_domain}\n")
-        
-        file.write("\nModel Constraints:\n")
-        for ct in model.Proto().constraints:
-            file.write(f"Constraint: {ct}\n")  # Basic print, customize for readability
-            
-    print(f"Model exported to {filename}")
 
 
 #generate a value in [from_,to_] if not in already in notThese
@@ -99,8 +85,6 @@ def generateConstraints(varsInTable,domainsMin,domainsMax,noTuples,tableNo):
 			table+=str(val)+","
 
 
-		print("clause:"+str(literals))
-		print("enforced if:"+str(constrTuple))
 		model.AddBoolAnd(literals).OnlyEnforceIf(constrTuple)
 		disjuncts.append(constrTuple)
 
@@ -120,7 +104,7 @@ def generateConstraints(varsInTable,domainsMin,domainsMax,noTuples,tableNo):
 
 
 	#we generate also some additional constraints
-	noConstraints=(int)(random.randint(0,8)/8*len(varsInTable))
+	noConstraints=(int)(random.randint(0,8)/10*len(varsInTable))
 	constraints=""
 	for i in range(noConstraints):
 		#choosing the constraint > < != or =
@@ -142,7 +126,6 @@ def generateConstraints(varsInTable,domainsMin,domainsMax,noTuples,tableNo):
 			constraints+="constraint x"+ str(varsInTable[i])+"="+str(valueC)+";\n"
 		
 	
-	export_model_to_text(model)
 	solver = cp_model.CpSolver()
 	#set time limit 5 min (doesn't work)
 	
@@ -172,21 +155,21 @@ def generateConstraints(varsInTable,domainsMin,domainsMax,noTuples,tableNo):
 ####################################################################################
 
 #note, it doesn't create n sat instances and n unsat instances, but it create n instances, then they are solved via cp_model and put in the right (SAT or NOT folder)
-filesToCreate=3
+filesToCreate=20
 
 #how many clauses we want in an instance (max and min)
 minNoVars=5
-maxNoVars=20#300
+maxNoVars=80#300
 
 minDomain=10
-maxDomain=80
-maxOffset=40
+maxDomain=250
+maxOffset=90
 
 #minNoTables=1 #not yet used only 1 table
 #maxNoTables=1
 
 minTuples=5
-maxTuples=80
+maxTuples=220
 
 osType="linux"; # "windows" or "linux" #used just to specify the directory format
 
@@ -259,7 +242,6 @@ for i in range(1,filesToCreate+1):
 	for i in range(noVarsInTable):
 		varsInTable.append(generate_random(0,noVars,varsInTable))
 
-	print(varsInTable)
 	status,table,singTable,otherConstraint=generateConstraints(varsInTable,domainsMin,domainsMax,noTuples,0)
 	if(status=="TIMEOUT"):
 		print("skipping instnace")

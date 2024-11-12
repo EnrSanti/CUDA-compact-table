@@ -45,7 +45,7 @@ SmartTable::SmartTable(vector<var<int>::Ptr> & vars,  vector<vector<int>> & tupl
     //we allocate and initialize the support bitsets
     _supports=vector<SparseBitSet>(_supportSize,SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),noTuples));
     _residues= vector<trail<int>>(_supportSize);
-
+    printf("%%%%%% _supports  size %d\n",_supportSize);
 
     //we allocate and initialize the support bitsets
     for (int i = 0; i < _supportSize; i++){
@@ -73,17 +73,17 @@ void SmartTable::intializeTable(int noVars,int noTuples){
     printf("%%%%%% begin init: \n");
     bool found=false;
     int tuplesOfSingletons[noVars];
+    printf("%%%%%% begin init 2: \n");
     for (int v = 0; v < noVars; v++){
+
+        printf("%%%%%% inside first for\n");
         tuplesOfSingletons[v]=-1;
         for (int t = 0; t < noTuples; t++){
-
             //if we have a * or an entry that is in the domain of the variable, we need to update the supports
             
             switch(_signs[t][v]) {
                 //* entry (we update all the supports in the same way)                
                 case SmartTableOp::All:{
-                    //printf("%%%%%% signs star: %d %d\n",t,v);
-
                     //set all the bits for the variable in support
                     int offset=_supportOffsetJmp[v];
                     for(int i=0; i<_vars[v]->intialSize(); i++){
@@ -99,6 +99,7 @@ void SmartTable::intializeTable(int noVars,int noTuples){
                     break;
                 }
                 case SmartTableOp::Eq:{
+                    
                     if(_vars[v]->contains(_tuples[t][v])){
                         int entryValue=_tuples[t][v]-_variablesOffsets[v];   
                         int offset=_supportOffsetJmp[v]+entryValue;
@@ -119,10 +120,11 @@ void SmartTable::intializeTable(int noVars,int noTuples){
                         }
                         found=true;
                         tuplesOfSingletons[v]=t;
-                        break;
+                        
                     }else{
                         _currTable.addToMaskInt(t+1);   
                     }
+                    break;
                 }
 
 
@@ -130,8 +132,28 @@ void SmartTable::intializeTable(int noVars,int noTuples){
                     
                     //populate the supports
                     if(_tuples[t][v]>_vars[v]->min()){
-                        int entryValue=_tuples[t][v]-_variablesOffsets[v];   
-                        int offset=_supportOffsetJmp[v];
+                        
+                        int entryValue=_tuples[t][v]-_variablesOffsets[v];   //value of the entry-initial min  
+                        
+                        int offset=_supportOffsetJmp[v]; //starting point of the supports 
+                      
+                        bool borken=false;
+                        printf("%%%%%% ------------------------------------\n");
+                        for(int i=0; i<entryValue; i++){
+                            if(offset+i>_supportSize || offset+i<0){
+                                printf("%%%%%% checking %d up to %d\n",i, entryValue);
+                                printf("%%%%%% offset+i %d\n",offset+i);
+                                printf("%%%%%% in tuple %d var %d\n",t,v);
+                                borken=true;
+                            }else{
+                                  printf("%%%%%% checking %d up to %d\n",i, entryValue);
+                                printf("%%%%%% offset+i %d\n",offset+i);
+                                printf("%%%%%% in tuple %d var %d\n",t,v);
+                            }
+                            //don't set anything for supportsShort
+                        }
+                        if (borken)
+                            failNow();
                         for(int i=0; i<entryValue; i++){
                             _supports[offset+i].addToMaskInt(t+1);
                             //don't set anything for supportsShort
@@ -149,21 +171,28 @@ void SmartTable::intializeTable(int noVars,int noTuples){
                         }
                         found=true;
                         tuplesOfSingletons[v]=t;
-                        break;
+                        
                     }else{
                         _currTable.addToMaskInt(t+1);   
                     }
+                    break;
                 }
                 //SmartTableOp::GtInt
-                default:{
+                case SmartTableOp::GtInt:{
                     if(_tuples[t][v]<_vars[v]->max()){
                         //populate the supports
                         int entryValue=_tuples[t][v]-_variablesOffsets[v];   
+                        //if i have x [28,50] but i have a constraint x>30, i need to set the supports from 31 to 50
+                        if(entryValue<0)
+                            entryValue=-1;
                         int offset=_supportOffsetJmp[v];
-                        for(int i=entryValue+1; i<_vars[v]->intialSize(); i++){
+                        
+                        for(int i=entryValue+1; i<_vars[v]->intialSize()-1; i++){
+                            
                             _supports[offset+i].addToMaskInt(t+1);
                             //don't set anything for supportsShort
                         }
+                        
                         //We need to set all the bits in supportsMax
                         for(int i=0; i<_vars[v]->intialSize(); i++){
                             _supportsMin[offset+i].addToMaskInt(t+1);
@@ -177,10 +206,11 @@ void SmartTable::intializeTable(int noVars,int noTuples){
                         
                         found=true;
                         tuplesOfSingletons[v]=t;
-                        break;
+                        
                     }else{
                         _currTable.addToMaskInt(t+1);   
                     }
+                    break;
                 }
                 
             }
@@ -245,7 +275,7 @@ void SmartTable::intializeTable(int noVars,int noTuples){
         failNow();
         return;
     }
-    printf("%%%%%% _currTable: \n");
+    printf("%%%%%% aaaaaaaaaaaaaa currTable: \n");
 }
 void SmartTable::post(){
     for (auto const & v : _vars){
@@ -254,7 +284,6 @@ void SmartTable::post(){
 }
 
 void SmartTable::propagate(){
-    printf("%%%%%% ******** propagating: ********\n");
     enfoceGAC();
 }
 
