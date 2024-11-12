@@ -7,7 +7,6 @@ SmartTable::SmartTable(vector<var<int>::Ptr> & vars,  vector<vector<int>> & tupl
 
     setPriority(CLOW);
         
-    printf("%%%%%% begin init: \n");
     int noTuples=_tuples.size();
     int noVars=_vars.size();
 
@@ -24,8 +23,6 @@ SmartTable::SmartTable(vector<var<int>::Ptr> & vars,  vector<vector<int>> & tupl
     for (int i = 0; i < noVars; i++){        
         //calculating the number of rows in the support bitset
         _supportSize+=vars[i]->intialSize();
-        printf("%%%%%% vars[%d] has size %d\n",i,vars[i]->intialSize());
-        printf("%%%%%% supportSize: %d\n",_supportSize);
         //we store the offset
         _variablesOffsets[i]=vars[i]->min();
 
@@ -47,7 +44,6 @@ SmartTable::SmartTable(vector<var<int>::Ptr> & vars,  vector<vector<int>> & tupl
     //we allocate and initialize the support bitsets
     _supports=vector<SparseBitSet>(_supportSize,SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),noTuples));
     _residues= vector<trail<int>>(_supportSize);
-    printf("%%%%%% _supports  size %d\n",_supportSize);
 
     //we allocate and initialize the support bitsets
     for (int i = 0; i < _supportSize; i++){
@@ -72,13 +68,10 @@ SmartTable::SmartTable(vector<var<int>::Ptr> & vars,  vector<vector<int>> & tupl
 }
 void SmartTable::intializeTable(int noVars,int noTuples){
 
-    printf("%%%%%% begin init: \n");
     bool found=false;
     int tuplesOfSingletons[noVars];
-    printf("%%%%%% begin init 2: \n");
     for (int v = 0; v < noVars; v++){
 
-        printf("%%%%%% inside first for\n");
         tuplesOfSingletons[v]=-1;
         for (int t = 0; t < noTuples; t++){
             //if we have a * or an entry that is in the domain of the variable, we need to update the supports
@@ -250,20 +243,16 @@ void SmartTable::intializeTable(int noVars,int noTuples){
     //forall vars
     for (int i = 0; i < noVars; i++){
         if(_vars[i]->size()==1){
-            printf("%%%%%% var %d has size 1\n",i);
             if(tuplesOfSingletons[i]==-1){
-                printf("%%%%%% EMPTY DOMAIN 2\n");
                 failNow();
                 return;
             }
         }
     }
     if(_currTable.isEmpty()){
-        printf("%%%%%% EMPTY DOMAIN 3\n");
         failNow();
         return;
     }
-    printf("%%%%%% aaaaaaaaaaaaaa currTable: \n");
 }
 void SmartTable::post(){
     for (auto const & v : _vars){
