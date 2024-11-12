@@ -45,7 +45,6 @@ SmartTable::SmartTable(vector<var<int>::Ptr> & vars,  vector<vector<int>> & tupl
     _supports=vector<SparseBitSet>(_supportSize,SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),noTuples));
     _residues= vector<trail<int>>(_supportSize);
 
-
     //we allocate and initialize the support bitsets
     for (int i = 0; i < _supportSize; i++){
         _supports[i]=SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),noTuples);//the content doesn't make sense yet, later we need to update the mask and intersect it
@@ -72,73 +71,31 @@ void SmartTable::intializeTable(int noVars,int noTuples){
     bool found=false;
     int tuplesOfSingletons[noVars];
     for (int v = 0; v < noVars; v++){
+
         tuplesOfSingletons[v]=-1;
         for (int t = 0; t < noTuples; t++){
-
             //if we have a * or an entry that is in the domain of the variable, we need to update the supports
-            if(_vars[v]->contains(_tuples[t][v])){
-                switch(_signs[t][v]) {
+            
+            switch(_signs[t][v]) {
                 //* entry (we update all the supports in the same way)                
-                    case SmartTableOp::All:{
-                        //printf("%%%%%% signs star: %d %d\n",t,v);
-
-                        //set all the bits for the variable in support
-                        int offset=_supportOffsetJmp[v];
-                        for(int i=0; i<_vars[v]->intialSize(); i++){
-                            _supports[offset+i].addToMaskInt(t+1);
-                            _supportsMax[offset+i].addToMaskInt(t+1);
-                            _supportsMin[offset+i].addToMaskInt(t+1);
-                            //don't set anything for supportsShort
-                        }
+                case SmartTableOp::All:{
+                    //set all the bits for the variable in support
+                    int offset=_supportOffsetJmp[v];
+                    for(int i=0; i<_vars[v]->intialSize(); i++){
+                        _supports[offset+i].addToMaskInt(t+1);
+                        _supportsMax[offset+i].addToMaskInt(t+1);
+                        _supportsMin[offset+i].addToMaskInt(t+1);
                         //don't set anything for supportsShort
-                        break;
                     }
+                    //don't set anything for supportsShort
 
-                    case SmartTableOp::LtInt:{
-                        //populate the supports
-                        int entryValue=_tuples[t][v]-_variablesOffsets[v];   
-                        int offset=_supportOffsetJmp[v];
-                        for(int i=0; i<entryValue; i++){
-                            _supports[offset+i].addToMaskInt(t+1);
-                            //don't set anything for supportsShort
-                        }
-
-                        //if the value is not the minimum we need to set the bits in supportsMin
-                        for(int i=0; i<entryValue; i++){
-                            _supportsMin[_supportOffsetJmp[v]+i].addToMaskInt(t+1);
-                            //don't set anything for supportsShort
-                        }
-                        //We need to set all the bits in supportsMax
-                        for(int i=0; i<_vars[v]->intialSize(); i++){
-                            _supportsMax[offset+i].addToMaskInt(t+1);
-                            //don't set anything for supportsShort
-                        }
-                        break;
-                    }
-                    case SmartTableOp::GtInt:{
-                        //populate the supports
-                        int entryValue=_tuples[t][v]-_variablesOffsets[v];   
-                        int offset=_supportOffsetJmp[v];
-                        for(int i=entryValue+1; i<_vars[v]->intialSize(); i++){
-                            _supports[offset+i].addToMaskInt(t+1);
-                            //don't set anything for supportsShort
-                        }
-                        //We need to set all the bits in supportsMax
-                        for(int i=0; i<_vars[v]->intialSize(); i++){
-                            _supportsMin[offset+i].addToMaskInt(t+1);
-                            //don't set anything for supportsShort
-                        }
-                        //if the value is not the minimum we need to set the bits in supportsMin
-                        for(int i=_vars[v]->intialSize()-1; i>entryValue; i--){
-                            _supportsMax[_supportOffsetJmp[v]+i].addToMaskInt(t+1);
-                            //don't set anything for supportsShort
-                        }
-                        
-
-                        break;
-                    }
-                    //classical entry
-                    default:{
+                    found=true;
+                    tuplesOfSingletons[v]=t;
+                    break;
+                }
+                case SmartTableOp::Eq:{
+                    
+                    if(_vars[v]->contains(_tuples[t][v])){
                         int entryValue=_tuples[t][v]-_variablesOffsets[v];   
                         int offset=_supportOffsetJmp[v]+entryValue;
                         //if it's not a *, add one bit to both supports
@@ -156,34 +113,87 @@ void SmartTable::intializeTable(int noVars,int noTuples){
                             _supportsMax[_supportOffsetJmp[v]+i].addToMaskInt(t+1);
                             //don't set anything for supportsShort
                         }
+                        found=true;
+                        tuplesOfSingletons[v]=t;
                         
+                    }else{
+                        _currTable.addToMaskInt(t+1);   
                     }
+                    break;
                 }
-                
-                found=true;
-                tuplesOfSingletons[v]=t;
-            }else{
-                switch(_signs[t][v]) {
-                    //* entry (we update all the supports in the same way)                
-                    case SmartTableOp::All:{
-                        //set all the bits for the variable in support
-                        int offset=_supportOffsetJmp[v];
 
-                        for(int i=0; i<_vars[v]->intialSize(); i++){
+
+                case SmartTableOp::LtInt:{
+                    
+                    //populate the supports
+                    if(_tuples[t][v]>_vars[v]->min()){
+                        
+                        int entryValue=_tuples[t][v]-_variablesOffsets[v];   //value of the entry-initial min  
+                        if(entryValue>_vars[v]->initialMax())
+                            entryValue=_vars[v]->initialMax();
+                        int offset=_supportOffsetJmp[v]; //starting point of the supports 
+                      
+                        
+                            
+                        for(int i=0; i<entryValue; i++){
                             _supports[offset+i].addToMaskInt(t+1);
-                            _supportsMax[offset+i].addToMaskInt(t+1);
-                            _supportsMin[offset+i].addToMaskInt(t+1);
                             //don't set anything for supportsShort
                         }
 
-
-                        //don't set anything for supportsShort
-                        break;
+                        //if the value is not the minimum we need to set the bits in supportsMin
+                        for(int i=0; i<entryValue; i++){
+                            _supportsMin[_supportOffsetJmp[v]+i].addToMaskInt(t+1);
+                            //don't set anything for supportsShort
+                        }
+                        //We need to set all the bits in supportsMax
+                        for(int i=0; i<_vars[v]->intialSize(); i++){
+                            _supportsMax[offset+i].addToMaskInt(t+1);
+                            //don't set anything for supportsShort
+                        }
+                        found=true;
+                        tuplesOfSingletons[v]=t;
+                        
+                    }else{
+                        _currTable.addToMaskInt(t+1);   
                     }
-                    default:{
-                        _currTable.addToMaskInt(t+1);
-                    }
+                    break;
                 }
+                //SmartTableOp::GtInt
+                case SmartTableOp::GtInt:{
+                    if(_tuples[t][v]<_vars[v]->max()){
+                        //populate the supports
+                        int entryValue=_tuples[t][v]-_variablesOffsets[v];   
+                        //if i have x [28,50] but i have a constraint x>30, i need to set the supports from 31 to 50
+                        if(entryValue<0)
+                            entryValue=-1;
+                        int offset=_supportOffsetJmp[v];
+                        
+                        for(int i=entryValue+1; i<_vars[v]->intialSize()-1; i++){
+                            
+                            _supports[offset+i].addToMaskInt(t+1);
+                            //don't set anything for supportsShort
+                        }
+                        
+                        //We need to set all the bits in supportsMax
+                        for(int i=0; i<_vars[v]->intialSize(); i++){
+                            _supportsMin[offset+i].addToMaskInt(t+1);
+                            //don't set anything for supportsShort
+                        }
+                        //if the value is not the minimum we need to set the bits in supportsMin
+                        for(int i=_vars[v]->intialSize()-1; i>entryValue; i--){
+                            _supportsMax[_supportOffsetJmp[v]+i].addToMaskInt(t+1);
+                            //don't set anything for supportsShort
+                        }
+                        
+                        found=true;
+                        tuplesOfSingletons[v]=t;
+                        
+                    }else{
+                        _currTable.addToMaskInt(t+1);   
+                    }
+                    break;
+                }
+                
             }
         }
         if (found==false){
@@ -234,14 +244,12 @@ void SmartTable::intializeTable(int noVars,int noTuples){
     for (int i = 0; i < noVars; i++){
         if(_vars[i]->size()==1){
             if(tuplesOfSingletons[i]==-1){
-                //printf("%%%%%% EMPTY DOMAIN 2\n");
                 failNow();
                 return;
             }
         }
     }
     if(_currTable.isEmpty()){
-        //printf("%%%%%% EMPTY DOMAIN 3\n");
         failNow();
         return;
     }
