@@ -1,0 +1,222 @@
+Model Variables:
+Variable x2 with domain [23, 68]
+Variable x3 with domain [22, 77]
+Variable x4 with domain [34, 102]
+Variable constrTuple0 with domain [0, 1]
+Variable lit02 with domain [0, 1]
+Variable lit03 with domain [0, 1]
+Variable lit04 with domain [0, 1]
+Variable constrTuple1 with domain [0, 1]
+Variable lit12 with domain [0, 1]
+Variable lit13 with domain [0, 1]
+Variable lit14 with domain [0, 1]
+Variable constrTuple2 with domain [0, 1]
+Variable lit22 with domain [0, 1]
+Variable lit23 with domain [0, 1]
+Variable lit24 with domain [0, 1]
+Variable constrTuple3 with domain [0, 1]
+Variable lit32 with domain [0, 1]
+Variable lit33 with domain [0, 1]
+Variable lit34 with domain [0, 1]
+Variable constrTuple4 with domain [0, 1]
+Variable lit43 with domain [0, 1]
+Variable lit44 with domain [0, 1]
+Variable constrTuple5 with domain [0, 1]
+Variable lit52 with domain [0, 1]
+Variable lit53 with domain [0, 1]
+Variable lit54 with domain [0, 1]
+
+Model Constraints:
+Constraint: enforcement_literal: 4
+linear {
+  vars: 0
+  coeffs: 1
+  domain: -9223372036854775808
+  domain: 62
+}
+
+Constraint: enforcement_literal: 5
+linear {
+  vars: 1
+  coeffs: 1
+  domain: -9223372036854775808
+  domain: 24
+}
+
+Constraint: enforcement_literal: 6
+linear {
+  vars: 2
+  coeffs: 1
+  domain: 94
+  domain: 94
+}
+
+Constraint: enforcement_literal: 3
+bool_and {
+  literals: 4
+  literals: 5
+  literals: 6
+}
+
+Constraint: enforcement_literal: 8
+linear {
+  vars: 0
+  coeffs: 1
+  domain: 51
+  domain: 51
+}
+
+Constraint: enforcement_literal: 9
+linear {
+  vars: 1
+  coeffs: 1
+  domain: 48
+  domain: 48
+}
+
+Constraint: enforcement_literal: 10
+linear {
+  vars: 2
+  coeffs: 1
+  domain: 65
+  domain: 65
+}
+
+Constraint: enforcement_literal: 7
+bool_and {
+  literals: 8
+  literals: 9
+  literals: 10
+}
+
+Constraint: enforcement_literal: 12
+linear {
+  vars: 0
+  coeffs: 1
+  domain: 46
+  domain: 9223372036854775807
+}
+
+Constraint: enforcement_literal: 13
+linear {
+  vars: 1
+  coeffs: 1
+  domain: 59
+  domain: 59
+}
+
+Constraint: enforcement_literal: 14
+linear {
+  vars: 2
+  coeffs: 1
+  domain: 91
+  domain: 91
+}
+
+Constraint: enforcement_literal: 11
+bool_and {
+  literals: 12
+  literals: 13
+  literals: 14
+}
+
+Constraint: enforcement_literal: 16
+linear {
+  vars: 0
+  coeffs: 1
+  domain: 26
+  domain: 26
+}
+
+Constraint: enforcement_literal: 17
+linear {
+  vars: 1
+  coeffs: 1
+  domain: 50
+  domain: 50
+}
+
+Constraint: enforcement_literal: 18
+linear {
+  vars: 2
+  coeffs: 1
+  domain: 80
+  domain: 9223372036854775807
+}
+
+Constraint: enforcement_literal: 15
+bool_and {
+  literals: 16
+  literals: 17
+  literals: 18
+}
+
+Constraint: enforcement_literal: 20
+linear {
+  vars: 1
+  coeffs: 1
+  domain: 43
+  domain: 43
+}
+
+Constraint: enforcement_literal: 21
+linear {
+  vars: 2
+  coeffs: 1
+  domain: 74
+  domain: 74
+}
+
+Constraint: enforcement_literal: 19
+bool_and {
+  literals: 20
+  literals: 21
+}
+
+Constraint: enforcement_literal: 23
+linear {
+  vars: 0
+  coeffs: 1
+  domain: 24
+  domain: 24
+}
+
+Constraint: enforcement_literal: 24
+linear {
+  vars: 1
+  coeffs: 1
+  domain: 28
+  domain: 28
+}
+
+Constraint: enforcement_literal: 25
+linear {
+  vars: 2
+  coeffs: 1
+  domain: 55
+  domain: 55
+}
+
+Constraint: enforcement_literal: 22
+bool_and {
+  literals: 23
+  literals: 24
+  literals: 25
+}
+
+Constraint: bool_or {
+  literals: 3
+  literals: 7
+  literals: 11
+  literals: 15
+  literals: 19
+  literals: 22
+}
+
+Constraint: linear {
+  vars: 0
+  coeffs: 1
+  domain: -9223372036854775808
+  domain: 29
+}
+
