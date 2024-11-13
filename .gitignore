@@ -1,5 +1,5 @@
 #ignoring
 
-./.vscode
-./fzn-minicpp/.vscode
-./fzn-minicpp/build/*
+.vscode
+fzn-minicpp/.vscode
+fzn-minicpp/build/*
