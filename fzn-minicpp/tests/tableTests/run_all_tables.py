@@ -1,15 +1,18 @@
 import os
 import subprocess
+import time
+
+#it just check sat/unsat (on the small instances you can also check the assignments)
 
 # List of model files
 modelsSAT = ["serial/SAT/",
-"CUDA/SAT/",
 "TestGenerator & more tests/testsSAT/",
+"CUDA/SAT/",
 "TestGenerator & more tests/testsSAT_CUDA/"]
 
 modelsUNSAT = ["serial/UNSAT/",
-"CUDA/UNSAT/",
 "TestGenerator & more tests/testsUNSAT/",
+"CUDA/UNSAT/",
 "TestGenerator & more tests/testsUNSAT_CUDA/"]
 
 solver="MiniCpp"
@@ -28,15 +31,17 @@ def run_sat_models(prefix):
         #forall files in the folder get their name
         #print all instances
         errors=0
+        t0 = time.time()
         for instance in instances:
             result = subprocess.run(["minizinc", "--solver", solver,folder+instance], capture_output=True, text=True)
             if("=====UNSATISFIABLE=====" in result.stdout):
                 #print in red
                 print(f"\033[91m \n{instance} FAILED\033[00m")
                 errors+=1
+        
         totalErrors+=errors
         if (errors==0):
-            print("\033[92m Instances passed\033[00m")
+            print("\033[92m Instances passed (elapsed (with overhead) time: "+str(time.time()-t0 )+")\033[00m")
 
 def run_unsat_models(prefix):
     global totalErrors
@@ -48,6 +53,7 @@ def run_unsat_models(prefix):
         #forall files in the folder get their name
         #print all instances
         errors=0
+        t0 = time.time()
         for instance in instances:
             result = subprocess.run(["minizinc", "--solver", solver,folder+instance], capture_output=True, text=True)
             if(not ("=====UNSATISFIABLE=====" in result.stdout)):
@@ -56,10 +62,10 @@ def run_unsat_models(prefix):
                 errors+=1
         totalErrors+=errors
         if (errors==0):
-            print("\033[92m Instances passed\033[00m")
+            print("\033[92m Instances passed (exlapsed (with overhead) time: "+str(time.time()-t0)+")\033[00m")
 
 
-
+#start timer
 run_sat_models("./SimpleTables/")
 run_unsat_models("./SimpleTables/")
 run_sat_models("./SmartTables/")
