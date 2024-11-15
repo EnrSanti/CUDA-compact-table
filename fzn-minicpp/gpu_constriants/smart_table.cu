@@ -2,7 +2,6 @@
 
 SmartTableGPU::SmartTableGPU(vector<var<int>::Ptr> & vars,  vector<std::vector<int>> & tuples, vector<std::vector<int>> & signs) : SmartTable(vars,tuples,signs){
    setPriority(CLOW);
-    printf("%%%%%% Hola, I'm on GPU\n");
 
     int noTuples=tuples.size();
     noVars=vars.size();
