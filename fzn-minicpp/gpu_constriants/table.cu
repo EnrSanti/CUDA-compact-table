@@ -48,7 +48,10 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
         }
         
     }
-
+    for(int i=0;i<((_supportSize/32)+1);i++){
+        _vars_host[i]=0xffffffff;
+    }
+    /*
     for(int i=0;i<((_supportSize/32)+1);i++){
         _vars_host[i]=0;
     }
@@ -63,8 +66,8 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
             _vars_host[starting_word]=_vars_host[starting_word]|mask;
             //prinitng bits of _vars_host
         }
-    }
-
+    }*/
+    
             
     //end of could be done better
     *_currTable_host=_currTable._words.data()->value();
@@ -92,7 +95,6 @@ void TableGPU::post(){
     }
 }
 void TableGPU::propagate(){
-    //printf("%%%%%% propagate on GPU\n");
     enfoceGAC();
 }
 
@@ -353,6 +355,8 @@ void printBits(unsigned int num) {
         str[i] = (num >> i) & 1; 
         printf("%d",str[i]);
     }
+
+    printf("\n%%%%%% \n");
     
 }
 __device__ void printBitsGPU(unsigned int num) {
