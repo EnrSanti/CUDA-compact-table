@@ -34,7 +34,7 @@ def run_sat_models(prefix):
         t0 = time.time()
         for instance in instances:
             result = subprocess.run(["minizinc", "--solver", solver,folder+instance], capture_output=True, text=True)
-            if("=====UNSATISFIABLE=====" in result.stdout):
+            if("=====UNSATISFIABLE=====" in result.stdout or "=====ERROR=====" in result.stdout):
                 #print in red
                 print(f"\033[91m \n{instance} FAILED\033[00m")
                 errors+=1
@@ -56,7 +56,7 @@ def run_unsat_models(prefix):
         t0 = time.time()
         for instance in instances:
             result = subprocess.run(["minizinc", "--solver", solver,folder+instance], capture_output=True, text=True)
-            if(not ("=====UNSATISFIABLE=====" in result.stdout)):
+            if(not ("=====UNSATISFIABLE====="  in result.stdout) or "=====ERROR=====" in result.stdout):
                 #print in red
                 print(f"\033[91m \n{instance} FAILED\033[00m")
                 errors+=1
