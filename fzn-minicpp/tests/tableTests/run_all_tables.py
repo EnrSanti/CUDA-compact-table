@@ -7,11 +7,15 @@ import time
 # List of model files
 modelsSAT = ["serial/SAT/",
 "TestGenerator & more tests/testsSAT/",
+"TestGenerator & more tests/testsSAT_bigger/",
+"TestGenerator & more tests/testsSAT_CUDA_bigger/",
 "CUDA/SAT/",
 "TestGenerator & more tests/testsSAT_CUDA/"]
 
 modelsUNSAT = ["serial/UNSAT/",
 "TestGenerator & more tests/testsUNSAT/",
+"TestGenerator & more tests/testsUNSAT_bigger/",
+"TestGenerator & more tests/testsUNSAT_CUDA_bigger/",
 "CUDA/UNSAT/",
 "TestGenerator & more tests/testsUNSAT_CUDA/"]
 
@@ -27,11 +31,16 @@ def run_sat_models(prefix):
         folder=prefix+folder
         print("Running SAT models in "+folder+" -> ",end="")
 
+        if not os.path.exists(folder):
+            print(f"\033[93m FOLDER not found, SKIPPING\033[00m")
+            continue
         instances = [file for file in os.listdir(folder) if os.path.isfile(os.path.join(folder, file))]
         #forall files in the folder get their name
         #print all instances
         errors=0
         t0 = time.time()
+        #check if folder exists, print in yellow
+        
         for instance in instances:
             result = subprocess.run(["minizinc", "--solver", solver,folder+instance], capture_output=True, text=True)
             if("=====UNSATISFIABLE=====" in result.stdout or "=====ERROR=====" in result.stdout):
@@ -48,12 +57,15 @@ def run_unsat_models(prefix):
     for folder in modelsUNSAT:
         folder=prefix+folder
         print("Running UNSAT models in "+folder+" -> ",end="")
-
+        if not os.path.exists(folder):
+            print(f"\033[93m FOLDER not found, SKIPPING\033[00m")
+            continue
         instances = [file for file in os.listdir(folder) if os.path.isfile(os.path.join(folder, file))]
         #forall files in the folder get their name
         #print all instances
         errors=0
         t0 = time.time()
+        
         for instance in instances:
             result = subprocess.run(["minizinc", "--solver", solver,folder+instance], capture_output=True, text=True)
             if(not ("=====UNSATISFIABLE====="  in result.stdout) or "=====ERROR=====" in result.stdout):
@@ -66,8 +78,11 @@ def run_unsat_models(prefix):
 
 
 #start timer
+
+
 run_sat_models("./SimpleTables/")
 run_unsat_models("./SimpleTables/")
+
 run_sat_models("./SmartTables/")
 run_unsat_models("./SmartTables/")
 

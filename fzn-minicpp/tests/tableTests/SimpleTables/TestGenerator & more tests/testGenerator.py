@@ -1,11 +1,10 @@
 #!/usr/bin/python3
 
 import os 
-import random
 import time
+import random
+import subprocess
 from random import choice
-from ortools.constraint_solver import pywrapcp	
-from ortools.sat.python import cp_model
 from datetime import datetime
 import gc
 
@@ -44,92 +43,56 @@ def generateConstraints(varsInTable,domainsMin,domainsMax,noTuples,tableNo):
 	table+="]; \n"
 
 
-	#ŧesting the satifsfiability
-	model = cp_model.CpModel()
-	varsInSolver=[]
-
-	for v in varsInTable:
-		varsInSolver.append(model.new_int_var(domainsMin[v],domainsMax[v], "x"+str(v)))
-
-	for i in range(noTuples):
-		model.AddAllowedAssignments(varsInSolver,tuples)
 
 	#we generate also some additional constraints
 	noConstraints=(int)(random.randint(0,8)/10*len(varsInTable))
 	constraints=""
 	for i in range(noConstraints):
-		#choosing the constraint > < != or =
 		constraintType=(int)(random.randint(1,10))
 		valueC=random.randint(domainsMin[varsInTable[i]],domainsMax[varsInTable[i]])
 		if(constraintType<2): #0,1 -> <
-			model.add(varsInSolver[i]<valueC)
 			constraints+="constraint x"+ str(varsInTable[i])+"<"+str(valueC)+";\n"
 		elif(constraintType<4): #2,3 -> >
-			model.add(varsInSolver[i]>valueC)
 			constraints+="constraint x"+ str(varsInTable[i])+">"+str(valueC)+";\n" 
-		
 		elif(constraintType<10): #4,5,6,7,8,9 -> !=
-			model.add(varsInSolver[i]!=valueC)
 			constraints+="constraint not(x"+ str(varsInTable[i])+"="+str(valueC)+");\n" 
-		
 		else: #10 -> =
-			model.add(varsInSolver[i]==valueC)
 			constraints+="constraint x"+ str(varsInTable[i])+"="+str(valueC)+";\n"
 		
-	solver = cp_model.CpSolver()
-	#set time limit 5 min
-	search_parameters = pywrapcp.DefaultRoutingSearchParameters()
-	search_parameters.local_search_operators.use_shortest_path_swap_active = "BOOL_FALSE"
-	solver.parameters.num_search_workers = 2
-	solver.parameters.max_time_in_seconds = 60*5
-	t0=time.time()
-	print("Solving model (t0="+str(datetime.fromtimestamp(t0))+")...")
-	status = solver.solve(model)
-	t1=time.time()
-
-	print("Over (time elapsed: "+str(t1-t0)+").")
-	retStat=""
-	if(status==cp_model.OPTIMAL or status==cp_model.FEASIBLE):
-		print("SAT")
-		retStat="SAT"
-	elif(status==cp_model.INFEASIBLE):
-		print("UNSAT")
-		retStat="UNSAT"
-	else:
-		retStat="TIMEOUT"
-		print("...TIMEOUT\n")
 	
-	del model
-	del solver
-	gc.collect()
-	return retStat,table,constraints
+
+	return table,constraints
+
+def remove_up_to_first_newline(input_string):
+    # Find the position of the first newline and slice the string
+    return input_string.split('\n', 1)[1] if '\n' in input_string else input_string
 
 ############################  MODIFIABLE VARIABLES  ################################
 ####################################################################################
 
 #note, it doesn't create n sat instances and n unsat instances, but it create n instances, then they are solved via cp_model and put in the right (SAT or NOT folder)
-filesToCreate=100
+filesToCreate=50
 
 #how many clauses we want in an instance (max and min)
-minNoVars=10
-maxNoVars=300
+minNoVars=250
+maxNoVars=450
 
-minDomain=20
-maxDomain=900
-maxOffset=600
+minDomain=200
+maxDomain=700
+maxOffset=300
 
 #minNoTables=1 #not yet used only 1 table
 #maxNoTables=1
 
-minTuples=5
-maxTuples=1200
+minTuples=2500
+maxTuples=5000
 
 osType="linux"; # "windows" or "linux" #used just to specify the directory format
 
 #cosntant string reported before each file
 include="""%test automatically generated\n
-include \"table.mzn\";
-include \"minicpp.mzn\";\n\n"""
+include \"minicpp.mzn\";
+include \"table.mzn\";\n\n"""
 
 ####################################################################################
 ####################################################################################
@@ -152,10 +115,10 @@ if(osType=="windows"):
 	directoryPathUNSAT_CUDA="testsUNSAT_CUDA\\"
 	directoryPathSAT_CUDA="testsSAT_CUDA\\"
 else:
-	directoryPathUNSAT="testsUNSAT/"
-	directoryPathSAT="testsSAT/"
-	directoryPathUNSAT_CUDA="testsUNSAT_CUDA/"
-	directoryPathSAT_CUDA="testsSAT_CUDA/"
+	directoryPathUNSAT="testsUNSAT_bigger/"
+	directoryPathSAT="testsSAT_bigger/"
+	directoryPathUNSAT_CUDA="testsUNSAT_CUDA_bigger/"
+	directoryPathSAT_CUDA="testsSAT_CUDA_bigger/"
 
 #check if folders exist else create them
 if not os.path.isdir(directoryPathSAT):
@@ -196,10 +159,8 @@ for i in range(1,filesToCreate+1):
 		varsInTable.append(generate_random(0,noVars,varsInTable))
 
 	print(varsInTable)
-	status,table,otherConstraint=generateConstraints(varsInTable,domainsMin,domainsMax,noTuples,0)
-	if(status=="TIMEOUT"):
-		print("skipping instnace")
-		continue
+	table,otherConstraint=generateConstraints(varsInTable,domainsMin,domainsMax,noTuples,0)
+
 	fileStr+=table
 
 	constraintLine="constraint table(["
@@ -211,13 +172,39 @@ for i in range(1,filesToCreate+1):
 
 	#yes we duplicate, it's not optimal
 	fileStrCUDA=fileStr+constraintLine+"::gpu;\n"
+	fileTmp=fileStr+constraintLine+";\n"
 	fileStr+=constraintLine+"::uniud;\n"
-
 	#add the other constraints
 	fileStrCUDA+=otherConstraint
 	fileStr+=otherConstraint
 	fileStrCUDA+="solve satisfy;"
 	fileStr+="solve satisfy;"
+	fileTmp+=otherConstraint+"solve satisfy;"
+
+
+
+	#save file tmp
+	with open('tmp.mzn', 'w') as f:
+		f.write(remove_up_to_first_newline(remove_up_to_first_newline(remove_up_to_first_newline(fileTmp))))
+		f.close()
+	
+
+	t0=time.time()
+	print("Solving model (t0="+str(datetime.fromtimestamp(t0))+")...")
+	result = subprocess.run(["minizinc","--solver","Geeecode","./tmp.mzn"], capture_output=True, text=True)
+
+	status=""
+	if("=====UNSATISFIABLE=====" in result.stdout):
+	#print in red
+		status="UNSAT"
+	elif(not ("=====ERROR=====") in result.stdout):
+		status="SAT"
+	else:
+		status="ERROR"
+		print(f"\033[91m \n{instance} FAILED\033[00m")
+		errors+=1
+	t1=time.time()
+
 
 
 	folder=""
@@ -235,6 +222,8 @@ for i in range(1,filesToCreate+1):
 		folder_cuda=directoryPathUNSAT_CUDA
 		unsatFilesNo+=1
 		counter=unsatFilesNo
+
+
 
 	with open(folder+'test_'+str(counter)+'.mzn', 'w') as f:
 		f.write(fileStr)
