@@ -6,18 +6,20 @@ import time
 
 # List of model files
 modelsSAT = ["serial/SAT/",
-"TestGenerator & more tests/testsSAT/",
-"TestGenerator & more tests/testsSAT_bigger/",
-"TestGenerator & more tests/testsSAT_CUDA_bigger/",
 "CUDA/SAT/",
-"TestGenerator & more tests/testsSAT_CUDA/"]
+"TestGenerator & more tests/testsSAT/",
+"TestGenerator & more tests/testsSAT_CUDA/",
+"TestGenerator & more tests/testsSAT_bigger/",
+"TestGenerator & more tests/testsSAT_CUDA_bigger/"]
 
 modelsUNSAT = ["serial/UNSAT/",
+"CUDA/UNSAT/",
 "TestGenerator & more tests/testsUNSAT/",
+"TestGenerator & more tests/testsUNSAT_CUDA/",
 "TestGenerator & more tests/testsUNSAT_bigger/",
 "TestGenerator & more tests/testsUNSAT_CUDA_bigger/",
-"CUDA/UNSAT/",
-"TestGenerator & more tests/testsUNSAT_CUDA/"]
+"TestGenerator & more tests/testsUNSAT_even_bigger/",
+"TestGenerator & more tests/testsUNSAT_CUDA_even_bigger/"]
 
 solver="MiniCpp"
 # Run each serial SAT model

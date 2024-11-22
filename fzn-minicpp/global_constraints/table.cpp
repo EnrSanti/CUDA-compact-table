@@ -197,7 +197,7 @@ void Table::filterDomains(){
                     indexResidue=_supports[index_x_a].intersectIndexSparse(_currTable);
                     
                     if(indexResidue!=-1){
-                        _residues[index_x_a].setValue(indexResidue); //ok setVal
+                        _residues[index_x_a]=indexResidue; //ok setVal
                     }else{
                         _vars[index]->remove(j+_vars[index]->initialMin());                   
                     }
@@ -217,6 +217,8 @@ void Table::enfoceGAC(){
     
     _s_val.clear();
     _s_sup.clear();
+    _s_val.shrink_to_fit();
+    _s_sup.shrink_to_fit();
     
 	for (int i = 0; i < _vars.size(); i++){
 		//update s_val and the deltas
