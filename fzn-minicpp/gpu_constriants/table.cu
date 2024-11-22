@@ -120,8 +120,7 @@ void TableGPU::enfoceGAC(){
     }
 
     cudaMemcpyAsync(_vars_dev, _vars_host, sizeof(unsigned int)*((_supportSize/32)+1), cudaMemcpyHostToDevice);
-    cudaDeviceSynchronize();
-            
+
     //end of could be done better
 
     _s_val.clear();
@@ -173,6 +172,10 @@ void TableGPU::enfoceGAC(){
     cudaMemcpyAsync(_outputArray, _output_dev, sizeof(int)*noBlocks, cudaMemcpyDeviceToHost);
 
 
+	
+    cudaDeviceSynchronize();
+    
+
     //performed on host, the number of blocks usually is small (e.g. if we have 1280 rows in the table we have 2 blocks)
 
     for(int i=0; i<noBlocks; i++){
@@ -181,6 +184,7 @@ void TableGPU::enfoceGAC(){
             break;
         }
     }
+
     if(output==1){
         failNow();
         printf("%%%%%% fail now\n");
