@@ -19,15 +19,12 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     _currTable=SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),tuples.size());
 
     for (int i = 0; i < noVars; i++){        
-        //_deltaXs[i]=SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),_vars[i]->max()+1);
-        //_lastVarsValues[i]=SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),_vars[i]->max()+1);
-
+   
         //calculating the number of rows in the support bitset
         _supportSize+=vars[i]->intialSize();
         //we store the offset
         _variablesOffsets[i]=vars[i]->min();      
-        //vars[i]->dumpInSparseBitSet(i,_variablesOffsets[i],vars[i]->min(),vars[i]->initialMin(),vars[i]->max(),_lastVarsValues[i]);
-
+       
     }
 
 
@@ -192,9 +189,6 @@ void Table::filterDomains(){
                 
             }
         }
-        //printf("%%%%%% new domain for var %d\n",index);
-        //_vars[index]->dumpInSparseBitSet(index,_variablesOffsets[index],_vars[index]->min(),_vars[index]->initialMin(),_vars[index]->max(),_lastVarsValues[index]);
-        //_lastVarsValues[index].printNoMask(0);
     }
 }
 
@@ -212,8 +206,6 @@ void Table::enfoceGAC(){
         if(_vars[i]->changed()){
             //printf("%%%%%% Var %d changed, [%d,%d]\n",i,_vars[i]->min(),_vars[i]->max());
             _s_val.push_back(i);
-            //printf("%%%%%% Var %d changed UPDATING DELTA\n",i);
-            //updateDelta(i);
         }
         
 		//update s_sup

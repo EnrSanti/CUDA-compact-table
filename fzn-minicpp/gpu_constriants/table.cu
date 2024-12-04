@@ -9,16 +9,7 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     currTableSize=(noTuples/32)+1;
     _noVars_dev=mallocDevice<int>(sizeof(int));
     cudaMemcpyAsync(_noVars_dev, &noVars, sizeof(int), cudaMemcpyHostToDevice);
-    cudaDeviceProp device_prop;
-    cudaGetDeviceProperties(&device_prop, 0);
-    sm_count = device_prop.multiProcessorCount;
-    int cores_per_SM = 128;
-    //printf("%%%%%% number of SMs: %d\n",sm_count);
-    //printf("%%%%%% warp size: %d\n",32);
-    //printf("%%%%%% cores per SM: %d\n",cores_per_SM);
-    //printf("%%%%%% support size: %d\n",_supportSize);
-    
-    
+
     // Memory allocation
     _currTable_dev = mallocDevice<unsigned int >(sizeof(unsigned int)*currTableSize); 
     _currTable_mask_dev = mallocDevice<unsigned int >(sizeof(unsigned int)*currTableSize); 
@@ -51,25 +42,7 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     for(int i=0;i<((_supportSize/32)+1);i++){
         _vars_host[i]=0xffffffff;
     }
-    /*
-    for(int i=0;i<((_supportSize/32)+1);i++){
-        _vars_host[i]=0;
-    }
 
-    //can be done much better but for now it's ok
-    for(int i=0;i<noVars;i++){
-        vector<int> dom=_vars[i]->dumpDomainToVec();
-        for(int j=0;j<dom.size();j++){
-            //getting an unsigned int with the 32-dom[j]-_variablesOffsets[i] bit set
-            unsigned int mask=1<<31-(dom[j]-_variablesOffsets[i]+_supportOffsetJmp[i]);
-            int starting_word=(dom[j]-_variablesOffsets[i]+_supportOffsetJmp[i])/32;
-            _vars_host[starting_word]=_vars_host[starting_word]|mask;
-            //prinitng bits of _vars_host
-        }
-    }*/
-    
-            
-    //end of could be done better
     *_currTable_host=_currTable._words.data()->value();
     
 
@@ -154,12 +127,7 @@ void TableGPU::enfoceGAC(){
     }
     cudaMemcpyAsync(_offset, &offset, sizeof(int), cudaMemcpyHostToDevice);
     cudaDeviceSynchronize();
-    //printGPUdata<<<1,1>>>(_supportSize_dev,_variablesOffsets_dev,_currTable_dev,_supports_dev,_supportOffsetJmp_dev,_currTable_size_dev);
-    //cudaDeviceSynchronize();
-    //for each word of currTable launch a kernel
-    
-    //printf("%%%%%% currTableSize %d, launching %d blocks\n",currTableSize, (currTableSize/32)+1);
-    //print(); 
+  
     for(int i=0;i<currTableSize;i++){
         _currTable_host[i]=_currTable._words[i].value();
     }
@@ -205,12 +173,7 @@ void TableGPU::enfoceGAC(){
         
         _currTable.intersectWithMask();
         _currTable.clearMask();
-        //printing the currTable
-        /*
-        for(int i=0;i<currTableSize;i++){
-            printf("%%%%%% [%d] ", i);
-            printBits(_currTable._words[i].value());
-        }*/
+      
         if(_currTable.isEmpty()){
             failNow();
             //printf("%%%%%% backtrack\n");
@@ -274,17 +237,7 @@ __global__ void updateTableGPU(unsigned int* _supports_dev,int * _s_val_size_dev
     
     //printf("%%%%%% GPU th %d currTable[%d] %d\n",thPos,thPos,_currTable_dev[thPos]);
     if(threadIdx.x==0){
-        /*
-        for(int i=0; i<*_supportSize_dev*2; i++){
-            printf("%%%%%% [%d] %u\n",i,_supports_dev[i]);
-        }
-        //Forall all the vars
-        for(int i=0; i<(*_s_val_size_dev)+1; i++){
-           int k=_supportOffsetJmp_dev[varIndex];
-           printf("%%%%%% GPU th %d var %d offset %d\n",thPos,i,_supportOffsetJmp_dev[i]);
-        }
-        */
-        //printf("%%%%%% GPU kernel over\n");
+    
         for(int i=blockIdx.x*32;i<(blockIdx.x+1)*32;i++){
             if(_currTable_dev[i]!=0){
                 output[blockIdx.x]=0;
