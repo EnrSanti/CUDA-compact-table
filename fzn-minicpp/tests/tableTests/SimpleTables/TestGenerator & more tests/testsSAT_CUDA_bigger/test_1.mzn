@@ -1,5 +1,6 @@
 %test automatically generated
 
+include "minicpp.mzn";
 include "table.mzn";
 
 var 48..377 : x0;

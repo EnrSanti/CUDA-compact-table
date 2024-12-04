@@ -40,7 +40,6 @@ class TableGPU : public Table{
         void post() override;
         void propagate() override;
         void enfoceGAC();
-        void filterDomains();
         void print();
 };
 

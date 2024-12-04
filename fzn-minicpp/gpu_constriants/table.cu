@@ -223,33 +223,6 @@ void TableGPU::enfoceGAC(){
     
 
 }
-void TableGPU::filterDomains(){
-    for(int i=0; i < _s_sup.size(); ++i){
-        int index=_s_sup[i];
-        //printf("%%%%%% filtering domain for var %d\n",index);
-        for (int j = 0; j < _vars[index]->size(); j++){
-            if(_vars[index]->contains(j+_vars[index]->initialMin())){ //i.e. a \in dom(x)
-
-                int index_x_a=_supportOffsetJmp[index]+j;
-                int indexResidue=_residues[index_x_a].value();
-
-                if((_currTable._words[indexResidue] & _supports[index_x_a]._words[indexResidue] ) == 0x00000000){
-                
-                    indexResidue=_supports[index_x_a].intersectIndexSparse(_currTable);
-                    
-                    if(indexResidue!=-1){
-                        _residues[index_x_a]=indexResidue; //ok setVal
-                    }else{
-                        _vars[index]->remove(j+_vars[index]->initialMin());                   
-                    }
-                  
-                }
-                
-            }
-        }
-        //_vars[index]->dumpInSparseBitSet(index,_variablesOffsets[index],_vars[index]->min(),_vars[i]->initialMin(),_vars[index]->max(),_lastVarsValues[index]);
-    }
-}
 
 // 1 th per support row
 __global__ void updateTableGPU(unsigned int* _supports_dev,int * _s_val_size_dev, int *_s_val_dev, int *_supportSize_dev, int *_variablesOffsets_dev, int *_supportOffsetJmp_dev, unsigned int * _currTable_dev,int* _currTable_dev_size, unsigned int* _vars_dev, int* output, int *offset, int *varNoDev){
@@ -375,26 +348,3 @@ __device__ void printBitsGPU(unsigned int num) {
     }
     printf("\n%%%%%% \n");
 }
-/*
-void TableGPU::print(){    
-    
-    printf("%%%%%% ----------------- VARS: -----------------\n\n");
-    for (int i = 0; i < _vars.size(); i++){
-        printf("%%%%%% Var %d: %d\n",i,_vars[i]->getId());      
-    }
-    for (int i = 0; i < _vars.size(); i++){
-        //checking the contained values
-        for (int j = 0; j < _vars[i]->intialSize(); j++){
-            if(_vars[i]->contains(j+_vars[i]->initialMin()))
-                printf("%%%%%% Var %d contains? %d: YES\n",i,j+_vars[i]->initialMin());
-            else
-                printf("%%%%%% Var %d contains? %d: NO\n",i,j+_vars[i]->initialMin());
-        }
-    }
-    printf("%%%%%% ----------------- CURR TABLE: -----------------\n\n");
-    for (int i = 0; i < _currTable._words.size(); i++){
-        printf("%%%%%% [%d] ", i);
-        printBits(_currTable._words[i].value());
-    }
-    printf("%%%%%% --------------------------------------------------------\n");
-}*/

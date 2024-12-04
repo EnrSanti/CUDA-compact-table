@@ -149,28 +149,14 @@ void Table::updateTable(){
     for(int i=0; i < _s_val.size(); ++i){
         _currTable.clearMask();
         index=_s_val[i];
-        /*if(_deltaXs[index].countOnes() < _vars[index]->size()){//_deltaXs[index].countOnes() < _vars[index]->size()
-            //incremental update
-            
-            for (int j = 0; j < _vars[index]->intialSize(); j++){
-                //printf("%%%%%% deltaXs[%d] contains 1 at pos %d? ",index,_vars[index]->initialMin()+j);  
-                if(_deltaXs[index].getIthBit(j+_vars[index]->initialMin())==1){     
-                    int index_x_a=_supportOffsetJmp[index]+j;
-                    _currTable.addToMaskVector(_supports[index_x_a]._words);
-                }
-            }    
 
-            _currTable.reverseMask();
-
-        }else{ */
-            //reset based update
-            vector<int> dom=_vars[index]->dumpDomainToVec();
-            
-            for (int j = 0; j < dom.size(); j++){ 
-                int index_x_a=_supportOffsetJmp[index]+dom[j]-_variablesOffsets[index];
-                _currTable.addToMaskVector(_supports[index_x_a]._words);
-            } 
-        //}
+        //reset based update
+        vector<int> dom=_vars[index]->dumpDomainToVec();
+        
+        for (int j = 0; j < dom.size(); j++){ 
+            int index_x_a=_supportOffsetJmp[index]+dom[j]-_variablesOffsets[index];
+            _currTable.addToMaskVector(_supports[index_x_a]._words);
+        } 
 
         _currTable.intersectWithMask();
 
@@ -240,21 +226,3 @@ void Table::enfoceGAC(){
 	filterDomains();
     
 }
-
-/*
-void Table::updateDelta(int i){
-
-    _vars[i]->dumpInSparseBitSet(i,_variablesOffsets[i],_vars[i]->min(),_vars[i]->initialMin(),_vars[i]->max(),_deltaXs[i]);
-
-    //we calculate the delta by xoring the words
-   
-   
-    
-    for (int j = 0; j < _vars[i]->getSizeOfBitSet(); j++){
-        _deltaXs[i]._words[j].setValue(_deltaXs[i]._words[j].value()^_lastVarsValues[i]._words[j].value()); //BEWARE, BROKEN THE DATA STRUCTURE can be replaced with x XOR y = (x AND (NOT y)) OR ((NOT x) AND y)
-        printf("%%%%%% var %d, %d %d \n",i,_lastVarsValues[i]._words[j].value(),_deltaXs[i]._words[j]);
-    }
-    
-
-}
-*/
