@@ -126,7 +126,7 @@ void TableGPU::enfoceGAC(){
     }
     cudaMemcpyAsync(_currTable_dev, _currTable_host, sizeof(unsigned int)*currTableSize, cudaMemcpyHostToDevice);
     cudaDeviceSynchronize();
-    updateTableGPU<<<noBlocks,32,32*sizeof(unsigned int)>>>(_supports_dev,_s_val_size_dev,_s_val_dev,_supportSize_dev,_variablesOffsets_dev,_supportOffsetJmp_dev,_currTable_dev,_currTable_size_dev,_vars_dev,_output_dev, _offset, _noVars_dev);
+    updateTableGPU<<<noBlocks,32,32*sizeof(unsigned int)>>>(_supports_dev,_s_val_size_dev,_s_val_dev,_supportOffsetJmp_dev,_currTable_dev,_currTable_size_dev,_vars_dev,_output_dev);
 
 	
     cudaDeviceSynchronize();
@@ -172,8 +172,12 @@ void TableGPU::enfoceGAC(){
             //printf("%%%%%% backtrack\n");
         }
     }
-    
+
+    //REMOVE BEFORE FLIGHT
     updateTable();
+    //OVER
+
+
 	filterDomains();
 
 
@@ -185,7 +189,7 @@ void TableGPU::enfoceGAC(){
 }
 
 // 1 th per support row
-__global__ void updateTableGPU(unsigned int* _supports_dev,int * _s_val_size_dev, int *_s_val_dev, int *_supportSize_dev, int *_variablesOffsets_dev, int *_supportOffsetJmp_dev, unsigned int * _currTable_dev,int* _currTable_dev_size, unsigned int* _vars_dev, int* output, int *offset, int *varNoDev){
+__global__ void updateTableGPU(unsigned int* _supports_dev,int * _s_val_size_dev, int *_s_val_dev, int *_supportOffsetJmp_dev, unsigned int * _currTable_dev,int* _currTable_dev_size, unsigned int* _vars_dev, int* output){
 
 
     int thPos = blockIdx.x * blockDim.x + threadIdx.x; //which currTable word we are considering
