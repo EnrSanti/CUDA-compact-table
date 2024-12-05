@@ -6,10 +6,13 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
 
     int noTuples=tuples.size();
     noVars=vars.size();
-    currTableSize=(noTuples/32)+1;
     _noVars_dev=mallocDevice<int>(sizeof(int));
     cudaMemcpyAsync(_noVars_dev, &noVars, sizeof(int), cudaMemcpyHostToDevice);
 
+    currTableSize=(noTuples/32)+1; 
+    printf("%%%%%% noVars %d, %d %d\n",noVars,currTableSize,_supportSize);
+
+    fflush(stdout);
     // Memory allocation
     _currTable_dev = mallocDevice<unsigned int >(sizeof(unsigned int)*currTableSize); 
     _currTable_mask_dev = mallocDevice<unsigned int >(sizeof(unsigned int)*currTableSize); 
@@ -37,6 +40,7 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
         _vars_host[i]=0xffffffff;
     }
 
+
     *_currTable_host=_currTable._words.data()->value();
     
 
@@ -50,7 +54,6 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     cudaMemcpyAsync(_supportOffsetJmp_dev, _supportOffsetJmp.data(), sizeof(int)*noVars, cudaMemcpyHostToDevice);
     cudaMemcpyAsync(&_supportOffsetJmp_dev[noVars], &_supportSize, sizeof(int), cudaMemcpyHostToDevice);
     cudaMemcpyAsync(_currTable_size_dev, &currTableSize, sizeof(int), cudaMemcpyHostToDevice);
-    cudaMemcpyAsync(_vars_dev, _vars_host, sizeof(unsigned int)*((_supportSize/32)+1), cudaMemcpyHostToDevice);
 
     cudaDeviceSynchronize();
 }
@@ -149,7 +152,7 @@ void TableGPU::enfoceGAC(){
     }
 
     if(output==1){
-        //failNow();
+        failNow();
         printf("%%%%%% fail now\n");
     }else{
         //we retrieve current table
@@ -172,10 +175,6 @@ void TableGPU::enfoceGAC(){
             //printf("%%%%%% backtrack\n");
         }
     }
-
-    //REMOVE BEFORE FLIGHT
-    updateTable();
-    //OVER
 
 
 	filterDomains();

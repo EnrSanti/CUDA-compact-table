@@ -38,7 +38,7 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     }
 
     //we allocate and initialize the support bitsets
-    currTableSize=(noTuples/32)+1;
+    currTableSize=(noTuples/32)+1; 
     _supports=(unsigned int*) malloc(sizeof(unsigned int)*_supportSize*currTableSize);
     //check allocation
     
@@ -181,7 +181,7 @@ void Table::filterDomains(){
                 int index_x_a=_supportOffsetJmp[index]+j;
                 int indexResidue=_residues[index_x_a].value();
 
-                if((_currTable._words[indexResidue] & _supports[(index_x_a+indexResidue)*currTableSize] ) == 0x00000000){
+                if((_currTable._words[indexResidue] & _supports[(index_x_a)*currTableSize+indexResidue] ) == 0x00000000){
                 
                     indexResidue=intersectIndexSparse(&_supports[index_x_a*currTableSize],_currTable);
                     
