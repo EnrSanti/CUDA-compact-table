@@ -32,13 +32,7 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     _vars_host=mallocHost<int>(sizeof(unsigned int)*((_supportSize/32)+1)); //matrix
     _outputArray=mallocHost<int>(sizeof(int)*(currTableSize/32)+1); 
 
-    //get the vectors to arrays
-    for(int i=0;i<_supportSize;i++){
-        for(int j=0; j<currTableSize;j++){
-            _supports_host[i*currTableSize+j]=_supports[i]._words[j].value();
-        }
-        
-    }
+
     for(int i=0;i<((_supportSize/32)+1);i++){
         _vars_host[i]=0xffffffff;
     }
@@ -49,7 +43,7 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
 
     //Memory copy
 
-    cudaMemcpyAsync(_supports_dev, _supports_host, sizeof(unsigned int)*_supportSize*currTableSize, cudaMemcpyHostToDevice);
+    cudaMemcpyAsync(_supports_dev, _supports, sizeof(unsigned int)*_supportSize*currTableSize, cudaMemcpyHostToDevice);
     cudaMemcpyAsync(_currTable_dev, _currTable_host, sizeof(unsigned int)*currTableSize, cudaMemcpyHostToDevice);
     cudaMemcpyAsync(_supportSize_dev, &_supportSize, sizeof(int), cudaMemcpyHostToDevice);
     cudaMemcpyAsync(_variablesOffsets_dev, _variablesOffsets.data(), sizeof(int)*noVars, cudaMemcpyHostToDevice);
@@ -58,8 +52,7 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     cudaMemcpyAsync(_currTable_size_dev, &currTableSize, sizeof(int), cudaMemcpyHostToDevice);
     cudaMemcpyAsync(_vars_dev, _vars_host, sizeof(unsigned int)*((_supportSize/32)+1), cudaMemcpyHostToDevice);
 
-
-    cudaFree(_supports_host);
+    cudaDeviceSynchronize();
 }
 void TableGPU::post(){
     //printf("%%%%%% post GPU\n");
@@ -156,7 +149,7 @@ void TableGPU::enfoceGAC(){
     }
 
     if(output==1){
-        failNow();
+        //failNow();
         printf("%%%%%% fail now\n");
     }else{
         //we retrieve current table
@@ -167,9 +160,9 @@ void TableGPU::enfoceGAC(){
 
         //we need to update the current table
 
-        for(int i=0;i<currTableSize;i++){
-            _currTable._mask[i]=_currTable_host[i];
-        }
+        _currTable.clearMask();
+        _currTable.addToMaskArray(_currTable_host);
+      
         
         _currTable.intersectWithMask();
         _currTable.clearMask();
@@ -180,10 +173,14 @@ void TableGPU::enfoceGAC(){
         }
     }
     
-    
+    updateTable();
 	filterDomains();
 
-    
+
+
+
+
+
 
 }
 

@@ -9,7 +9,7 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     
     int noTuples=tuples.size();
     int noVars=vars.size();
-
+    
     _s_val= vector<int>();
     _s_sup= vector<int>();
     _supportOffsetJmp=vector<int>(noVars);
@@ -19,12 +19,15 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     _currTable=SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),tuples.size());
 
     for (int i = 0; i < noVars; i++){        
-   
+        //_deltaXs[i]=SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),_vars[i]->max()+1);
+        //_lastVarsValues[i]=SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),_vars[i]->max()+1);
+
         //calculating the number of rows in the support bitset
         _supportSize+=vars[i]->intialSize();
         //we store the offset
         _variablesOffsets[i]=vars[i]->min();      
-       
+        //vars[i]->dumpInSparseBitSet(i,_variablesOffsets[i],vars[i]->min(),vars[i]->initialMin(),vars[i]->max(),_lastVarsValues[i]);
+
     }
 
 
@@ -35,13 +38,16 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     }
 
     //we allocate and initialize the support bitsets
-    _supports=vector<SparseBitSet>(_supportSize,SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),noTuples));
+    currTableSize=(noTuples/32)+1;
+    _supports=(unsigned int*) malloc(sizeof(unsigned int)*_supportSize*currTableSize);
+    //check allocation
+    
     _residues= vector<trail<int>>(_supportSize);
 
 
     //we allocate and initialize the support bitsets
-    for (int i = 0; i < _supportSize; i++){
-        _supports[i]=SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),noTuples);//the content doesn't make sense yet, later we need to update the mask and intersect it
+    for (int i = 0; i < _supportSize*currTableSize; i++){
+        _supports[i]=0x00000000;
     }
 
     
@@ -56,9 +62,9 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
                 //classical entry (we update all the supports in the same way)
                 int entryValue=tuples[t][v]-_variablesOffsets[v];   
                 
-                int offset=_supportOffsetJmp[v]+entryValue;
+                int offset=(_supportOffsetJmp[v]+entryValue)*currTableSize;
 
-                _supports[offset].addToMaskInt(t+1); 
+                addToMaskInt(&(_supports[offset]),t+1); 
 
                 found=true;
                 tuplesOfSingletons[v]=t;
@@ -82,14 +88,11 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     int bitsPerWord=32;
 
     for (int i = 0; i < _supportSize; ++i){  
-        _supports[i].intersectWithMask();
-
-        _supports[i].clearMask();
         
         //we initialize residues
         bool broken=false;
         for(int j=0; j<noTuples; j++){
-            if(_supports[i]._words[j/bitsPerWord].value()!=0x00000000 && !broken){
+            if(_supports[i*currTableSize+(j/bitsPerWord)]!=0x00000000 && !broken){
                 _residues[i]=trail<int>(vars[0]->getSolver()->getStateManager(), j); 
                 broken=true;
             }else{
@@ -98,10 +101,6 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
         }
     }
     
-    /*for (int i = 0; i < _supportSize; ++i){  
-        _supports[i].print(i);
-    }*/
-    //print();
     //forall vars
     for (int i = 0; i < noVars; i++){
         if(_vars[i]->size()==1){
@@ -142,18 +141,25 @@ void Table::propagate()
 void Table::updateTable(){
     //forall var x in s_val
     int index=0;
-    
+
     for(int i=0; i < _s_val.size(); ++i){
         _currTable.clearMask();
         index=_s_val[i];
-
         //reset based update
-        vector<int> dom=_vars[index]->dumpDomainToVec();
-        
-        for (int j = 0; j < dom.size(); j++){ 
-            int index_x_a=_supportOffsetJmp[index]+dom[j]-_variablesOffsets[index];
-            _currTable.addToMaskVector(_supports[index_x_a]._words);
+
+        for (int j = _vars[index]->min(); j <= _vars[index]->max();  j++){ 
+
+            //printf("%%%%%% var %d contains %d ",index, j);
+            if(_vars[index]->contains(j)){
+                //printf("YES \n");
+                int index_x_a=(_supportOffsetJmp[index]+j-_variablesOffsets[index])*currTableSize;
+                _currTable.addToMaskArray(&(_supports[index_x_a]));
+            }else{
+                //printf("NO \n");
+            }
+           
         } 
+    
 
         _currTable.intersectWithMask();
 
@@ -175,12 +181,12 @@ void Table::filterDomains(){
                 int index_x_a=_supportOffsetJmp[index]+j;
                 int indexResidue=_residues[index_x_a].value();
 
-                if((_currTable._words[indexResidue] & _supports[index_x_a]._words[indexResidue] ) == 0x00000000){
+                if((_currTable._words[indexResidue] & _supports[(index_x_a+indexResidue)*currTableSize] ) == 0x00000000){
                 
-                    indexResidue=_supports[index_x_a].intersectIndexSparse(_currTable);
+                    indexResidue=intersectIndexSparse(&_supports[index_x_a*currTableSize],_currTable);
                     
                     if(indexResidue!=-1){
-                        _residues[index_x_a]=indexResidue; //ok setVal
+                        _residues[index_x_a]=indexResidue; 
                     }else{
                         _vars[index]->remove(j+_vars[index]->initialMin());                   
                     }
@@ -194,27 +200,45 @@ void Table::filterDomains(){
 
 void Table::enfoceGAC(){
     //update the table
-    
     _s_val.clear();
     _s_sup.clear();
     _s_val.shrink_to_fit();
     _s_sup.shrink_to_fit();
-    
 	for (int i = 0; i < _vars.size(); i++){
-		//update s_val and the deltas
-        
+		
         if(_vars[i]->changed()){
-            //printf("%%%%%% Var %d changed, [%d,%d]\n",i,_vars[i]->min(),_vars[i]->max());
             _s_val.push_back(i);
         }
         
-		//update s_sup
         if(_vars[i]->size()>1){
             _s_sup.push_back(i);
         }
 	}
+    //printf("%%%%%% enforcing GAC, size of s_val %d, size of s_sup %d \n",_s_val.size(),_s_sup.size());  
 	updateTable();
-	
+    //safe
 	filterDomains();
     
+}
+
+void Table::addToMaskInt(unsigned int* mask,int value){  
+	int offset;
+    int bitsPerWord=32;
+	unsigned int wordToOr=(unsigned int) 1<<(bitsPerWord-(value%bitsPerWord));
+   
+	int wordIndex=floor(value/bitsPerWord);
+	if(value%bitsPerWord==0){
+		wordIndex--;
+	}
+	mask[wordIndex]=mask[wordIndex] | wordToOr;
+}
+int Table::intersectIndexSparse(unsigned int* words,SparseBitSet& m) {
+
+   int offset;
+   for (int i = 0; i < currTableSize; i++) {
+   
+      if ((words[i] & m[i]) != 0)
+         return i;
+   }
+   return -1;
 }

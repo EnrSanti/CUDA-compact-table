@@ -55,7 +55,7 @@ public:
    void reverseMask();
    void addToMask(StaticBitSet& m);
    void addToMaskVector(const std::vector<trail<int>> &v);
-   void addToMaskVectorNaive(const std::vector<trail<int>> &v);
+   void addToMaskArray(unsigned int* v);
    void addToMaskInt(unsigned int value);
    void intersectWithMask();
    int intersectIndex(StaticBitSet& m);

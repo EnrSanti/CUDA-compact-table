@@ -131,11 +131,11 @@ void SparseBitSet::addToMaskVector(const vector<trail<int>> &v){
    }
 
 }
-void SparseBitSet::addToMaskVectorNaive(const vector<trail<int>> &v){
+void SparseBitSet::addToMaskArray(unsigned int* v){
    int offset;
-   for (int i = 0; i <= _words.size(); i++) {
+   for (int i = 0; i <= _limit; i++) {
       offset = _index[i];
-      _mask[offset] = (_mask[offset] | v[i].value());
+      _mask[offset] = (_mask[offset] | v[offset]);
    }
 
 }
