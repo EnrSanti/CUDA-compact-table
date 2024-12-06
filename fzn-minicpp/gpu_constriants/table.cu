@@ -8,8 +8,7 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     noVars=vars.size();
     _noVars_dev=mallocDevice<int>(sizeof(int));
     cudaMemcpyAsync(_noVars_dev, &noVars, sizeof(int), cudaMemcpyHostToDevice);
-    printf("%%%%%% ciao sono su gpu \n");
-    fflush(stdout);
+    
     currTableSize=(noTuples/32)+1; 
     //print supportOffjmp
     // Memory allocation
