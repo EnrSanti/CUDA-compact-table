@@ -23,15 +23,14 @@ class TableGPU : public Table{
         int * _supportSize_dev; //just a pointer to a single element
         int * _supportOffsetJmp_dev; //array
         int * _variablesOffsets_dev; //array
-        int * _s_val_size_dev; //pointer
-        int * _s_val_dev; //array
+        int* _svSize_sval_dev;
+        int* _svSize_sval_host;
         unsigned int * _vars_dev; //array (matrix) (the domains)
         int * _output_dev; //pointer
         int currTableSize;
         int noVars;
         int *_noVars_dev;
         int *_vars_host;
-        int *_offset;
         unsigned int *_currTable_host;
         int* _outputArray;
 
@@ -45,5 +44,5 @@ class TableGPU : public Table{
 
 __global__ void printGPUdata(int *_supportSize_dev, int *_variablesOffsets_dev,unsigned int *_currTable_dev,unsigned int *_supports_dev,int * _supportOffsetJmp_dev, int* currTable_size_dev);
 __device__ void printBitsGPU(unsigned int num);
-__global__ void updateTableGPU(unsigned int* _supports_dev,int * _s_val_size_dev, int *_s_val_dev, int *_supportOffsetJmp_dev, unsigned int * _currTable_dev,int* cur_currTable_dev_size, unsigned int* _vars_dev,int* out);
+__global__ void updateTableGPU(unsigned int* _supports_dev,int * _svSize_off_sval_dev, int *_supportOffsetJmp_dev, unsigned int * _currTable_dev,int* cur_currTable_dev_size, unsigned int* _vars_dev,int* out);
 void printBits(unsigned int num);
