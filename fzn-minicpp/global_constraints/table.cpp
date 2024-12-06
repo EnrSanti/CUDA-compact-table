@@ -154,8 +154,6 @@ void Table::updateTable(){
                 //printf("YES \n");
                 int index_x_a=(_supportOffsetJmp[index]+j-_variablesOffsets[index])*currTableSize;
                 _currTable.addToMaskArray(&(_supports[index_x_a]));
-            }else{
-                //printf("NO \n");
             }
            
         } 

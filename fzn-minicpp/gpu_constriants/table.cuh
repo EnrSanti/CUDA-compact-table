@@ -31,6 +31,7 @@ class TableGPU : public Table{
         int noVars;
         int *_noVars_dev;
         int *_vars_host;
+        int *_vars_host_to_check;
         unsigned int *_currTable_host;
         int* _outputArray;
 
@@ -40,6 +41,10 @@ class TableGPU : public Table{
         void propagate() override;
         void enfoceGAC();
         void print();
+        void printBits(unsigned int value);
+    private:
+        int bitsFromRight(int n);
+        int bitsFromLeft(int n);
 };
 
 __global__ void printGPUdata(int *_supportSize_dev, int *_variablesOffsets_dev,unsigned int *_currTable_dev,unsigned int *_supports_dev,int * _supportOffsetJmp_dev, int* currTable_size_dev);
