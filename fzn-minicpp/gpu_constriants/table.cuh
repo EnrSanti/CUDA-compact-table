@@ -30,7 +30,6 @@ class TableGPU : public Table{
         int currTableSize;
         int noVars;
         int *_noVars_dev;
-        int *_vars_host;
         int *_vars_host_to_check;
         unsigned int *_currTable_host;
         int* _outputArray;

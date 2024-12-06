@@ -5,7 +5,7 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     _vars(vars), _tuples(tuples), 
     _currTable(SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),tuples.size())){
     
-
+    printf("%%%%%% Table constructor\n");
     
     int noTuples=tuples.size();
     int noVars=vars.size();

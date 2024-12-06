@@ -8,13 +8,10 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     noVars=vars.size();
     _noVars_dev=mallocDevice<int>(sizeof(int));
     cudaMemcpyAsync(_noVars_dev, &noVars, sizeof(int), cudaMemcpyHostToDevice);
-
+    printf("%%%%%% ciao sono su gpu \n");
+    fflush(stdout);
     currTableSize=(noTuples/32)+1; 
     //print supportOffjmp
-    for(int i=0;i<noVars;i++){
-        printf("%%%%%% supportOffsetJmp[%d] %d\n",i,_supportOffsetJmp[i]);
-    }
-    fflush(stdout);
     // Memory allocation
     _currTable_dev = mallocDevice<unsigned int >(sizeof(unsigned int)*currTableSize); 
     _currTable_mask_dev = mallocDevice<unsigned int >(sizeof(unsigned int)*currTableSize); 
@@ -32,20 +29,16 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     //on host side we create simpler structures to then copy the data
     
     cudaMallocHost((void**)&_currTable_host, sizeof(unsigned int)*currTableSize);
-    cudaMallocHost((void**)&_vars_host, sizeof(unsigned int)*((_supportSize/32)+1)); //matrix
     cudaMallocHost((void**)&_vars_host_to_check, sizeof(unsigned int)*((_supportSize/32)+1)); //matrix
     cudaMallocHost((void**)&_outputArray, sizeof(int)*(currTableSize/32)+1);
     cudaMallocHost((void**)&_svSize_sval_host,sizeof(int)*(noVars+1));
 
     for(int i=0;i<((_supportSize/32)+1);i++){
-        _vars_host[i]=0xffffffff;
         _vars_host_to_check[i]=0xffffffff;
     }
 
 
-    for(int i=0; i<32; i++){
-        printf("%%%%%% left %d: %d right %d: %d \n",i,bitsFromLeft(i),i,bitsFromRight(i));
-    }
+  
     //todo initial dump
     _vars_host_to_check[(_supportSize/32)]=_vars_host_to_check[(_supportSize/32)] & bitsFromLeft((_supportOffsetJmp[noVars-1]+_vars[noVars-1]->intialSize())%32);
 
@@ -92,7 +85,6 @@ void TableGPU::enfoceGAC(){
 		//update s_val and the deltas
         if(_vars[i]->changed()){
             _s_val.push_back(i);
-            printf("%%%%%% HEYLA changed var %d\n",i);
             _svSize_sval_host[internalIndex+1]=i;
             internalIndex++;
         }
@@ -108,129 +100,59 @@ void TableGPU::enfoceGAC(){
 
 
 
-    
-    for(int i=0;i<((_supportSize/32)+1);i++){
-        _vars_host[i]=0;
-    }
-
-    //can be done much better but for now it's ok
-    for(int i=0;i<noVars;i++){
-        vector<int> dom=_vars[i]->dumpDomainToVec();
-        
-        for(int j=0;j<dom.size();j++){
-            //getting an unsigned int with the 32-dom[j]-_variablesOffsets[i] bit set
-            unsigned int mask=1<<31-(dom[j]-_variablesOffsets[i]+_supportOffsetJmp[i]);
-            //printing the domain
-            int starting_word=(dom[j]-_variablesOffsets[i]+_supportOffsetJmp[i])/32;
-            _vars_host[starting_word]=_vars_host[starting_word]|mask;
-        }
-    }
-
-
-    //print varhsot
-    for(int i=0;i<((_supportSize/32)+1);i++){
-        printf("%%%%%% vars_host[%d]: ",i);
-        printBits((unsigned int) (_vars_host[i]));
-    }
-    for(int i=0;i<((_supportSize/32)+1);i++){
-        printf("%%%%%% vars_host_to_check [%d]: ",i);
-        printBits((unsigned int) (_vars_host_to_check[i]));
-    }
     //to check
 
     for(int i=0; i < _s_val.size(); ++i){
 
         int index=_s_val[i];
 
-        printf("%%%%%% changed var %d\n",index);
         int starting_word=(_supportOffsetJmp[index])/32;
         int words_to_reset=-1;
         int to=-112;
         if(index<noVars-1){
             to=_supportOffsetJmp[index+1]/32;
             words_to_reset=to-starting_word;
-
-
-            printf("%%%%%% words to reset %d, starting from %d to %d\n",words_to_reset,starting_word,to);
         }else{
             to=(_supportSize/32)+1;
             words_to_reset=to-starting_word;
-            printf("%%%%%% words to reset %d, starting from %d to %d\n",words_to_reset,starting_word,to);
+            
         }
         for(int j=1;j<words_to_reset;j++){
-            printf("%%%%%% resetting word %d\n",starting_word+j);
             _vars_host_to_check[starting_word+j]=0;
         }
         
         if(words_to_reset>1){
-            //we need to reset first and last word
-
-            printf("%%%%%% caso a,  to the first word (%d) apply: ",starting_word);
-
-            printBits(bitsFromLeft((_supportOffsetJmp[index])%32));
             _vars_host_to_check[starting_word]=_vars_host_to_check[starting_word] & bitsFromLeft((_supportOffsetJmp[index])%32);
             
             if(index<noVars-1){
-                printf("%%%%%% (a1) to the last word (%d) apply: ",(starting_word+words_to_reset));
-                printBits(bitsFromRight((32-_supportOffsetJmp[index+1])%32));
                 _vars_host_to_check[starting_word+words_to_reset]=_vars_host_to_check[starting_word+words_to_reset] & bitsFromRight((32-_supportOffsetJmp[index+1])%32);
             }else{
-                
-                printf("%%%%%% (a2) to the last word apply: 0 \n ");
                 _vars_host_to_check[starting_word+words_to_reset]=0;
             }
         }else{
             //both masks on one word
             if(index<noVars-1){
 
-                printf("%%%%%% caso b,  mask 1: %d, mask 2: %d\n",bitsFromLeft(_supportOffsetJmp[index]%32),bitsFromRight((32-_supportOffsetJmp[index+1])%32));
                 _vars_host_to_check[starting_word]=_vars_host_to_check[starting_word] & ( bitsFromLeft(_supportOffsetJmp[index]%32) | bitsFromRight((32-_supportOffsetJmp[index+1])%32));
 
             }else{
-                printf("%%%%%% caso c, mask 1: %d\n",bitsFromLeft((_supportOffsetJmp[index])%32));
                 _vars_host_to_check[starting_word]=_vars_host_to_check[starting_word] & bitsFromLeft((_supportOffsetJmp[index]%32));
             }
 
         }
-         printf("%%%%%% after clearing var \n");
-        for(int i=0;i<((_supportSize/32)+1);i++){
-            printf("%%%%%% vars_host_to_check [%d]: ",i);
-            printBits((unsigned int) (_vars_host_to_check[i]));
-        }
+        
         for (int j = _vars[index]->min(); j <= _vars[index]->max();  j++){ 
 
             if(_vars[index]->contains(j)){
                 int wordIndex=(j-_variablesOffsets[index]+_supportOffsetJmp[index])/32;
-                printf("%%%%%% var %d, contains %d, so shift 1 by %d  ",index,j,((_supportOffsetJmp[index]+j-_variablesOffsets[index])%32));
-                printBits(0x80000000>>((_supportOffsetJmp[index]+j-_variablesOffsets[index])%32));
                 _vars_host_to_check[wordIndex]=_vars_host_to_check[wordIndex]|(0x80000000>>((_supportOffsetJmp[index]+j-_variablesOffsets[index])%32));
 
             }
 
         }
-         printf("%%%%%% after updating a var \n");
-        for(int i=0;i<((_supportSize/32)+1);i++){
-            printf("%%%%%% vars_host_to_check [%d]: ",i);
-            printBits((unsigned int) (_vars_host_to_check[i]));
-        }
-       
-
+        
     }
-    //compare vars_host and vars_host_to_check
-    for(int i=0;i<((_supportSize/32)+1);i++){
-        if(_vars_host[i]!=_vars_host_to_check[i]){
-            printf("%%%%%% EEEEEEEEEEEEEEEEEEEEEEEERRRRRRRRRR vars_host[%d] %u vars_host_to_check[%d] %u\n",i,_vars_host[i],i,_vars_host_to_check[i]);
-            
-        }
-    }
-    printf("%%%%%% after the update \n");
-    for(int i=0;i<((_supportSize/32)+1);i++){
-        printf("%%%%%% vars_host_to_check [%d]: ",i);
-        printBits((unsigned int) (_vars_host_to_check[i]));
-    }
-    printf("%%%%%% --------------------------------------------------------------------------------------------------------------------------------------------------------- \n");
-
-    cudaMemcpyAsync(_vars_dev, _vars_host, sizeof(unsigned int)*((_supportSize/32)+1), cudaMemcpyHostToDevice);
+    cudaMemcpyAsync(_vars_dev, _vars_host_to_check, sizeof(unsigned int)*((_supportSize/32)+1), cudaMemcpyHostToDevice);
 
     //end of could be done better
 
