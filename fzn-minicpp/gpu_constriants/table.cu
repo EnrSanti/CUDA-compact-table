@@ -23,7 +23,7 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     _svSize_sval_dev=mallocDevice<int>(sizeof(int)*(noVars+1));
     _vars_dev=mallocDevice<unsigned int>(sizeof(unsigned int)*((_supportSize/32)+1)); //matrix
     _output_dev=mallocDevice<int>(sizeof(int)*(currTableSize/32)+1); //one for each block
-    offset_dev=mallocDevice<int>(sizeof(int)*6);
+    offset_dev=mallocDevice<int>(sizeof(int)*noStreams);
 
     //on host side we create simpler structures to then copy the data
     
@@ -31,8 +31,9 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     cudaMallocHost((void**)&_vars_host, sizeof(unsigned int)*((_supportSize/32)+1)); //matrix
     cudaMallocHost((void**)&_outputArray, sizeof(int)*(currTableSize/32)+1);
     cudaMallocHost((void**)&_svSize_sval_host,sizeof(int)*(noVars+1));
-    cudaMallocHost((void**)&offset_host,sizeof(int)*6);
-
+    cudaMallocHost((void**)&offset_host,sizeof(int)*noStreams);
+    cudaMallocHost((void**)&stream_buffer,sizeof(int)*noStreams);
+    streams=(cudaStream_t*)malloc(sizeof(cudaStream_t)*noStreams);
 
 
 
@@ -40,12 +41,11 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
         _vars_host[i]=0xffffffff;
     }
 
-    for(int i=0;i<6;i++){
+    for(int i=0;i<noStreams;i++){
         cudaError_t err = cudaStreamCreate(&streams[i]);
         if (err != cudaSuccess){
             printf("%%%%%% Stream err: %s\n", cudaGetErrorString(err));
-            //throw std::runtime_error("Error creating stream");
-        
+            fflush(stdout);
             runtime_error("Error creating stream");
         }
     }
@@ -65,16 +65,17 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
 
 
     noBlocks=(currTableSize/32)+1;
-    vector<int>sizes= divideIn6(noBlocks);
-    offset_host[0]=0;
-    for(int i=1; i<6; i++){
-        if(sizes[i]>0){
-            offset_host[i]=offset_host[i-1]+sizes[i];
+    divideInStrems(noBlocks,offset_host);
+    stream_buffer[0]=0;
+    for(int i=1; i<noStreams; i++){
+        if(offset_host[i]>0){
+            stream_buffer[i]=stream_buffer[i-1]+offset_host[i];
         }
     }
-     cudaMemcpyAsync(offset_dev, offset_host, sizeof(int)*6, cudaMemcpyHostToDevice,streams[2]);
-            
+    cudaMemcpyAsync(offset_dev, stream_buffer, sizeof(int)*noStreams, cudaMemcpyHostToDevice,streams[2]);
+    
     cudaDeviceSynchronize();
+    cudaFree(offset_host);
 }
 void TableGPU::post(){
     for (auto const & v : _vars){
@@ -111,19 +112,19 @@ void TableGPU::enfoceGAC(){
     
     _svSize_sval_host[0]=_s_val.size();
 
-    cudaMemcpyAsync(_svSize_sval_dev, _svSize_sval_host, sizeof(int)*(_s_val.size()+1), cudaMemcpyHostToDevice);
+    cudaMemcpyAsync(_svSize_sval_dev, _svSize_sval_host, sizeof(int)*(_s_val.size()+1), cudaMemcpyHostToDevice,streams[2]);
 
     dumpDomainsGPU();
 
-    vector<int> sizes=divideIn6((_supportSize/32)+1);
+    divideInStrems((_supportSize/32)+1,stream_buffer);
     int offset=0;
-    for(int i=0;i<6;i++){
-        if(sizes[i]>0){
-            cudaMemcpyAsync(_vars_dev+offset, _vars_host+offset, sizeof(unsigned int)*sizes[i], cudaMemcpyHostToDevice,streams[i]);
+    for(int i=0;i<noStreams;i++){
+        if(stream_buffer[i]>0){
+            cudaMemcpyAsync(_vars_dev+offset, _vars_host+offset, sizeof(unsigned int)*stream_buffer[i], cudaMemcpyHostToDevice,streams[i]);
         }else{
             break;
         }
-        offset=offset+sizes[i];
+        offset=offset+stream_buffer[i];
     }
 
     
@@ -132,25 +133,25 @@ void TableGPU::enfoceGAC(){
         _currTable_host[i]=_currTable._words[i].value();
     }
     
-    sizes=divideIn6(currTableSize);
+    divideInStrems(currTableSize,stream_buffer);
     offset=0;
-    for(int i=0;i<6;i++){
+    for(int i=0;i<noStreams;i++){
         //offset is in terms of words (32 bits)
-        if(sizes[i]>0){
+        if(stream_buffer[i]>0){
             //tomove the max between tomove and 4
-            cudaMemcpyAsync(&_currTable_dev[offset], &_currTable_host[offset], sizes[i]*sizeof(unsigned int), cudaMemcpyHostToDevice,streams[i]);   
+            cudaMemcpyAsync(&_currTable_dev[offset], &_currTable_host[offset], stream_buffer[i]*sizeof(unsigned int), cudaMemcpyHostToDevice,streams[i]);   
         }else{
             break;
         }
-        offset=offset+sizes[i];
+        offset=offset+stream_buffer[i];
     }
 
 
-    sizes= divideIn6(noBlocks);
+    divideInStrems(noBlocks,stream_buffer);
   
-    for(int i=0; i<6; i++){
-        if(sizes[i]>0){
-            updateTableGPU<<<sizes[i],32,32*sizeof(unsigned int),streams[i]>>>(_supports_dev,_svSize_sval_dev,_supportOffsetJmp_dev,_currTable_dev,_currTable_size_dev,_vars_dev,_output_dev,offset_dev+i);          
+    for(int i=0; i<noStreams; i++){
+        if(stream_buffer[i]>0){
+            updateTableGPU<<<stream_buffer[i],32,32*sizeof(unsigned int),streams[i]>>>(_supports_dev,_svSize_sval_dev,_supportOffsetJmp_dev,_currTable_dev,_currTable_size_dev,_vars_dev,_output_dev,offset_dev+i);          
         }
     }
 	
@@ -384,14 +385,16 @@ __device__ void printBitsGPU(unsigned int num) {
 }
 
 
-vector<int> TableGPU::divideIn6(int size) {
-    vector<int> parts(6, floor(size / 6)); // equal division
-    int remainder = size % 6;           // Calculate the remainder
+void TableGPU::divideInStrems(int size,int * where) {
+    
+    for (int i = 0; i < noStreams; ++i) {
+        where[i] = size / noStreams;              // Divide the size by the no of streams
+    }
+    int remainder = size % noStreams;           // Calculate the remainder
 
     // Distribute the remainder across the first few parts
     for (int i = 0; i < remainder; ++i) {
-        parts[i]++;
+        where[i]++;
     }
 
-    return parts;
 }
