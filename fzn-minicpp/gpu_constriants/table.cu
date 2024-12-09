@@ -6,13 +6,12 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
 
     int noTuples=tuples.size();
     noVars=vars.size();
-    _noVars_dev=mallocDevice<int>(sizeof(int));
-    cudaMemcpyAsync(_noVars_dev, &noVars, sizeof(int), cudaMemcpyHostToDevice);
     
     currTableSize=(noTuples/32)+1; 
     
 
     // Memory allocation
+    _noVars_dev=mallocDevice<int>(sizeof(int));
     _currTable_dev = mallocDevice<unsigned int >(sizeof(unsigned int)*currTableSize); 
     _currTable_mask_dev = mallocDevice<unsigned int >(sizeof(unsigned int)*currTableSize); 
     _supports_dev = mallocDevice<unsigned int>(sizeof(unsigned int)*_supportSize*currTableSize);
@@ -42,7 +41,7 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     cudaMallocHost((void**)&noBlocks_host,sizeof(int)*noStreams);
     
     streams=(cudaStream_t*)malloc(sizeof(cudaStream_t)*noStreams);
-    
+    printf("%%%%%% creating %d streams\n",noStreams);
 
 
 
@@ -60,6 +59,7 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     }
 
 
+    cudaMemcpyAsync(_noVars_dev, &noVars, sizeof(int), cudaMemcpyHostToDevice,streams[0]);
     *_currTable_host=_currTable._words.data()->value();
     
     //Memory copy
@@ -80,7 +80,7 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     stream_buffer[0]=0;
     for(int i=1; i<noStreams; i++){
         if(offset_host[i]>0){
-            stream_buffer[i]=stream_buffer[i-1]+offset_host[i];
+            stream_buffer[i]=stream_buffer[i-1]+offset_host[i-1];
         }
     }
     
