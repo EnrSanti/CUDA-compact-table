@@ -36,10 +36,17 @@ class TableGPU : public Table{
 
 
         int noBlocks;
-        int* offset_dev;
-        int* offset_host;
+        int* offset_dev; //for the ths in the kernel
         int* stream_buffer;
-        int noStreams=4;
+        int noStreams=6; //hardcoded
+
+
+        int* CTsizes_host;
+        int* noBlocks_host;
+        int* ss32_host;
+        int lastStream_CT;
+        int lastStream_SS;
+        int lastStream_BL;
 
         cudaStream_t* streams;
 
