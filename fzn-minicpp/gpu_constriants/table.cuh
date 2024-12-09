@@ -30,7 +30,7 @@ class TableGPU : public Table{
         int currTableSize;
         int noVars;
         int *_noVars_dev;
-        int *_vars_host_to_check;
+        int *_vars_host;
         unsigned int *_currTable_host;
         int* _outputArray;
 
@@ -44,6 +44,7 @@ class TableGPU : public Table{
     private:
         int bitsFromRight(int n);
         int bitsFromLeft(int n);
+        void dumpDomainsGPU();
 };
 
 __global__ void printGPUdata(int *_supportSize_dev, int *_variablesOffsets_dev,unsigned int *_currTable_dev,unsigned int *_supports_dev,int * _supportOffsetJmp_dev, int* currTable_size_dev);
