@@ -23,6 +23,7 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     _svSize_sval_dev=mallocDevice<int>(sizeof(int)*(noVars+1));
     _vars_dev=mallocDevice<unsigned int>(sizeof(unsigned int)*((_supportSize/32)+1)); //matrix
     _output_dev=mallocDevice<int>(sizeof(int)*(currTableSize/32)+1); //one for each block
+    offset_dev=mallocDevice<int>(sizeof(int)*6);
 
     //on host side we create simpler structures to then copy the data
     
@@ -30,25 +31,49 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     cudaMallocHost((void**)&_vars_host, sizeof(unsigned int)*((_supportSize/32)+1)); //matrix
     cudaMallocHost((void**)&_outputArray, sizeof(int)*(currTableSize/32)+1);
     cudaMallocHost((void**)&_svSize_sval_host,sizeof(int)*(noVars+1));
+    cudaMallocHost((void**)&offset_host,sizeof(int)*6);
+
+
+
 
     for(int i=0;i<((_supportSize/32)+1);i++){
         _vars_host[i]=0xffffffff;
     }
 
+    for(int i=0;i<6;i++){
+        cudaError_t err = cudaStreamCreate(&streams[i]);
+        if (err != cudaSuccess){
+            printf("%%%%%% Stream err: %s\n", cudaGetErrorString(err));
+            //throw std::runtime_error("Error creating stream");
+        
+            runtime_error("Error creating stream");
+        }
+    }
 
 
     *_currTable_host=_currTable._words.data()->value();
     
     //Memory copy
 
-    cudaMemcpyAsync(_supports_dev, _supports, sizeof(unsigned int)*_supportSize*currTableSize, cudaMemcpyHostToDevice);
-    cudaMemcpyAsync(_currTable_dev, _currTable_host, sizeof(unsigned int)*currTableSize, cudaMemcpyHostToDevice);
-    cudaMemcpyAsync(_supportSize_dev, &_supportSize, sizeof(int), cudaMemcpyHostToDevice);
-    cudaMemcpyAsync(_variablesOffsets_dev, _variablesOffsets.data(), sizeof(int)*noVars, cudaMemcpyHostToDevice);
-    cudaMemcpyAsync(_supportOffsetJmp_dev, _supportOffsetJmp.data(), sizeof(int)*noVars, cudaMemcpyHostToDevice);
-    cudaMemcpyAsync(&_supportOffsetJmp_dev[noVars], &_supportSize, sizeof(int), cudaMemcpyHostToDevice);
-    cudaMemcpyAsync(_currTable_size_dev, &currTableSize, sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemcpyAsync(_supports_dev, _supports, sizeof(unsigned int)*_supportSize*currTableSize, cudaMemcpyHostToDevice,streams[0]);
+    cudaMemcpyAsync(_currTable_dev, _currTable_host, sizeof(unsigned int)*currTableSize, cudaMemcpyHostToDevice,streams[0]);
+    cudaMemcpyAsync(_supportSize_dev, &_supportSize, sizeof(int), cudaMemcpyHostToDevice,streams[1]);
+    cudaMemcpyAsync(_variablesOffsets_dev, _variablesOffsets.data(), sizeof(int)*noVars, cudaMemcpyHostToDevice,streams[1]);
+    cudaMemcpyAsync(_supportOffsetJmp_dev, _supportOffsetJmp.data(), sizeof(int)*noVars, cudaMemcpyHostToDevice,streams[2]);
+    cudaMemcpyAsync(&_supportOffsetJmp_dev[noVars], &_supportSize, sizeof(int), cudaMemcpyHostToDevice,streams[3]);
+    cudaMemcpyAsync(_currTable_size_dev, &currTableSize, sizeof(int), cudaMemcpyHostToDevice,streams[3]);
 
+
+    noBlocks=(currTableSize/32)+1;
+    vector<int>sizes= divideIn6(noBlocks);
+    offset_host[0]=0;
+    for(int i=1; i<6; i++){
+        if(sizes[i]>0){
+            offset_host[i]=offset_host[i-1]+sizes[i];
+        }
+    }
+     cudaMemcpyAsync(offset_dev, offset_host, sizeof(int)*6, cudaMemcpyHostToDevice,streams[2]);
+            
     cudaDeviceSynchronize();
 }
 void TableGPU::post(){
@@ -61,11 +86,8 @@ void TableGPU::propagate(){
 }
 
 void TableGPU::enfoceGAC(){
-
-    int noBlocks=(currTableSize/32)+1;
-    cudaMemcpyAsync(_currTable_dev, _currTable_host, sizeof(unsigned int)*currTableSize, cudaMemcpyHostToDevice);
-    //reset var_host
     
+    cudaMemcpyAsync(_currTable_dev, _currTable_host, currTableSize*sizeof(unsigned int), cudaMemcpyHostToDevice,streams[0]);
     
     _s_val.clear();
     _s_sup.clear();
@@ -93,28 +115,54 @@ void TableGPU::enfoceGAC(){
 
     dumpDomainsGPU();
 
-    cudaMemcpyAsync(_vars_dev, _vars_host, sizeof(unsigned int)*((_supportSize/32)+1), cudaMemcpyHostToDevice);
-    
-    cudaDeviceSynchronize();
+    vector<int> sizes=divideIn6((_supportSize/32)+1);
+    int offset=0;
+    for(int i=0;i<6;i++){
+        if(sizes[i]>0){
+            cudaMemcpyAsync(_vars_dev+offset, _vars_host+offset, sizeof(unsigned int)*sizes[i], cudaMemcpyHostToDevice,streams[i]);
+        }else{
+            break;
+        }
+        offset=offset+sizes[i];
+    }
 
+    
   
     for(int i=0;i<currTableSize;i++){
         _currTable_host[i]=_currTable._words[i].value();
     }
     
-    cudaMemcpyAsync(_currTable_dev, _currTable_host, sizeof(unsigned int)*currTableSize, cudaMemcpyHostToDevice);
-    cudaDeviceSynchronize();
-    updateTableGPU<<<noBlocks,32,32*sizeof(unsigned int)>>>(_supports_dev,_svSize_sval_dev,_supportOffsetJmp_dev,_currTable_dev,_currTable_size_dev,_vars_dev,_output_dev);
+    sizes=divideIn6(currTableSize);
+    offset=0;
+    for(int i=0;i<6;i++){
+        //offset is in terms of words (32 bits)
+        if(sizes[i]>0){
+            //tomove the max between tomove and 4
+            cudaMemcpyAsync(&_currTable_dev[offset], &_currTable_host[offset], sizes[i]*sizeof(unsigned int), cudaMemcpyHostToDevice,streams[i]);   
+        }else{
+            break;
+        }
+        offset=offset+sizes[i];
+    }
 
+
+    sizes= divideIn6(noBlocks);
+  
+    for(int i=0; i<6; i++){
+        if(sizes[i]>0){
+            updateTableGPU<<<sizes[i],32,32*sizeof(unsigned int),streams[i]>>>(_supports_dev,_svSize_sval_dev,_supportOffsetJmp_dev,_currTable_dev,_currTable_size_dev,_vars_dev,_output_dev,offset_dev+i);          
+        }
+    }
 	
     cudaDeviceSynchronize();
     
     //retrieve the output from the device
-    cudaMemcpyAsync(_outputArray, _output_dev, sizeof(int)*noBlocks, cudaMemcpyDeviceToHost);
+    cudaMemcpyAsync(_outputArray, _output_dev, sizeof(int)*noBlocks, cudaMemcpyDeviceToHost,streams[0]);
 
 
 	
-    cudaDeviceSynchronize();
+    
+    cudaStreamSynchronize(streams[0]); 
     
 
     //performed on host, the number of blocks usually is small (e.g. if we have 1280 rows in the table we have 2 blocks)
@@ -132,8 +180,8 @@ void TableGPU::enfoceGAC(){
         //we retrieve current table
         //getting back the current table
        
-        cudaMemcpyAsync(_currTable_host, _currTable_dev, sizeof(unsigned int)*(currTableSize), cudaMemcpyDeviceToHost);
-        cudaDeviceSynchronize();
+        cudaMemcpyAsync(_currTable_host, _currTable_dev, currTableSize*sizeof(unsigned int), cudaMemcpyDeviceToHost,streams[1]);
+        cudaStreamSynchronize(streams[1]);
 
         //we need to update the current table
 
@@ -216,10 +264,11 @@ int TableGPU::bitsFromLeft(int n) {
 }
 
 // 1 th per support row
-__global__ void updateTableGPU(unsigned int* _supports_dev,int * _svSize_off_sval_dev, int *_supportOffsetJmp_dev, unsigned int * _currTable_dev,int* _currTable_dev_size, unsigned int* _vars_dev, int* output){
+__global__ void updateTableGPU(unsigned int* _supports_dev,int * _svSize_off_sval_dev, int *_supportOffsetJmp_dev, unsigned int * _currTable_dev,int* _currTable_dev_size, unsigned int* _vars_dev, int* output, int* offsetPerTh){
 
 
-    int thPos = blockIdx.x * blockDim.x + threadIdx.x; //which currTable word we are considering
+    int blockIdxx=blockIdx.x+(*offsetPerTh);
+    int thPos = blockIdxx * blockDim.x + threadIdx.x; //which currTable word we are considering
     int varIndex=0;
     extern __shared__ unsigned int mask[]; //mask (32)
     
@@ -265,17 +314,14 @@ __global__ void updateTableGPU(unsigned int* _supports_dev,int * _svSize_off_sva
     
     //printf("%%%%%% GPU th %d currTable[%d] %d\n",thPos,thPos,_currTable_dev[thPos]);
     if(threadIdx.x==0){
-    
-        for(int i=blockIdx.x*32;i<(blockIdx.x+1)*32;i++){
+        for(int i=blockIdxx*32;i<(blockIdxx+1)*32;i++){
             if(_currTable_dev[i]!=0){
-                output[blockIdx.x]=0;
+                output[blockIdxx]=0;
                 return;
             }
         }
-        output[blockIdx.x]=1;
-        //printf("%%%%%% GPU fail now GPU\n");
+        output[blockIdxx]=1;
     }
-   
 
 }
 
@@ -335,4 +381,17 @@ __device__ void printBitsGPU(unsigned int num) {
         printf("%d",str[i]);
     }
     printf("\n%%%%%% \n");
+}
+
+
+vector<int> TableGPU::divideIn6(int size) {
+    vector<int> parts(6, floor(size / 6)); // equal division
+    int remainder = size % 6;           // Calculate the remainder
+
+    // Distribute the remainder across the first few parts
+    for (int i = 0; i < remainder; ++i) {
+        parts[i]++;
+    }
+
+    return parts;
 }

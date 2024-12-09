@@ -34,6 +34,13 @@ class TableGPU : public Table{
         unsigned int *_currTable_host;
         int* _outputArray;
 
+
+        int noBlocks;
+        int* offset_dev;
+        int* offset_host;
+        
+        cudaStream_t streams[6];
+
     public:
         TableGPU(vector<var<int>::Ptr> & vars,  vector<vector<int>> & tuples);
         void post() override;
@@ -45,9 +52,10 @@ class TableGPU : public Table{
         int bitsFromRight(int n);
         int bitsFromLeft(int n);
         void dumpDomainsGPU();
+        vector<int> divideIn6(int size);
 };
 
 __global__ void printGPUdata(int *_supportSize_dev, int *_variablesOffsets_dev,unsigned int *_currTable_dev,unsigned int *_supports_dev,int * _supportOffsetJmp_dev, int* currTable_size_dev);
 __device__ void printBitsGPU(unsigned int num);
-__global__ void updateTableGPU(unsigned int* _supports_dev,int * _svSize_off_sval_dev, int *_supportOffsetJmp_dev, unsigned int * _currTable_dev,int* cur_currTable_dev_size, unsigned int* _vars_dev,int* out);
+__global__ void updateTableGPU(unsigned int* _supports_dev,int * _svSize_off_sval_dev, int *_supportOffsetJmp_dev, unsigned int * _currTable_dev,int* cur_currTable_dev_size, unsigned int* _vars_dev,int* out,int* offsetPerTh);
 void printBits(unsigned int num);
