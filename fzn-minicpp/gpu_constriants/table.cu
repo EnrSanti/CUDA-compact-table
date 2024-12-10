@@ -321,8 +321,6 @@ __global__ void updateTableGPU(unsigned int* _supports_dev,int * _svSize_off_sva
         int loops=((_supportOffsetJmp_dev[varIndex+1]-(_supportOffsetJmp_dev[varIndex])));    
     
         
-        //printf("%%%%%% th %d comunque tutti prima di loops for me \n",blockIdx.x * blockDim.x + threadIdx.x);
-        __syncthreads();
         
         int from=_supportOffsetJmp_dev[varIndex];
         //printf("%%%%%% GPU var %d changed, loops for me: %d, in my case (thread %d) we do %d loops jumping from %d (accessing %d)\n",varIndex,mask[128+th_tableFourth],blockIdx.x * blockDim.x + threadIdx.x, mask[128+th_tableFourth],mask[128+th_tableFourth+4],128+th_tableFourth+4);
