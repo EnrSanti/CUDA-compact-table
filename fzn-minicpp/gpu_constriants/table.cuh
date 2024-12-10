@@ -48,8 +48,8 @@ class TableGPU : public Table{
         int lastStream_SS;
         int lastStream_BL;
 
-        cudaStream_t* streams;
 
+        cudaStream_t* streams;
     public:
         TableGPU(vector<var<int>::Ptr> & vars,  vector<vector<int>> & tuples);
         void post() override;
