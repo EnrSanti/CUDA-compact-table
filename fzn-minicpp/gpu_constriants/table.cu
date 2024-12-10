@@ -41,7 +41,7 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     cudaMallocHost((void**)&noBlocks_host,sizeof(int)*noStreams);
 
     streams=(cudaStream_t*)malloc(sizeof(cudaStream_t)*noStreams);
-    printf("%%%%%% creating %d streams\n",noStreams);
+    //printf("%%%%%% creating %d streams\n",noStreams);
 
 
 
@@ -310,7 +310,6 @@ __global__ void updateTableGPU(unsigned int* _supports_dev,int * _svSize_off_sva
         varIndex=_svSize_off_sval_dev[i+1];
         int loops=((_supportOffsetJmp_dev[varIndex+1]-(_supportOffsetJmp_dev[varIndex])));    
         
-        __syncthreads();
         if(th_mappedPos==0){
             mask[128+th_tableFourth] = loops / 4;
             int remainder = loops % 4;          
@@ -338,32 +337,28 @@ __global__ void updateTableGPU(unsigned int* _supports_dev,int * _svSize_off_sva
             int wordIndex=(from+j+mask[128+th_tableFourth+4])/32; //row of supports
             int maskContains=1<<(31-j-_supportOffsetJmp_dev[varIndex]-mask[128+th_tableFourth+4]+wordIndex*32);
 
-            //printf("%%%%%% GPU th %d var %d, accessing ctWord %d, checking mask %d\n",(thPos),varIndex,wordIndex,maskContains);
-            //printf("%%%%%% GPU th %d var %d, accessing word %d, maskContains: %u\n",thPos,varIndex,wordIndex, maskContains);
-            //printf("%%%%%% GPU th %d var %d maskContains %u\n",thPos,varIndex,maskContains);
             if(_vars_dev[wordIndex] & maskContains){ //check if val in domain
                 //printf("%%%%%% GPU INSIDE th %d var %d contains %d\n",thPos,varIndex,j);
                 int off=(j+mask[128+th_tableFourth+4])*(*_currTable_dev_size)+(_supportOffsetJmp_dev[varIndex]*(*_currTable_dev_size))+threadIdx.x%32; //1 -> the size of the currTable
-                //printf("%%%%%% GPU INSIDE th %d off %d, _currTable_dev_size: %u,_supportOffsetJmp_dev[varIndex]: %d\n",thPos,off,*_currTable_dev_size,_supportOffsetJmp_dev[varIndex]);
-                //printf("%%%%%% GPU th %d, var %d contains %d accessing the %d support word\n",thPos,varIndex,maskContains,off);
                 mask[threadIdx.x]=mask[threadIdx.x] | _supports_dev[off];
-                //printf("%%%%%% GPU INSIDE th %d mask related to var %d is %u, only the mask %u (accessing %d)\n",thPos,varIndex,mask[threadIdx.x],_supports_dev[off],off);
             }
-        }
 
+            
+        }
         __syncthreads();
+
+
         //printing complete mask
         //printf("%%%%%% GPU th %d complete mask for var %d is %u, table before[%d] %u\n",thPos,varIndex,mask[threadIdx.x],thPos,_currTable_dev[thPos]);
-        if(th_tableFourth==0){
+        if(th_tableFourth%2==0){
             //32 ths
-            for(int i=0;i<4;i++){
-                mask[threadIdx.x]=mask[threadIdx.x] | mask[threadIdx.x+i*32];
-                //printf("%%%%%% GPU th %d merging with block %d, mask %u, currTable[%d] %u\n",thPos,i,mask[threadIdx.x],thPos,_currTable_dev[thPos]);
-            }
-            _currTable_dev[th_mappedPos]=mask[threadIdx.x] & _currTable_dev[th_mappedPos];   
-            //printf("%%%%%% GPU th %d, mapped to %d ct is %u",thPos,th_mappedPos,_currTable_dev[th_mappedPos]);
+            mask[threadIdx.x]=mask[threadIdx.x] | mask[threadIdx.x+32];
         }
-
+        __syncthreads();
+        if(th_tableFourth==0){
+            mask[threadIdx.x]=mask[threadIdx.x] | mask[threadIdx.x+64];
+            _currTable_dev[th_mappedPos]=mask[threadIdx.x] & _currTable_dev[th_mappedPos];   
+        }
         __syncthreads();
         mask[threadIdx.x]=0;
         //printf("%%%%%% ******* new var ******** \n");
@@ -457,4 +452,5 @@ void TableGPU::divideInStrems(int size,int * where) {
     }
 
 }
+
 //thanks
