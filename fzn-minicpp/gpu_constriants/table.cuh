@@ -50,6 +50,10 @@ class TableGPU : public Table{
 
 
         cudaStream_t* streams;
+
+        int *workerOffestAndLimit_dev;
+        int *workerOffestAndLimit_host;
+
     public:
         TableGPU(vector<var<int>::Ptr> & vars,  vector<vector<int>> & tuples);
         void post() override;
@@ -62,9 +66,10 @@ class TableGPU : public Table{
         int bitsFromLeft(int n);
         void dumpDomainsGPU();
         void  divideInStrems(int, int*);
+        void varOffsetLimit(int size,int * where);
 };
 
 __global__ void printGPUdata(int *_supportSize_dev, int *_variablesOffsets_dev,unsigned int *_currTable_dev,unsigned int *_supports_dev,int * _supportOffsetJmp_dev, int* currTable_size_dev);
 __device__ void printBitsGPU(unsigned int num);
-__global__ void updateTableGPU(unsigned int* _supports_dev,int * _svSize_off_sval_dev, int *_supportOffsetJmp_dev, unsigned int * _currTable_dev,int* cur_currTable_dev_size, unsigned int* _vars_dev,int* out,int* offsetPerTh);
+__global__ void updateTableGPU(unsigned int* _supports_dev,int * _svSize_off_sval_dev, int *_supportOffsetJmp_dev, unsigned int * _currTable_dev,int* cur_currTable_dev_size, unsigned int* _vars_dev,int* out,int* offsetPerTh, int* offsetsAndLimits);
 void printBits(unsigned int num);
