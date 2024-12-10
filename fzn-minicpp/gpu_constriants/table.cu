@@ -167,7 +167,7 @@ void TableGPU::enfoceGAC(){
 
   
     for(int i=0; i<=lastStream_BL; i++){
-        updateTableGPU<<<noBlocks_host[i],128,(128+8)*sizeof(unsigned int),streams[i]>>>(_supports_dev,_svSize_sval_dev,_supportOffsetJmp_dev,_currTable_dev,_currTable_size_dev,_vars_dev,_output_dev,offset_dev+i);          
+        updateTableGPU<<<noBlocks_host[i],256,(256+16)*sizeof(unsigned int),streams[i]>>>(_supports_dev,_svSize_sval_dev,_supportOffsetJmp_dev,_currTable_dev,_currTable_size_dev,_vars_dev,_output_dev,offset_dev+i);          
     }
     
     cudaDeviceSynchronize();
@@ -311,20 +311,25 @@ __global__ void updateTableGPU(unsigned int* _supports_dev,int * _svSize_off_sva
         int loops=((_supportOffsetJmp_dev[varIndex+1]-(_supportOffsetJmp_dev[varIndex])));    
         
         if(th_mappedPos==0){
-            mask[128+th_tableFourth] = loops / 4;
-            int remainder = loops % 4;          
+            mask[256+th_tableFourth] = loops / 8;
+            int remainder = loops % 8;          
             
-            mask[128+th_tableFourth]+=(th_tableFourth<remainder);
+            mask[256+th_tableFourth]+=(th_tableFourth<remainder);
             
-            mask[128+th_tableFourth+4]=0;
+            mask[256+th_tableFourth+8]=0;
             
             if(threadIdx.x==0){
                 //printf("%%%%%% thread setting masks\n");
-                mask[133]=mask[128];
-                mask[134]=mask[133]+mask[129];
-                mask[135]=mask[134]+mask[130];
-                //printf("%%%%%% mask[132]: %d,mask[133]: %d, mask[134]: %d, mask[135]: %d\n",mask[132],mask[133],mask[134],mask[135]);
-            }            
+                
+                mask[265]=mask[256];
+                mask[266]=mask[265]+mask[257];
+                mask[267]=mask[266]+mask[258];
+                mask[268]=mask[267]+mask[259];
+                mask[269]=mask[268]+mask[260];
+                mask[270]=mask[269]+mask[261];
+                mask[271]=mask[270]+mask[262];
+
+           }            
         }
         //printf("%%%%%% th %d comunque tutti prima di loops for me \n",blockIdx.x * blockDim.x + threadIdx.x);
         __syncthreads();
@@ -332,18 +337,16 @@ __global__ void updateTableGPU(unsigned int* _supports_dev,int * _svSize_off_sva
         int from=_supportOffsetJmp_dev[varIndex];
         //printf("%%%%%% GPU var %d changed, loops for me: %d, in my case (thread %d) we do %d loops jumping from %d (accessing %d)\n",varIndex,mask[128+th_tableFourth],blockIdx.x * blockDim.x + threadIdx.x, mask[128+th_tableFourth],mask[128+th_tableFourth+4],128+th_tableFourth+4);
         //1/4 of the domain
-        for(int j=0; j<mask[128+th_tableFourth]; j++){
+        for(int j=0; j<mask[256+th_tableFourth]; j++){
 
-            int wordIndex=(from+j+mask[128+th_tableFourth+4])/32; //row of supports
-            int maskContains=1<<(31-j-_supportOffsetJmp_dev[varIndex]-mask[128+th_tableFourth+4]+wordIndex*32);
+            int wordIndex=(from+j+mask[256+th_tableFourth+8])/32; //row of supports
+            int maskContains=1<<(31-j-_supportOffsetJmp_dev[varIndex]-mask[256+th_tableFourth+8]+wordIndex*32);
 
             if(_vars_dev[wordIndex] & maskContains){ //check if val in domain
                 //printf("%%%%%% GPU INSIDE th %d var %d contains %d\n",thPos,varIndex,j);
-                int off=(j+mask[128+th_tableFourth+4])*(*_currTable_dev_size)+(_supportOffsetJmp_dev[varIndex]*(*_currTable_dev_size))+threadIdx.x%32; //1 -> the size of the currTable
+                int off=(j+mask[256+th_tableFourth+8])*(*_currTable_dev_size)+(_supportOffsetJmp_dev[varIndex]*(*_currTable_dev_size))+threadIdx.x%32; //1 -> the size of the currTable
                 mask[threadIdx.x]=mask[threadIdx.x] | _supports_dev[off];
-            }
-
-            
+            }            
         }
         __syncthreads();
 
@@ -355,8 +358,13 @@ __global__ void updateTableGPU(unsigned int* _supports_dev,int * _svSize_off_sva
             mask[threadIdx.x]=mask[threadIdx.x] | mask[threadIdx.x+32];
         }
         __syncthreads();
-        if(th_tableFourth==0){
+        if(th_tableFourth%4==0){
+            //32 ths
             mask[threadIdx.x]=mask[threadIdx.x] | mask[threadIdx.x+64];
+        }
+        __syncthreads();
+        if(th_tableFourth==0){
+            mask[threadIdx.x]=mask[threadIdx.x] | mask[threadIdx.x+128];
             _currTable_dev[th_mappedPos]=mask[threadIdx.x] & _currTable_dev[th_mappedPos];   
         }
         __syncthreads();
@@ -364,7 +372,6 @@ __global__ void updateTableGPU(unsigned int* _supports_dev,int * _svSize_off_sva
         //printf("%%%%%% ******* new var ******** \n");
     }
     
-    //printf("%%%%%% GPU th %d currTable[%d] %d\n",thPos,thPos,_currTable_dev[thPos]);
     if(threadIdx.x==0){
         for(int i=blockIdxx*32;i<(blockIdxx+1)*32;i++){
             if(_currTable_dev[i]!=0){
@@ -376,7 +383,6 @@ __global__ void updateTableGPU(unsigned int* _supports_dev,int * _svSize_off_sva
         }
         output[blockIdxx]=1;
     }
-    //printf("%%%%%% GPU th %d kernel over \n",thPos);
 
 }
 
