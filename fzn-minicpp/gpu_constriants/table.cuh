@@ -52,6 +52,7 @@ class TableGPU : public Table{
         cudaStream_t* streams;
 
         int *workerOffestAndLimit_dev;
+        int internalIndex;
         int *workerOffestAndLimit_host;
 
     public:
@@ -67,6 +68,7 @@ class TableGPU : public Table{
         void dumpDomainsGPU();
         void  divideInStrems(int, int*);
         void varOffsetLimit(int size,int * where);
+        void enfGACDev();
 };
 
 __global__ void printGPUdata(int *_supportSize_dev, int *_variablesOffsets_dev,unsigned int *_currTable_dev,unsigned int *_supports_dev,int * _supportOffsetJmp_dev, int* currTable_size_dev);

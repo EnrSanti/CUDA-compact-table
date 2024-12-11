@@ -211,7 +211,7 @@ void Table::enfoceGAC(){
             _s_sup.push_back(i);
         }
 	}
-    //printf("%%%%%% enforcing GAC, size of s_val %d, size of s_sup %d \n",_s_val.size(),_s_sup.size());  
+    
 	updateTable();
     //safe
 	filterDomains();
