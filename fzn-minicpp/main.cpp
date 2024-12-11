@@ -10,14 +10,23 @@
 #include "fzn_search_helper.h"
 #include "fzn_statistics_helper.h"
 #include "fzn_variables_helper.h"
-
+#include <sys/resource.h>
 int main(int argc, char * argv[])
 {
+    
     using namespace std;
 
+
+    rlimit limit = {RLIM_INFINITY,RLIM_INFINITY};
+    setrlimit(RLIMIT_STACK, &limit);
+
+
+    
     // Parse options
     FznCliHelper fzn_cli_helper;
     auto args = fzn_cli_helper.parseArgs(argc, argv);
+
+
 
     if ((args.count("h") == 0) and (args.count("fzn") == 1))
     {
@@ -47,6 +56,7 @@ int main(int argc, char * argv[])
         DFSearch search(solver, fzn_search_helper.getSearchStrategy(fzn_model));
         FznStatisticsHelper::hookToSearch(stats, search);
 
+        
         // Search limits
         Limit search_limits = FznSearchHelper::makeSearchLimits(fzn_model, args);
 
@@ -65,6 +75,7 @@ int main(int argc, char * argv[])
             if (fzn_model.solve_type == "satisfy")
             {
                 search.solve(stats, search_limits);
+                
             }
             else if (fzn_model.solve_type == "minimize")
             {

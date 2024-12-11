@@ -10,7 +10,9 @@ modelsSAT = ["serial/SAT/",
 "TestGenerator & more tests/testsSAT/",
 "TestGenerator & more tests/testsSAT_CUDA/",
 "TestGenerator & more tests/testsSAT_bigger/",
-"TestGenerator & more tests/testsSAT_CUDA_bigger/"]
+"TestGenerator & more tests/testsSAT_CUDA_bigger/",
+"TestGenerator & more tests/testsSAT_even_bigger/",
+"TestGenerator & more tests/testsSAT_CUDA_even_bigger/"]
 
 modelsUNSAT = ["serial/UNSAT/",
 "CUDA/UNSAT/",
