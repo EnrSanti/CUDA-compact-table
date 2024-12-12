@@ -131,7 +131,6 @@ void TableGPU::propagate(){
 void TableGPU::enfGACDev(){
     cudaMemcpyAsync(_currTable_dev, _currTable_host, currTableSize*sizeof(unsigned int), cudaMemcpyHostToDevice,streams[0]);
 
-
     int output=0;
     
     _svSize_sval_host[0]=_s_val.size();
@@ -163,45 +162,24 @@ void TableGPU::enfGACDev(){
     }
     
     cudaDeviceSynchronize();
-    //retrieve the output from the device
-    cudaMemcpyAsync(_outputArray, _output_dev, sizeof(int)*noBlocks, cudaMemcpyDeviceToHost,streams[0]);
 
+    cudaMemcpyAsync(_currTable_host, _currTable_dev, currTableSize*sizeof(unsigned int), cudaMemcpyDeviceToHost,streams[1]);
 
+    _currTable.clearMask();
     
+    cudaDeviceSynchronize();
+
+    //we need to update the current table
+
+    _currTable.addToMaskArray(_currTable_host);
     
-    cudaStreamSynchronize(streams[0]); 
-    
+    _currTable.intersectWithMask();
+    _currTable.clearMask();
 
-    //performed on host, the number of blocks usually is small (e.g. if we have 1280 rows in the table we have 2 blocks)
-
-    for(int i=0; i<noBlocks; i++){
-        if(_outputArray[i]==1){
-            output=1;
-            break;
-        }
-    }
-
-    if(output==1){
+    if(_currTable.isEmpty()){
         failNow();
-    }else{
-        //we retrieve current table
-        //getting back the current table
-       
-        cudaMemcpyAsync(_currTable_host, _currTable_dev, currTableSize*sizeof(unsigned int), cudaMemcpyDeviceToHost,streams[1]);
-        cudaStreamSynchronize(streams[1]);
-
-        //we need to update the current table
-
-        _currTable.clearMask();
-        _currTable.addToMaskArray(_currTable_host);
-        
-        _currTable.intersectWithMask();
-        _currTable.clearMask();
-      
-        if(_currTable.isEmpty()){
-            failNow();
-        }
     }
+
 }
 void TableGPU::enfoceGAC(){
     
@@ -227,8 +205,8 @@ void TableGPU::enfoceGAC(){
     }
 
 
-
-    if(overallSize>4000){
+    //overallSize>4000
+    if(overallSize>4000){ //to better see advantages
         enfGACDev();
     }else{
 
@@ -371,17 +349,7 @@ __global__ void updateTableGPU(unsigned int* _supports_dev,int * _svSize_off_sva
         //printf("%%%%%% ******* new var ******** \n");
     }
     
-    if(threadIdx.x==0){
-        for(int i=blockIdxx*32;i<(blockIdxx+1)*32;i++){
-            if(_currTable_dev[i]!=0){
 
-                //printf("%%%%%% GPU th %d kernel over \n",thPos);
-                output[blockIdxx]=0;
-                return;
-            }
-        }
-        output[blockIdxx]=1;
-    }
 
 }
 
@@ -392,14 +360,12 @@ __global__ void updateTableGPU(unsigned int* _supports_dev,int * _svSize_off_sva
 
 
 
-__global__ void printGPUdata(int *_supportSize_dev, int *_variablesOffsets_dev,unsigned int *_currTable_dev,unsigned int *_supports_dev,int * _supportOffsetJmp_dev, int* currTable_size_dev){
+__global__ void printGPUdata(int *_supportSize_dev, int *_variablesOffsets_dev,unsigned int *_currTable_dev,unsigned int *_supports_dev,int * _supportOffsetJmp_dev, int* currTable_size_dev, int* output){
     printf("%%%%%% -------------------------- printGPUdata -------------------------- \n");
     printf("%%%%%% threadIdx.x: %d\n",threadIdx.x);
     printf("%%%%%% _supportSize_dev: %d\n",*_supportSize_dev);
     //printing the offsets
-    printf("%%%%%% _variablesOffsets_dev: %d \n",_supportOffsetJmp_dev[0]);
-    printf("%%%%%% _variablesOffsets_dev: %d \n",_supportOffsetJmp_dev[1]);
-    printf("%%%%%% _variablesOffsets_dev: %d \n",_supportOffsetJmp_dev[2]);
+    printf("%%%%%% outputArray[0] %d\n",output[0]);
     int k=0;
     int off=0;
     for(int i=0;i<*_supportSize_dev;i++){
@@ -497,4 +463,27 @@ void TableGPU::varOffsetLimit(int size,int * where) {
     where[31]=where[14]+where[30];
 */
 
+}
+__global__ void isEmpty(unsigned int* _currTable_dev,int* _currTable_size_dev, int* res){
+   extern __shared__ int sdata[];
+
+    int tid = threadIdx.x;
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+
+    // Load input into shared memory
+    sdata[tid] = (idx < *_currTable_size_dev) ? (_currTable_dev[idx] != 0) : 0; // Store 1 if the element is non-zero
+    __syncthreads();
+
+    // Perform reduction in shared memory
+    for (int stride = blockDim.x / 2; stride > 0; stride >>= 1) {
+        if (tid < stride) {
+            sdata[tid] |= sdata[tid + stride]; // OR operation to detect any non-zero value
+        }
+        __syncthreads();
+    }
+
+    // Write result of this block to global memory
+    if (tid == 0) {
+        atomicOr(res, sdata[0]);
+    }
 }

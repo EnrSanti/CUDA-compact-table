@@ -33,6 +33,7 @@ class TableGPU : public Table{
         int *_vars_host;
         unsigned int *_currTable_host;
         int* _outputArray;
+        int* isEmpty_dev;
 
 
         int noBlocks;
@@ -71,7 +72,8 @@ class TableGPU : public Table{
         void enfGACDev();
 };
 
-__global__ void printGPUdata(int *_supportSize_dev, int *_variablesOffsets_dev,unsigned int *_currTable_dev,unsigned int *_supports_dev,int * _supportOffsetJmp_dev, int* currTable_size_dev);
+__global__ void printGPUdata(int *_supportSize_dev, int *_variablesOffsets_dev,unsigned int *_currTable_dev,unsigned int *_supports_dev,int * _supportOffsetJmp_dev, int* currTable_size_dev, int* out);
 __device__ void printBitsGPU(unsigned int num);
 __global__ void updateTableGPU(unsigned int* _supports_dev,int * _svSize_off_sval_dev, int *_supportOffsetJmp_dev, unsigned int * _currTable_dev,int* cur_currTable_dev_size, unsigned int* _vars_dev,int* out,int* offsetPerTh, int* offsetsAndLimits);
 void printBits(unsigned int num);
+__global__ void isEmpty(unsigned int* _currTable_dev,int* _currTable_size_dev, int* res);
