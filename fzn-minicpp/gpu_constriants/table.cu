@@ -156,7 +156,7 @@ void TableGPU::enfGACDev(){
 
   
     for(int i=0; i<=lastStream_BL; i++){
-        updateTableGPU<<<noBlocks_host[i],256,256*sizeof(unsigned int),streams[i]>>>(_supports_dev,_svSize_sval_dev,_supportOffsetJmp_dev,_currTable_dev,_currTable_size_dev,_vars_dev,offset_dev+i,workerOffestAndLimit_dev);          
+        updateTableGPU<<<noBlocks_host[i],512,512*sizeof(unsigned int),streams[i]>>>(_supports_dev,_svSize_sval_dev,_supportOffsetJmp_dev,_currTable_dev,_currTable_size_dev,_vars_dev,offset_dev+i,workerOffestAndLimit_dev);          
     }
     
     cudaDeviceSynchronize();
