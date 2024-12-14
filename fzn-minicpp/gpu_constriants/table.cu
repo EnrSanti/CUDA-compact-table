@@ -44,10 +44,12 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     streams=(cudaStream_t*)malloc(sizeof(cudaStream_t)*noStreams);
 
 
-
+    printf("%%%%%% TableGPU constructor support size: %d\n",_supportSize);
     for(int i=0;i<((_supportSize/32)+1);i++){
         _vars_host[i]=0xffffffff;
     }
+    if(_supportSize%32!=0)
+        _vars_host[(_supportSize/32)]=0xffffffff<<(32-(_supportSize%32));
 
     for(int i=0;i<noStreams;i++){
         cudaError_t err = cudaStreamCreate(&streams[i]);
@@ -66,11 +68,11 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
 
     cudaMemcpyAsync(_supports_dev, _supports, sizeof(unsigned int)*_supportSize*currTableSize, cudaMemcpyHostToDevice,streams[0]);
     cudaMemcpyAsync(_currTable_dev, _currTable_host, sizeof(unsigned int)*currTableSize, cudaMemcpyHostToDevice,streams[0]);
-    cudaMemcpyAsync(_supportSize_dev, &_supportSize, sizeof(int), cudaMemcpyHostToDevice,streams[1]);
-    cudaMemcpyAsync(_variablesOffsets_dev, _variablesOffsets.data(), sizeof(int)*noVars, cudaMemcpyHostToDevice,streams[1]);
-    cudaMemcpyAsync(_supportOffsetJmp_dev, _supportOffsetJmp.data(), sizeof(int)*noVars, cudaMemcpyHostToDevice,streams[2]);
-    cudaMemcpyAsync(&_supportOffsetJmp_dev[noVars], &_supportSize, sizeof(int), cudaMemcpyHostToDevice,streams[3]);
-    cudaMemcpyAsync(_currTable_size_dev, &currTableSize, sizeof(int), cudaMemcpyHostToDevice,streams[3]);
+    cudaMemcpyAsync(_supportSize_dev, &_supportSize, sizeof(int), cudaMemcpyHostToDevice,streams[0]);
+    cudaMemcpyAsync(_variablesOffsets_dev, _variablesOffsets.data(), sizeof(int)*noVars, cudaMemcpyHostToDevice,streams[0]);
+    cudaMemcpyAsync(_supportOffsetJmp_dev, _supportOffsetJmp.data(), sizeof(int)*noVars, cudaMemcpyHostToDevice,streams[0]);
+    cudaMemcpyAsync(&_supportOffsetJmp_dev[noVars], &_supportSize, sizeof(int), cudaMemcpyHostToDevice,streams[0]);
+    cudaMemcpyAsync(_currTable_size_dev, &currTableSize, sizeof(int), cudaMemcpyHostToDevice,streams[0]);
 
 
     //compute once and transfer the offsets for the streams:
@@ -89,11 +91,11 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     }
     varOffsetLimit(_supportSize-_supportOffsetJmp[noVars-1],workerOffestAndLimit_host+((noVars-1)*32));
 
-    cudaMemcpyAsync(workerOffestAndLimit_dev, workerOffestAndLimit_host, sizeof(int)*32*noVars, cudaMemcpyHostToDevice,streams[3]);
+    cudaMemcpyAsync(workerOffestAndLimit_dev, workerOffestAndLimit_host, sizeof(int)*32*noVars, cudaMemcpyHostToDevice,streams[0]);
 
 
-
-    cudaMemcpyAsync(_stream_offset_dev, stream_buffer, sizeof(int)*noStreams, cudaMemcpyHostToDevice,streams[1]);
+    printf("%%%%%% TableGPU streamoffsetDev[0]: %d  streamoffsetDev[1]: %d \n",stream_buffer[0],stream_buffer[1]);
+    cudaMemcpyAsync(_stream_offset_dev, stream_buffer, sizeof(int)*noStreams, cudaMemcpyHostToDevice,streams[0]);
 
     divideInStrems(noBlocks,noBlocks_host);
     divideInStrems(currTableSize,CTsizes_host);
@@ -116,6 +118,11 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     cudaDeviceSynchronize();
     cudaFree(offset_host);
     cudaFree(stream_buffer);
+    printf("%%%%%% dumping domains\n");
+    for(int i=0;i<(_supportSize/32)+1;i++){
+        printf("%%%%%% [%d] ",i);
+        printBits(_vars_host[i]);
+    }
 
 }
 void TableGPU::post(){
@@ -133,7 +140,7 @@ void TableGPU::enfGACDev(){
     
     _svSize_sval_host[0]=_s_val.size();
 
-    cudaMemcpyAsync(_svSize_sval_dev, _svSize_sval_host, sizeof(int)*(_s_val.size()+1), cudaMemcpyHostToDevice,streams[2]);
+    cudaMemcpyAsync(_svSize_sval_dev, _svSize_sval_host, sizeof(int)*(_s_val.size()+1), cudaMemcpyHostToDevice,streams[0]);
 
     dumpDomainsGPU();
 
@@ -163,7 +170,7 @@ void TableGPU::enfGACDev(){
     
     cudaDeviceSynchronize();
 
-    cudaMemcpyAsync(_currTable_host, _currTable_dev, currTableSize*sizeof(unsigned int), cudaMemcpyDeviceToHost,streams[1]);
+    cudaMemcpyAsync(_currTable_host, _currTable_dev, currTableSize*sizeof(unsigned int), cudaMemcpyDeviceToHost,streams[0]);
 
     _currTable.clearMask();
     
@@ -212,6 +219,7 @@ void TableGPU::enfoceGAC(){
             _s_sup.push_back(i);
         }
     }
+    fflush(stdout);
 
 
     //overallSize>4000
@@ -228,7 +236,7 @@ void TableGPU::dumpDomainsGPU(){
     for(int i=0; i < _s_val.size(); ++i){
 
         int index=_s_val[i];
-
+        
         int starting_word=(_supportOffsetJmp[index])/32;
         int words_to_reset=-1;
         int to=-1;
@@ -240,11 +248,13 @@ void TableGPU::dumpDomainsGPU(){
             words_to_reset=to-starting_word;
             
         }
+        printf("%%%%%%  var changed: %d, it starts at %d and ends at %d \n",index,starting_word,to);
+       
         for(int j=1;j<words_to_reset;j++){
             _vars_host[starting_word+j]=0;
         }
         
-        if(words_to_reset>1){
+        if(words_to_reset>=1){
             _vars_host[starting_word]=_vars_host[starting_word] & bitsFromLeft((_supportOffsetJmp[index])%32);
             
             if(index<noVars-1){
@@ -254,11 +264,13 @@ void TableGPU::dumpDomainsGPU(){
             }
         }else{
             //both masks on one word
+            
             if(index<noVars-1){
-
+                printf("%%%%%%  var changed: 0 words to reset, I AM IN THEN, index: %d before: %d maskLeft: %d maskRight: %d \n",starting_word, _vars_host[starting_word], bitsFromLeft(_supportOffsetJmp[index]%32),bitsFromRight((32-_supportOffsetJmp[index+1])%32));
                 _vars_host[starting_word]=_vars_host[starting_word] & ( bitsFromLeft(_supportOffsetJmp[index]%32) | bitsFromRight((32-_supportOffsetJmp[index+1])%32));
 
             }else{
+                printf("%%%%%%  var changed: 0 words to reset, I AM IN ELSE");
                 _vars_host[starting_word]=_vars_host[starting_word] & bitsFromLeft((_supportOffsetJmp[index]%32));
             }
 
@@ -274,6 +286,11 @@ void TableGPU::dumpDomainsGPU(){
 
         }
         
+    }
+    printf("%%%%%% dumping domains\n");
+    for(int i=0;i<(_supportSize/32)+1;i++){
+        printf("%%%%%% [%d] ",i);
+        printBits(_vars_host[i]);
     }
 }
 
@@ -329,51 +346,47 @@ __global__ void updateTableGPU(unsigned int* _supports_dev,int * _svSize_off_sva
             int wordIndex=(from+j+offset16_th)/32; //piece of row of supports, not the cell, the row piece of row the block looks at
             int maskContains=1<<(31-j-_supportOffsetJmp_dev[varIndex]-offset16_th+wordIndex*32);
 
-            printf("%%%%%% (c: %d, r: %d) ( th %d), looking at domains[%d] (i.e. bit val %d) for var %d and checking mask %d \n",th_col,th_row,threadIdx.x,wordIndex,(from+j+offset16_th), varIndex, maskContains);
-
-            if(_vars_dev[wordIndex] & maskContains){ //check if val in domain
+            if((_vars_dev[wordIndex] & maskContains) != 0){ //check if val in domain
                 //off is != for each of the 128 ths
                 int off=(j+offset16_th)*(*_currTable_dev_size)+(_supportOffsetJmp_dev[varIndex]*(*_currTable_dev_size))+threadIdx.x%8; 
 
                 mask[threadIdx.x]=mask[threadIdx.x] | _supports_dev[off];
-                printf("%%%%%% MODIFYING (c: %d, r: %d) (th %d, mapped pos %d) looking at (i.e. for val %d) which is in the domain, offset %d (word del supporto) e thidx %d, mask at the end %d \n",th_col,th_row,threadIdx.x, th_mappedPos_stream,(from+j+offset16_th), off, threadIdx.x,mask[threadIdx.x]);
+                printf("%%%%%% block %d MODIFYING (c: %d, r: %d th %d, mapped pos %d, looking at bit %d) which is in the domain, offset %d (word del supporto) e thidx %d, mask at the end %d, vardev[%d]: %d maskContains %d \n",blockIdx.x,th_col,th_row,threadIdx.x, th_mappedPos_stream,(from+j+offset16_th), off, threadIdx.x,mask[threadIdx.x],wordIndex,_vars_dev[wordIndex],maskContains);
 
             }            
         }
         __syncthreads();
 
 
-        printf("%%%%%% AT THE END of computation, all ths, GPU th c %d r %d MASK[%d] %d \n",th_col,th_row,threadIdx.x,mask[threadIdx.x]);
+        printf("%%%%%% block %d AT THE END all ths, GPU th c %d r %d MASK[%d] %d \n",blockIdx.x,th_col,th_row,threadIdx.x,mask[threadIdx.x]);
         //printing complete mask
         //printf("%%%%%% GPU th %d complete mask for var %d is %u, table before[%d] %u\n",thPos,varIndex,mask[threadIdx.x],thPos,_currTable_dev[thPos]);
         if(threadIdx.x<64){
             //64 ths
             mask[threadIdx.x]=mask[threadIdx.x] | mask[threadIdx.x+64];
-            printf("%%%%%% AT THE END of computation, GPU th c %d r %d partial 64 MASK[%d] %d \n",th_col,th_row,threadIdx.x,mask[threadIdx.x]);
+            printf("%%%%%% block %d AT THE END partial 64 GPU th c %d r %d, MASK[%d] %d \n",blockIdx.x,th_col,th_row,threadIdx.x,mask[threadIdx.x]);
         }
         __syncthreads();
         if(threadIdx.x<32){
             //32 ths
             mask[threadIdx.x]=mask[threadIdx.x] | mask[threadIdx.x+32];
-            printf("%%%%%% AT THE END, GPU th c %d r %d partial 32 MASK %d \n",th_col,th_row,mask[threadIdx.x]);
+            printf("%%%%%% block %d AT THE END partial 32 GPU th c %d r %d MASK %d \n",blockIdx.x,th_col,th_row,mask[threadIdx.x]);
         }
         __syncthreads();
         if(threadIdx.x<16){
             //32 ths
             mask[threadIdx.x]=mask[threadIdx.x] | mask[threadIdx.x+16];
 
-            printf("%%%%%% AT THE END, GPU th c %d r %d partial 16 MASK %d \n",th_col,th_row,mask[threadIdx.x]);
+            printf("%%%%%% block %d AT THE END partial 16 GPU th c %d r %d MASK %d \n",blockIdx.x,th_col,th_row,mask[threadIdx.x]);
         }
         __syncthreads();
         //8 threads to this last operation
         if(threadIdx.x<8){
             mask[threadIdx.x]=mask[threadIdx.x] | mask[threadIdx.x+8];
 
-            printf("%%%%%% AT THE END, GPU th c %d r %d 8 MASK %d \n",th_col,th_row,mask[threadIdx.x]);
-
-            printf("%%%%%% AT THE END, GPU th row %d col %d ct BEFORE %d MASK %d \n",th_row,th_col,_currTable_dev[th_mappedPos_stream],mask[threadIdx.x]);
+            printf("%%%%%% block %d FINE 1, AT THE END, GPU th row %d col %d ct BEFORE %d, MASK %d \n",blockIdx.x,th_row,th_col,_currTable_dev[th_mappedPos_stream],mask[threadIdx.x]);
             _currTable_dev[th_mappedPos_stream]=mask[threadIdx.x] & _currTable_dev[th_mappedPos_stream];   
-            printf("%%%%%% GPU th  col %d row %d (mapped %d) ct %d \n",th_row,th_col,th_mappedPos_stream,_currTable_dev[th_mappedPos_stream]);
+            printf("%%%%%% block %d FINE 2, GPU th  col %d row %d (mapped %d, non ci dovrebbero essere altri numeri uguali) ct %d \n",blockIdx.x,th_row,th_col,th_mappedPos_stream,_currTable_dev[th_mappedPos_stream]);
         }
         mask[threadIdx.x]=0;
     }

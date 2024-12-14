@@ -36,7 +36,7 @@ class TableGPU : public Table{
         int noBlocks;
         int* _stream_offset_dev; //for the ths in the kernel
         int* stream_buffer;
-        int noStreams=4; //hardcoded
+        int noStreams=1; //hardcoded
 
 
         int* CTsizes_host;
