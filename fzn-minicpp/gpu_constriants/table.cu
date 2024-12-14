@@ -246,11 +246,11 @@ void TableGPU::enfoceGAC(){
 
 
     //overallSize>4000
-    //if(overallSize>2000){ //to better see advantages when testing remove and do only enfGACDev();
+    if(overallSize>4000){ //to better see advantages when testing remove and do only enfGACDev();
         enfGACDev();
-    //}else{
-        //updateTable();
-    //}
+    }else{
+        updateTable();
+    }
 
     filterDomains();
 }
