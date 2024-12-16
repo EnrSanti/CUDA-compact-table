@@ -352,8 +352,6 @@ void SmartTable::filterDomains(){
                 
             }
         }
-        
-       // _vars[index]->dumpInSparseBitSet(index,_variablesOffsets[index],_vars[index]->min(),_vars[i]->initialMin(),_vars[index]->max(),_lastVarsValues[index]);
     }    
 }
 

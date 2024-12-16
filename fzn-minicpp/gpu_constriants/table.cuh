@@ -53,6 +53,7 @@ class TableGPU : public Table{
         int internalIndex;
         int *workerOffestAndLimit_host;
 
+
     public:
         TableGPU(vector<var<int>::Ptr> & vars,  vector<vector<int>> & tuples);
         void post() override;

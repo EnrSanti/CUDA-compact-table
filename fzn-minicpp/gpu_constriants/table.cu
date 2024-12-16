@@ -465,20 +465,6 @@ void TableGPU::varOffsetLimit(int size,int * where) {
         where[i]++;
     }
 
-    /* per 8 th per table
-    where[8]=0;
-    where[9]=where[0];
-    where[10]=where[1]+where[9];
-    where[11]=where[2]+where[10];
-    where[12]=where[3]+where[11];
-    where[13]=where[4]+where[12];
-    where[14]=where[5]+where[13];
-    where[15]=where[6]+where[14];
-    where[16]=where[7]+where[15];
-    */
-    //upper bound
-
-
     where[16]=0;
     where[17]=where[0];
     where[18]=where[1]+where[17];

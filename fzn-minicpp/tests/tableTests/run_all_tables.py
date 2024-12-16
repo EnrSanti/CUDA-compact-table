@@ -5,23 +5,17 @@ import time
 #it just check sat/unsat (on the small instances you can also check the assignments)
 
 # List of model files
-modelsSAT = ["serial/SAT/",
-"CUDA/SAT/",
-"TestGenerator & more tests/testsSAT/",
-"TestGenerator & more tests/testsSAT_CUDA/",
-"TestGenerator & more tests/testsSAT_bigger/",
-"TestGenerator & more tests/testsSAT_CUDA_bigger/",
+modelsSAT = [
+"TestGenerator & more tests/testsSAT_CUDA_even_bigger/",
 "TestGenerator & more tests/testsSAT_even_bigger/",
-"TestGenerator & more tests/testsSAT_CUDA_even_bigger/"]
+"TestGenerator & more tests/testsSAT_CUDA_even_even_bigger/",
+"TestGenerator & more tests/testsSAT_even_even_bigger/"]
 
-modelsUNSAT = ["serial/UNSAT/",
-"CUDA/UNSAT/",
-"TestGenerator & more tests/testsUNSAT/",
-"TestGenerator & more tests/testsUNSAT_CUDA/",
-"TestGenerator & more tests/testsUNSAT_bigger/",
-"TestGenerator & more tests/testsUNSAT_CUDA_bigger/",
-"TestGenerator & more tests/testsUNSAT_even_bigger/",
-"TestGenerator & more tests/testsUNSAT_CUDA_even_bigger/"]
+modelsUNSAT = [
+"TestGenerator & more tests/testsUNSAT_CUDA_even_even_bigger/",
+"TestGenerator & more tests/testsUNSAT_even_even_bigger/",
+"TestGenerator & more tests/testsUNSAT_CUDA_even_bigger/",
+"TestGenerator & more tests/testsUNSAT_even_bigger/"]
 
 solver="MiniCpp"
 # Run each serial SAT model
@@ -57,7 +51,6 @@ def run_sat_models(prefix):
                 #print in red
                 print(f"\033[91m \n{instance} FAILED\033[00m")
                 errors+=1
-        
         totalErrors+=errors
         if (errors==0):
             print("\033[92m Instances passed (elapsed (with overhead) time: "+str(time.time()-t0 )+")\033[00m")

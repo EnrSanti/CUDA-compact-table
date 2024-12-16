@@ -45,7 +45,7 @@ def generateConstraints(varsInTable,domainsMin,domainsMax,noTuples,tableNo):
 
 
 	#we generate also some additional constraints
-	noConstraints=(int)(random.randint(0,8)/10*len(varsInTable))
+	noConstraints=(int)(random.randint(0,8)*len(varsInTable)/100)
 	constraints=""
 	for i in range(noConstraints):
 		constraintType=(int)(random.randint(1,10))
@@ -71,21 +71,21 @@ def remove_up_to_first_newline(input_string):
 ####################################################################################
 
 #note, it doesn't create n sat instances and n unsat instances, but it create n instances, then they are solved via cp_model and put in the right (SAT or NOT folder)
-filesToCreate=50
+filesToCreate=30
 
 #how many clauses we want in an instance (max and min)
-minNoVars=500
-maxNoVars=800
+minNoVars=600
+maxNoVars=1200
 
-minDomain=400
-maxDomain=1000
-maxOffset=500
+minDomain=1000
+maxDomain=9000
+maxOffset=900
 
 #minNoTables=1 #not yet used only 1 table
 #maxNoTables=1
 
-minTuples=6000
-maxTuples=10000
+minTuples=10000
+maxTuples=15000
 
 osType="linux"; # "windows" or "linux" #used just to specify the directory format
 
@@ -115,10 +115,10 @@ if(osType=="windows"):
 	directoryPathUNSAT_CUDA="testsUNSAT_CUDA\\"
 	directoryPathSAT_CUDA="testsSAT_CUDA\\"
 else:
-	directoryPathUNSAT="testsUNSAT_even_bigger/"
-	directoryPathSAT="testsSAT_even_bigger/"
-	directoryPathUNSAT_CUDA="testsUNSAT_CUDA_even_bigger/"
-	directoryPathSAT_CUDA="testsSAT_CUDA_even_bigger/"
+	directoryPathUNSAT="testsUNSAT_bomb_bigger/"
+	directoryPathSAT="testsSAT_bomb_bigger/"
+	directoryPathUNSAT_CUDA="testsUNSAT_CUDA_bomb_bigger/"
+	directoryPathSAT_CUDA="testsSAT_CUDA_bomb_bigger/"
 
 #check if folders exist else create them
 if not os.path.isdir(directoryPathSAT):
@@ -153,7 +153,7 @@ for i in range(1,filesToCreate+1):
 		toWrite="var "+str(domainsMin[i])+".."+str(domainsMax[i])+" : "+"x"+str(i)+";\n"
 		fileStr+=toWrite
 
-	noVarsInTable=random.randint((int)(noVars*0.3),(int)(noVars*0.7))
+	noVarsInTable=random.randint((int)(noVars*0.4),(int)(noVars*0.9))
 	varsInTable=[]
 	for i in range(noVarsInTable):
 		varsInTable.append(generate_random(0,noVars,varsInTable))
