@@ -36,7 +36,7 @@ class TableGPU : public Table{
         int noBlocks;
         int* _stream_offset_dev; //for the ths in the kernel
         int* stream_buffer;
-        int noStreams=4; //hardcoded
+        int noStreams=1; //hardcoded, don't touch for NOW
 
 
         int* CTsizes_host;
@@ -69,7 +69,7 @@ class TableGPU : public Table{
         void enfGACDev();
 };
 
-__global__ void printGPUdata(int *_supportSize_dev, int *_variablesOffsets_dev,unsigned int *_currTable_dev,unsigned int *_supports_dev,int * _supportOffsetJmp_dev, int* currTable_size_dev, int * a);
+__global__ void printGPUdata(int *_supportSize_dev, int *_variablesOffsets_dev,unsigned int *_currTable_dev,unsigned int *_supports_dev,int * _supportOffsetJmp_dev, int* currTable_size_dev, unsigned int* domains);
 __device__ void printBitsGPU(unsigned int num);
 __global__ void updateTableGPU(unsigned int* _supports_dev,int * _svSize_off_sval_dev, int *_supportOffsetJmp_dev, unsigned int * _currTable_dev,int* cur_currTable_dev_size, unsigned int* _vars_dev,int* offsetPerTh, int* offsetsAndLimits);
 void printBits(unsigned int num);

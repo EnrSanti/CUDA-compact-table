@@ -31,8 +31,14 @@ totalErrors=0
 
 def run_sat_models(prefix):
     global totalErrors
+    i=0
     for folder in modelsSAT:  
         folder=prefix+folder
+        
+        if(i%2==0):
+            print("-------------------------------------------------------------------------------------------\n")
+
+        i+=1
         print("Running SAT models in "+folder+" -> ",end="")
 
         if not os.path.exists(folder):
@@ -58,8 +64,13 @@ def run_sat_models(prefix):
 
 def run_unsat_models(prefix):
     global totalErrors
+    i=0
     for folder in modelsUNSAT:
         folder=prefix+folder
+        if(i%2==0):
+            print("-------------------------------------------------------------------------------------------\n")
+
+        i+=1
         print("Running UNSAT models in "+folder+" -> ",end="")
         if not os.path.exists(folder):
             print(f"\033[93m FOLDER not found, SKIPPING\033[00m")

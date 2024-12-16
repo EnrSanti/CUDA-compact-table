@@ -11,7 +11,7 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     
     
 
-
+    printf("%%%%%% TableGPU constructor \n");
     // Memory allocation
     _noVars_dev=mallocDevice<int>(sizeof(int));
     _currTable_dev = mallocDevice<unsigned int >(sizeof(unsigned int)*currTableSize); 
@@ -67,12 +67,12 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     //Memory copy
 
     cudaMemcpyAsync(_supports_dev, _supports, sizeof(unsigned int)*_supportSize*currTableSize, cudaMemcpyHostToDevice,streams[0]);
-    cudaMemcpyAsync(_currTable_dev, _currTable_host, sizeof(unsigned int)*currTableSize, cudaMemcpyHostToDevice,streams[1]);
-    cudaMemcpyAsync(_supportSize_dev, &_supportSize, sizeof(int), cudaMemcpyHostToDevice,streams[1]);
-    cudaMemcpyAsync(_variablesOffsets_dev, _variablesOffsets.data(), sizeof(int)*noVars, cudaMemcpyHostToDevice,streams[2]);
-    cudaMemcpyAsync(_supportOffsetJmp_dev, _supportOffsetJmp.data(), sizeof(int)*noVars, cudaMemcpyHostToDevice,streams[3]);
-    cudaMemcpyAsync(&_supportOffsetJmp_dev[noVars], &_supportSize, sizeof(int), cudaMemcpyHostToDevice,streams[3]);
-    cudaMemcpyAsync(_currTable_size_dev, &currTableSize, sizeof(int), cudaMemcpyHostToDevice,streams[3]);
+    cudaMemcpyAsync(_currTable_dev, _currTable_host, sizeof(unsigned int)*currTableSize, cudaMemcpyHostToDevice,streams[0]);
+    cudaMemcpyAsync(_supportSize_dev, &_supportSize, sizeof(int), cudaMemcpyHostToDevice,streams[0]);
+    cudaMemcpyAsync(_variablesOffsets_dev, _variablesOffsets.data(), sizeof(int)*noVars, cudaMemcpyHostToDevice,streams[0]);
+    cudaMemcpyAsync(_supportOffsetJmp_dev, _supportOffsetJmp.data(), sizeof(int)*noVars, cudaMemcpyHostToDevice,streams[0]);
+    cudaMemcpyAsync(&_supportOffsetJmp_dev[noVars], &_supportSize, sizeof(int), cudaMemcpyHostToDevice,streams[0]);
+    cudaMemcpyAsync(_currTable_size_dev, &currTableSize, sizeof(int), cudaMemcpyHostToDevice,streams[0]);
 
     
 
@@ -116,6 +116,7 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
             lastStream_BL=i;
         }
     }
+
     cudaDeviceSynchronize();
     cudaFree(offset_host);
     cudaFree(stream_buffer);
@@ -131,6 +132,7 @@ void TableGPU::propagate(){
     enfoceGAC();
 }
 void TableGPU::enfGACDev(){
+    
     cudaMemcpyAsync(_currTable_dev, _currTable_host, currTableSize*sizeof(unsigned int), cudaMemcpyHostToDevice,streams[0]);
 
     int output=0;
@@ -142,11 +144,23 @@ void TableGPU::enfGACDev(){
     dumpDomainsGPU();
 
     int offset=0;
-    for(int i=0;i<=lastStream_SS;i++){
-        cudaMemcpyAsync(_vars_dev+offset, _vars_host+offset, sizeof(unsigned int)*ss32_host[i], cudaMemcpyHostToDevice,streams[i]);
-        offset=offset+ss32_host[i];
+    int domainSize=0;
+    //for each changed var copy just their domain
+    for(int i=0;i<_s_val.size();i++){
+        int index=_s_val[i];
+        offset=(_supportOffsetJmp[index])/32;
+        int words_to_reset=-1;
+        int to=-1;
+        if(index<noVars-1){
+            to=_supportOffsetJmp[index+1]/32;
+            domainSize=to-offset+1;
+        }else{
+            to=(_supportSize/32)+1;
+            domainSize=to-offset;
+        }
+        cudaMemcpyAsync(_vars_dev+offset, _vars_host+offset, sizeof(unsigned int)*domainSize, cudaMemcpyHostToDevice,streams[0]);
     }
-
+    
   
     for(int i=0;i<currTableSize;i++){
         _currTable_host[i]=_currTable._words[i].value();
@@ -157,8 +171,10 @@ void TableGPU::enfGACDev(){
         cudaMemcpyAsync(&_currTable_dev[offset], &_currTable_host[offset], CTsizes_host[i]*sizeof(unsigned int), cudaMemcpyHostToDevice,streams[i]);   
         offset=offset+CTsizes_host[i];
     }
+    //per il dump dei domini
+    cudaStreamSynchronize(streams[0]);
 
-  
+    
     for(int i=0; i<=lastStream_BL; i++){
         //pass: the supports, the changed variables + how many, the indexes for the support, the table and the size, the domains, the stream offset and 32*vars ints which tells what range of the varialbe to check according to the index of the th
         updateTableGPU<<<noBlocks_host[i],128,128*sizeof(unsigned int),streams[i]>>>(_supports_dev,_svSize_sval_dev,_supportOffsetJmp_dev,_currTable_dev,_currTable_size_dev,_vars_dev,_stream_offset_dev+i,workerOffestAndLimit_dev);          
@@ -170,7 +186,7 @@ void TableGPU::enfGACDev(){
 
     _currTable.clearMask();
     
-    cudaDeviceSynchronize();
+    cudaStreamSynchronize(streams[0]);
 
     //we need to update the current table
 
@@ -185,7 +201,6 @@ void TableGPU::enfGACDev(){
 
 }
 void TableGPU::enfoceGAC(){
-    
     _s_val.clear();
     _s_sup.clear();
     _s_sup.shrink_to_fit();
@@ -207,7 +222,7 @@ void TableGPU::enfoceGAC(){
             _s_sup.push_back(i);
         }
     }
-    if(overallSize>1000){ //to better see advantages when testing remove and do only enfGACDev();
+    if(overallSize>2000){ //to better see advantages when testing remove and do only enfGACDev();
         enfGACDev();
     }else{
         updateTable();
@@ -380,7 +395,7 @@ __global__ void updateTableGPU(unsigned int* _supports_dev,int * _svSize_off_sva
 
 
 
-__global__ void printGPUdata(int *_supportSize_dev, int *_variablesOffsets_dev,unsigned int *_currTable_dev,unsigned int *_supports_dev,int * _supportOffsetJmp_dev, int* currTable_size_dev, int* offsetsAndLimits){
+__global__ void printGPUdata(int *_supportSize_dev, int *_variablesOffsets_dev,unsigned int *_currTable_dev,unsigned int *_supports_dev,int * _supportOffsetJmp_dev, int* currTable_size_dev, unsigned int* domains){
     printf("%%%%%% -------------------------- printGPUdata -------------------------- \n");
     printf("%%%%%% threadIdx.x: %d\n",threadIdx.x);
     printf("%%%%%% _supportSize_dev: %d\n",*_supportSize_dev);
@@ -393,14 +408,11 @@ __global__ void printGPUdata(int *_supportSize_dev, int *_variablesOffsets_dev,u
         printf("%%%%%% [%d] ", j);
         printBitsGPU(_currTable_dev[j]);
     }
-    printf("%%%%%% limits and offsets\n");
-    for(int j=0;j<3;j++){
-    
-        for(int i=0;i<32;i++){
-            printf("%%%%%% [%d] %d \n", i,offsetsAndLimits[i]);
-        }
-        printf("%%%%%% --------------------\n");
 
+    printf("%%%%%% domains: \n");
+    for(int i=0;i<*_supportSize_dev/32+1;i++){
+        printf("%%%%%% [%d] ", i);
+        printBitsGPU(domains[i]);
     }
  
 }
