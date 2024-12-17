@@ -23,18 +23,16 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     _currTable_size_dev=mallocDevice<int>(sizeof(int));
     _svSize_sval_dev=mallocDevice<int>(sizeof(int)*(noVars+1));
     _vars_dev=mallocDevice<unsigned int>(sizeof(unsigned int)*((_supportSize/32)+1)); //matrix
-    _stream_offset_dev=mallocDevice<int>(sizeof(int)*noStreams);
+    
     workerOffestAndLimit_dev=mallocDevice<int>(sizeof(int)*32*noVars);
     
     
 
     //on host side we create simpler structures to then copy the data
-    int * offset_host;
+
     cudaMallocHost((void**)&_currTable_host, sizeof(unsigned int)*currTableSize);
     cudaMallocHost((void**)&_vars_host, sizeof(unsigned int)*((_supportSize/32)+1)); //matrix
     cudaMallocHost((void**)&_svSize_sval_host,sizeof(int)*(noVars+1));
-    cudaMallocHost((void**)&offset_host,sizeof(int)*noStreams);
-    cudaMallocHost((void**)&stream_buffer,sizeof(int)*noStreams);
 
     cudaMallocHost((void**)&CTsizes_host,sizeof(int)*noStreams);
     cudaMallocHost((void**)&ss32_host,sizeof(int)*noStreams);
@@ -51,13 +49,11 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     if(_supportSize%32!=0)
         _vars_host[(_supportSize/32)]=0xffffffff<<(32-(_supportSize%32));
 
-    for(int i=0;i<noStreams;i++){
-        cudaError_t err = cudaStreamCreate(&streams[i]);
-        if (err != cudaSuccess){
-            printf("%%%%%% Stream err: %s\n", cudaGetErrorString(err));
-            fflush(stdout);
-            runtime_error("Error creating stream");
-        }
+
+    cudaError_t err = cudaStreamCreate(&streams[0]);
+    
+    if (err != cudaSuccess) {
+        printf("%%%%%% Error creating stream: %s\n", cudaGetErrorString(err));
     }
 
 
@@ -78,14 +74,7 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
 
     //compute once and transfer the offsets for the streams:
     noBlocks=(currTableSize/8)+1;
-    divideInStrems(noBlocks,offset_host);
-    stream_buffer[0]=0;
-    for(int i=1; i<noStreams; i++){
-        if(offset_host[i]>0){
-            stream_buffer[i]=stream_buffer[i-1]+offset_host[i-1];
-        }
-    }
-    
+
 
     for(int i=0;i<noVars-1;i++){
         varOffsetLimit(_supportOffsetJmp[i+1]-_supportOffsetJmp[i],workerOffestAndLimit_host+(i*32));
@@ -95,33 +84,7 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     cudaMemcpyAsync(workerOffestAndLimit_dev, workerOffestAndLimit_host, sizeof(int)*32*noVars, cudaMemcpyHostToDevice,streams[0]);
 
 
-    //printf("%%%%%% TableGPU streamoffsetDev[0]: %d  streamoffsetDev[1]: %d \n",stream_buffer[0],stream_buffer[1]);
-    cudaMemcpyAsync(_stream_offset_dev, stream_buffer, sizeof(int)*noStreams, cudaMemcpyHostToDevice,streams[0]);
-
-    divideInStrems(noBlocks,noBlocks_host);
-    divideInStrems(currTableSize,CTsizes_host);
-    divideInStrems((_supportSize/32)+1,ss32_host);
-
-    lastStream_BL=0;
-    lastStream_CT=0;
-    lastStream_SS=0;
-    for(int i=0;i<noStreams;i++){
-        if(ss32_host[i]>0){
-            lastStream_SS=i;
-        }
-        if(CTsizes_host[i]>0){
-            lastStream_CT=i;
-        }
-        if(noBlocks_host[i]>0){
-            lastStream_BL=i;
-        }
-    }
-
     cudaDeviceSynchronize();
-    cudaFree(offset_host);
-    cudaFree(stream_buffer);
-
-    
 }
 void TableGPU::post(){
     for (auto const & v : _vars){
@@ -132,6 +95,8 @@ void TableGPU::propagate(){
     enfoceGAC();
 }
 void TableGPU::enfGACDev(){
+
+    cudaStreamSynchronize(streams[0]);
     
     cudaMemcpyAsync(_currTable_dev, _currTable_host, currTableSize*sizeof(unsigned int), cudaMemcpyHostToDevice,streams[0]);
 
@@ -145,6 +110,7 @@ void TableGPU::enfGACDev(){
 
     int offset=0;
     int domainSize=0;
+
     //for each changed var copy just their domain
     for(int i=0;i<_s_val.size();i++){
         int index=_s_val[i];
@@ -158,30 +124,28 @@ void TableGPU::enfGACDev(){
             to=(_supportSize/32)+1;
             domainSize=to-offset;
         }
+
+        //cudaMemcpyAsync(_vars_dev, _vars_host, sizeof(unsigned int)*((_supportSize/32)+1), cudaMemcpyHostToDevice,streams[0]);
         cudaMemcpyAsync(_vars_dev+offset, _vars_host+offset, sizeof(unsigned int)*domainSize, cudaMemcpyHostToDevice,streams[0]);
     }
+
     
   
     for(int i=0;i<currTableSize;i++){
         _currTable_host[i]=_currTable._words[i].value();
     }
-    
-    offset=0;
-    for(int i=0;i<=lastStream_CT;i++){
-        cudaMemcpyAsync(&_currTable_dev[offset], &_currTable_host[offset], CTsizes_host[i]*sizeof(unsigned int), cudaMemcpyHostToDevice,streams[i]);   
-        offset=offset+CTsizes_host[i];
-    }
-    //per il dump dei domini
-    cudaStreamSynchronize(streams[0]);
 
     
-    for(int i=0; i<=lastStream_BL; i++){
-        //pass: the supports, the changed variables + how many, the indexes for the support, the table and the size, the domains, the stream offset and 32*vars ints which tells what range of the varialbe to check according to the index of the th
-        updateTableGPU<<<noBlocks_host[i],128,128*sizeof(unsigned int),streams[i]>>>(_supports_dev,_svSize_sval_dev,_supportOffsetJmp_dev,_currTable_dev,_currTable_size_dev,_vars_dev,_stream_offset_dev+i,workerOffestAndLimit_dev);          
-    }
     
-    cudaDeviceSynchronize();
+    cudaMemcpyAsync(_currTable_dev, _currTable_host, sizeof(unsigned int)*(currTableSize), cudaMemcpyHostToDevice,streams[0]);   
+    
 
+
+
+    //pass: the supports, the changed variables + how many, the indexes for the support, the table and the size, the domains,  and 32*vars ints which tells what range of the varialbe to check according to the index of the th
+    updateTableGPU<<<noBlocks,128,128*sizeof(unsigned int),streams[0]>>>(_supports_dev,_svSize_sval_dev,_supportOffsetJmp_dev,_currTable_dev,_currTable_size_dev,_vars_dev,workerOffestAndLimit_dev);          
+  
+    
     cudaMemcpyAsync(_currTable_host, _currTable_dev, currTableSize*sizeof(unsigned int), cudaMemcpyDeviceToHost,streams[0]);
 
     _currTable.clearMask();
@@ -215,18 +179,25 @@ void TableGPU::enfoceGAC(){
             _svSize_sval_host[internalIndex+1]=i;
             internalIndex++;
             overallSize=overallSize+_vars[i]->intialSize();
-         
+            
         }
         //update s_sup
         if(_vars[i]->size()>1){
             _s_sup.push_back(i);
         }
     }
-    if(overallSize>2000){ //to better see advantages when testing remove and do only enfGACDev();
-        enfGACDev();
-    }else{
-        updateTable();
-    }
+
+    
+
+    //if(overallSize>300){ //to better see advantages when testing remove and do only enfGACDev();
+    
+       enfGACDev();
+
+
+    
+    //}else{
+    //    updateTable();
+    //}
 
     filterDomains();
 }
@@ -296,13 +267,13 @@ int TableGPU::bitsFromLeft(int n) {
 }
 
 // 1 th per support row
-__global__ void updateTableGPU(unsigned int* _supports_dev,int * _svSize_off_sval_dev, int *_supportOffsetJmp_dev, unsigned int * _currTable_dev,int* _currTable_dev_size, unsigned int* _vars_dev, int* offsetPerTh,int* offsetsAndLimits){
+__global__ void updateTableGPU(unsigned int* _supports_dev,int * _svSize_off_sval_dev, int *_supportOffsetJmp_dev, unsigned int * _currTable_dev,int* _currTable_dev_size, unsigned int* _vars_dev, int* offsetsAndLimits){
 
 
     extern __shared__ unsigned int mask[]; //mask (128 ints)
 
     //block: actual block in the stream + how many are before me in other streams
-    int blockIdxx=blockIdx.x+(*offsetPerTh);
+    int blockIdxx=blockIdx.x;
     int rowsPerBlock=16;
     int colsPerBlock=8;
     int varIndex=0;
@@ -384,6 +355,7 @@ __global__ void updateTableGPU(unsigned int* _supports_dev,int * _svSize_off_sva
             mask[threadIdx.x]=mask[threadIdx.x] | mask[threadIdx.x+8];
 
             _currTable_dev[th_mappedPos_stream]=mask[threadIdx.x] & _currTable_dev[th_mappedPos_stream];   
+            
         }
         mask[threadIdx.x]=0;
     }
@@ -414,20 +386,11 @@ __global__ void printGPUdata(int *_supportSize_dev, int *_variablesOffsets_dev,u
         printf("%%%%%% [%d] ", i);
         printBitsGPU(domains[i]);
     }
+    
  
 }
-void TableGPU::printBits(unsigned int num) {
-    // Extracting each bit of the int and printing it
-    //yes rather weird function, but since we need to print %%%%%
-    char str[32] = {'0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0'};
-    for (int i = 31; i >= 0; i--) {
-        str[i] = (num >> i) & 1; 
-        printf("%d",str[i]);
-    }
 
-    printf(" \n");
-    
-}
+
 __device__ void printBitsGPU(unsigned int num) {
     // Extracting each bit of the int and printing it
     //yes rather weird function, but since we need to print %%%%%
@@ -437,20 +400,6 @@ __device__ void printBitsGPU(unsigned int num) {
         printf("%d",str[i]);
     }
     printf("\n%%%%%% \n");
-}
-
-
-void TableGPU::divideInStrems(int size,int * where) {
-    
-    for (int i = 0; i < noStreams; ++i) {
-        where[i] = size / noStreams;              // Divide the size by the no of streams
-    }
-    int remainder = size % noStreams;           // Calculate the remainder
-
-    // Distribute the remainder across the first few parts
-    for (int i = 0; i < remainder; ++i) {
-        where[i]++;
-    }
 }
 
 void TableGPU::varOffsetLimit(int size,int * where) {
@@ -483,27 +432,4 @@ void TableGPU::varOffsetLimit(int size,int * where) {
     where[31]=where[14]+where[30];
 
 
-}
-__global__ void isEmpty(unsigned int* _currTable_dev,int* _currTable_size_dev, int* res){
-   extern __shared__ int sdata[];
-
-    int tid = threadIdx.x;
-    int idx = blockIdx.x * blockDim.x + threadIdx.x;
-
-    // Load input into shared memory
-    sdata[tid] = (idx < *_currTable_size_dev) ? (_currTable_dev[idx] != 0) : 0; // Store 1 if the element is non-zero
-    __syncthreads();
-
-    // Perform reduction in shared memory
-    for (int stride = blockDim.x / 2; stride > 0; stride >>= 1) {
-        if (tid < stride) {
-            sdata[tid] |= sdata[tid + stride]; // OR operation to detect any non-zero value
-        }
-        __syncthreads();
-    }
-
-    // Write result of this block to global memory
-    if (tid == 0) {
-        atomicOr(res, sdata[0]);
-    }
 }

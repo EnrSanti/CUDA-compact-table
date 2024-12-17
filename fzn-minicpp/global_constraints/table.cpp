@@ -239,3 +239,14 @@ int Table::intersectIndexSparse(unsigned int* words,SparseBitSet& m) {
    }
    return -1;
 }
+void Table::printBits(unsigned int num) {
+    // Extracting each bit of the int and printing it
+    //yes rather weird function, but since we need to print %%%%%
+    char str[32] = {'0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0'};
+    for (int i = 31; i >= 0; i--) {
+        str[i] = (num >> i) & 1; 
+        printf("%d",str[i]);
+    }
+
+    printf(" \n");
+}
