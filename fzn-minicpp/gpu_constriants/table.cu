@@ -14,14 +14,13 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     printf("%%%%%% TableGPU constructor \n");
     // Memory allocation
     _noVars_dev=mallocDevice<int>(sizeof(int));
-    _currTable_dev = mallocDevice<unsigned int >(sizeof(unsigned int)*currTableSize); 
+    _CT_svSize_sval_dev = mallocDevice<unsigned int >(sizeof(unsigned int)*(currTableSize+noVars+1)); 
     _currTable_mask_dev = mallocDevice<unsigned int >(sizeof(unsigned int)*currTableSize); 
     _supports_dev = mallocDevice<unsigned int>(sizeof(unsigned int)*_supportSize*currTableSize);
     _supportSize_dev = mallocDevice<int>(sizeof(int));
     _variablesOffsets_dev = mallocDevice<int>(sizeof(int)*noVars);
     _supportOffsetJmp_dev = mallocDevice<int>(sizeof(int)*(noVars+1));
     _currTable_size_dev=mallocDevice<int>(sizeof(int));
-    _svSize_sval_dev=mallocDevice<int>(sizeof(int)*(noVars+1));
     _vars_dev=mallocDevice<unsigned int>(sizeof(unsigned int)*((_supportSize/32)+1)); //matrix
     
     workerOffestAndLimit_dev=mallocDevice<int>(sizeof(int)*32*noVars);
@@ -30,13 +29,9 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
 
     //on host side we create simpler structures to then copy the data
 
-    cudaMallocHost((void**)&_currTable_host, sizeof(unsigned int)*currTableSize);
+    cudaMallocHost((void**)&_CT_svSize_sval_host, sizeof(unsigned int)*(noVars+1+currTableSize));
     cudaMallocHost((void**)&_vars_host, sizeof(unsigned int)*((_supportSize/32)+1)); //matrix
-    cudaMallocHost((void**)&_svSize_sval_host,sizeof(int)*(noVars+1));
 
-    cudaMallocHost((void**)&CTsizes_host,sizeof(int)*noStreams);
-    cudaMallocHost((void**)&ss32_host,sizeof(int)*noStreams);
-    cudaMallocHost((void**)&noBlocks_host,sizeof(int)*noStreams);
     cudaMallocHost((void**)&workerOffestAndLimit_host,sizeof(int)*32*noVars);
 
 
@@ -58,12 +53,12 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
 
 
     cudaMemcpyAsync(_noVars_dev, &noVars, sizeof(int), cudaMemcpyHostToDevice,streams[0]);
-    *_currTable_host=_currTable._words.data()->value();
+    *_CT_svSize_sval_host=_currTable._words.data()->value();
     
     //Memory copy
 
     cudaMemcpyAsync(_supports_dev, _supports, sizeof(unsigned int)*_supportSize*currTableSize, cudaMemcpyHostToDevice,streams[0]);
-    cudaMemcpyAsync(_currTable_dev, _currTable_host, sizeof(unsigned int)*currTableSize, cudaMemcpyHostToDevice,streams[0]);
+    cudaMemcpyAsync(_CT_svSize_sval_dev, _CT_svSize_sval_host, sizeof(unsigned int)*currTableSize, cudaMemcpyHostToDevice,streams[0]);
     cudaMemcpyAsync(_supportSize_dev, &_supportSize, sizeof(int), cudaMemcpyHostToDevice,streams[0]);
     cudaMemcpyAsync(_variablesOffsets_dev, _variablesOffsets.data(), sizeof(int)*noVars, cudaMemcpyHostToDevice,streams[0]);
     cudaMemcpyAsync(_supportOffsetJmp_dev, _supportOffsetJmp.data(), sizeof(int)*noVars, cudaMemcpyHostToDevice,streams[0]);
@@ -84,7 +79,7 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     cudaMemcpyAsync(workerOffestAndLimit_dev, workerOffestAndLimit_host, sizeof(int)*32*noVars, cudaMemcpyHostToDevice,streams[0]);
 
 
-    cudaDeviceSynchronize();
+    cudaStreamSynchronize(streams[0]);
 }
 void TableGPU::post(){
     for (auto const & v : _vars){
@@ -96,17 +91,18 @@ void TableGPU::propagate(){
 }
 void TableGPU::enfGACDev(){
 
-    cudaStreamSynchronize(streams[0]);
-    
-    cudaMemcpyAsync(_currTable_dev, _currTable_host, currTableSize*sizeof(unsigned int), cudaMemcpyHostToDevice,streams[0]);
-
     int output=0;
     
-    _svSize_sval_host[0]=_s_val.size();
+    _CT_svSize_sval_host[currTableSize]=_s_val.size();
 
-    cudaMemcpyAsync(_svSize_sval_dev, _svSize_sval_host, sizeof(int)*(_s_val.size()+1), cudaMemcpyHostToDevice,streams[0]);
-
+    for(int i=0;i<currTableSize;i++){
+        _CT_svSize_sval_host[i]=_currTable._words[i].value();
+    }
+    
+    cudaMemcpyAsync(_CT_svSize_sval_dev, _CT_svSize_sval_host, sizeof(unsigned int)*(currTableSize+_s_val.size()+1), cudaMemcpyHostToDevice,streams[0]);   
+    
     dumpDomainsGPU();
+    
 
     int offset=0;
     int domainSize=0;
@@ -131,22 +127,13 @@ void TableGPU::enfGACDev(){
 
     
   
-    for(int i=0;i<currTableSize;i++){
-        _currTable_host[i]=_currTable._words[i].value();
-    }
-
     
-    
-    cudaMemcpyAsync(_currTable_dev, _currTable_host, sizeof(unsigned int)*(currTableSize), cudaMemcpyHostToDevice,streams[0]);   
-    
-
-
 
     //pass: the supports, the changed variables + how many, the indexes for the support, the table and the size, the domains,  and 32*vars ints which tells what range of the varialbe to check according to the index of the th
-    updateTableGPU<<<noBlocks,128,128*sizeof(unsigned int),streams[0]>>>(_supports_dev,_svSize_sval_dev,_supportOffsetJmp_dev,_currTable_dev,_currTable_size_dev,_vars_dev,workerOffestAndLimit_dev);          
+    updateTableGPU<<<noBlocks,128,128*sizeof(unsigned int),streams[0]>>>(_supports_dev,_CT_svSize_sval_dev+currTableSize,_supportOffsetJmp_dev,_CT_svSize_sval_dev,_currTable_size_dev,_vars_dev,workerOffestAndLimit_dev);          
   
     
-    cudaMemcpyAsync(_currTable_host, _currTable_dev, currTableSize*sizeof(unsigned int), cudaMemcpyDeviceToHost,streams[0]);
+    cudaMemcpyAsync(_CT_svSize_sval_host, _CT_svSize_sval_dev, currTableSize*sizeof(unsigned int), cudaMemcpyDeviceToHost,streams[0]);
 
     _currTable.clearMask();
     
@@ -154,7 +141,7 @@ void TableGPU::enfGACDev(){
 
     //we need to update the current table
 
-    _currTable.addToMaskArray(_currTable_host);
+    _currTable.addToMaskArray(_CT_svSize_sval_host);
     
     _currTable.intersectWithMask();
     _currTable.clearMask();
@@ -169,14 +156,15 @@ void TableGPU::enfoceGAC(){
     _s_sup.clear();
     _s_sup.shrink_to_fit();
     _s_val.shrink_to_fit();
-    int internalIndex=0;
+
+    int internalIndex=currTableSize;
     
-   int overallSize=0;
+    int overallSize=0;
     for (int i = 0; i < _vars.size(); i++){
         //update s_val and the deltas
         if(_vars[i]->changed()){
             _s_val.push_back(i);
-            _svSize_sval_host[internalIndex+1]=i;
+            _CT_svSize_sval_host[internalIndex+1]=i;
             internalIndex++;
             overallSize=overallSize+_vars[i]->intialSize();
             
@@ -267,7 +255,7 @@ int TableGPU::bitsFromLeft(int n) {
 }
 
 // 1 th per support row
-__global__ void updateTableGPU(unsigned int* _supports_dev,int * _svSize_off_sval_dev, int *_supportOffsetJmp_dev, unsigned int * _currTable_dev,int* _currTable_dev_size, unsigned int* _vars_dev, int* offsetsAndLimits){
+__global__ void updateTableGPU(unsigned int* _supports_dev,unsigned int * _svSize_off_sval_dev, int *_supportOffsetJmp_dev, unsigned int * _currTable_dev,int* _currTable_dev_size, unsigned int* _vars_dev, int* offsetsAndLimits){
 
 
     extern __shared__ unsigned int mask[]; //mask (128 ints)

@@ -74,8 +74,8 @@ def remove_up_to_first_newline(input_string):
 filesToCreate=30
 
 #how many clauses we want in an instance (max and min)
-minNoVars=600
-maxNoVars=1200
+minNoVars=300
+maxNoVars=700
 
 minDomain=1000
 maxDomain=9000
@@ -84,8 +84,8 @@ maxOffset=900
 #minNoTables=1 #not yet used only 1 table
 #maxNoTables=1
 
-minTuples=10000
-maxTuples=15000
+minTuples=2000
+maxTuples=5000
 
 osType="linux"; # "windows" or "linux" #used just to specify the directory format
 
@@ -115,10 +115,10 @@ if(osType=="windows"):
 	directoryPathUNSAT_CUDA="testsUNSAT_CUDA\\"
 	directoryPathSAT_CUDA="testsSAT_CUDA\\"
 else:
-	directoryPathUNSAT="testsUNSAT_bomb_bigger/"
-	directoryPathSAT="testsSAT_bomb_bigger/"
-	directoryPathUNSAT_CUDA="testsUNSAT_CUDA_bomb_bigger/"
-	directoryPathSAT_CUDA="testsSAT_CUDA_bomb_bigger/"
+	directoryPathUNSAT="testsUNSAT_shallow_bigger/"
+	directoryPathSAT="testsSAT_shallow_bigger/"
+	directoryPathUNSAT_CUDA="testsUNSAT_CUDA_shallow_bigger/"
+	directoryPathSAT_CUDA="testsSAT_CUDA_shallow_bigger/"
 
 #check if folders exist else create them
 if not os.path.isdir(directoryPathSAT):

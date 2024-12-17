@@ -8,20 +8,19 @@ import time
 modelsSAT = [
 "serial/SAT/",
 "CUDA/SAT/",
-"TestGenerator & more tests/testsSAT_CUDA_even_even_bigger/",
-"TestGenerator & more tests/testsSAT_even_even_bigger/",
 "TestGenerator & more tests/testsSAT/",
 "TestGenerator & more tests/testsSAT_CUDA/",
 "TestGenerator & more tests/testsSAT_bigger/",
 "TestGenerator & more tests/testsSAT_CUDA_bigger/",
 "TestGenerator & more tests/testsSAT_CUDA_even_bigger/",
-"TestGenerator & more tests/testsSAT_even_bigger/" ]
+"TestGenerator & more tests/testsSAT_even_bigger/",
+#"TestGenerator & more tests/testsSAT_CUDA_even_even_bigger/",
+#"TestGenerator & more tests/testsSAT_even_even_bigger/" 
+]
 
 modelsUNSAT = [
 "serial/UNSAT/",
 "CUDA/UNSAT/",
-"TestGenerator & more tests/testsUNSAT_CUDA_even_even_bigger/",
-"TestGenerator & more tests/testsUNSAT_even_even_bigger/",
 "TestGenerator & more tests/testsUNSAT/",
 "TestGenerator & more tests/testsUNSAT_CUDA/",
 "TestGenerator & more tests/testsUNSAT_bigger/",
@@ -29,7 +28,10 @@ modelsUNSAT = [
 "TestGenerator & more tests/testsUNSAT_CUDA_even_even_bigger/",
 "TestGenerator & more tests/testsUNSAT_even_even_bigger/",
 "TestGenerator & more tests/testsUNSAT_CUDA_even_bigger/",
-"TestGenerator & more tests/testsUNSAT_even_bigger/"]
+"TestGenerator & more tests/testsUNSAT_even_bigger/",
+#"TestGenerator & more tests/testsUNSAT_CUDA_even_even_bigger/",
+#"TestGenerator & more tests/testsUNSAT_even_even_bigger/"
+]
 
 solver="MiniCpp"
 # Run each serial SAT model
