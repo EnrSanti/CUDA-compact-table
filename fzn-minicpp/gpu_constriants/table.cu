@@ -11,7 +11,6 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     
     
 
-    printf("%%%%%% TableGPU constructor \n");
     // Memory allocation
     _noVars_dev=mallocDevice<int>(sizeof(int));
     _CT_svSize_sval_dev = mallocDevice<unsigned int >(sizeof(unsigned int)*(currTableSize+noVars+1)); 
