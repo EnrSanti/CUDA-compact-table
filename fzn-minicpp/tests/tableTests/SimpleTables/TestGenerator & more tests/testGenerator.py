@@ -45,7 +45,7 @@ def generateConstraints(varsInTable,domainsMin,domainsMax,noTuples,tableNo):
 
 
 	#we generate also some additional constraints
-	noConstraints=(int)(random.randint(0,8)*len(varsInTable)/100)
+	noConstraints=(int)(random.randint(1,10)*len(varsInTable)/100)
 	constraints=""
 	for i in range(noConstraints):
 		constraintType=(int)(random.randint(1,10))
@@ -74,18 +74,18 @@ def remove_up_to_first_newline(input_string):
 filesToCreate=30
 
 #how many clauses we want in an instance (max and min)
-minNoVars=300
-maxNoVars=700
+minNoVars=30
+maxNoVars=70
 
-minDomain=1000
-maxDomain=9000
-maxOffset=900
+minDomain=100
+maxDomain=900
+maxOffset=90
 
 #minNoTables=1 #not yet used only 1 table
 #maxNoTables=1
 
-minTuples=2000
-maxTuples=5000
+minTuples=30
+maxTuples=50
 
 osType="linux"; # "windows" or "linux" #used just to specify the directory format
 
@@ -115,10 +115,10 @@ if(osType=="windows"):
 	directoryPathUNSAT_CUDA="testsUNSAT_CUDA\\"
 	directoryPathSAT_CUDA="testsSAT_CUDA\\"
 else:
-	directoryPathUNSAT="testsUNSAT_shallow_bigger/"
-	directoryPathSAT="testsSAT_shallow_bigger/"
-	directoryPathUNSAT_CUDA="testsUNSAT_CUDA_shallow_bigger/"
-	directoryPathSAT_CUDA="testsSAT_CUDA_shallow_bigger/"
+	directoryPathUNSAT="testsUNSAT_shallow/"
+	directoryPathSAT="testsSAT_shallow/"
+	directoryPathUNSAT_CUDA="testsUNSAT_CUDA_shallow/"
+	directoryPathSAT_CUDA="testsSAT_CUDA_shallow/"
 
 #check if folders exist else create them
 if not os.path.isdir(directoryPathSAT):

@@ -8,6 +8,8 @@ import time
 modelsSAT = [
 "serial/SAT/",
 "CUDA/SAT/",
+#"TestGenerator & more tests/testsSAT_shallow",
+#"TestGenerator & more tests/testsSAT_CUDA_shallow"
 "TestGenerator & more tests/testsSAT/",
 "TestGenerator & more tests/testsSAT_CUDA/",
 "TestGenerator & more tests/testsSAT_bigger/",
@@ -21,6 +23,8 @@ modelsSAT = [
 modelsUNSAT = [
 "serial/UNSAT/",
 "CUDA/UNSAT/",
+#"TestGenerator & more tests/testsUNSAT_shallow",
+#"TestGenerator & more tests/testsUNSAT_CUDA_shallow",
 "TestGenerator & more tests/testsUNSAT/",
 "TestGenerator & more tests/testsUNSAT_CUDA/",
 "TestGenerator & more tests/testsUNSAT_bigger/",

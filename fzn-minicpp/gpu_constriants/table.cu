@@ -23,7 +23,7 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     _currTable_size_dev=mallocDevice<int>(sizeof(int));
     _vars_dev=mallocDevice<unsigned int>(sizeof(unsigned int)*((_supportSize/32)+1)); //matrix
     
-    workerOffestAndLimit_dev=mallocDevice<int>(sizeof(int)*32*noVars);
+    workerOffestAndLimit_dev=mallocDevice<int>(sizeof(int)*64*noVars);
     
     
 
@@ -32,24 +32,33 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     cudaMallocHost((void**)&_CT_svSize_sval_host, sizeof(unsigned int)*(noVars+1+currTableSize));
     cudaMallocHost((void**)&_vars_host, sizeof(unsigned int)*((_supportSize/32)+1)); //matrix
 
-    cudaMallocHost((void**)&workerOffestAndLimit_host,sizeof(int)*32*noVars);
+    cudaMallocHost((void**)&workerOffestAndLimit_host,sizeof(int)*64*noVars);
 
 
     streams=(cudaStream_t*)malloc(sizeof(cudaStream_t)*noStreams);
 
 
-    for(int i=0;i<((_supportSize/32)+1);i++){
-        _vars_host[i]=0xffffffff;
-    }
-    if(_supportSize%32!=0)
-        _vars_host[(_supportSize/32)]=0xffffffff<<(32-(_supportSize%32));
-
+    
 
     cudaError_t err = cudaStreamCreate(&streams[0]);
     
     if (err != cudaSuccess) {
         printf("%%%%%% Error creating stream: %s\n", cudaGetErrorString(err));
     }
+
+    for(int i=0;i<noVars-1;i++){
+        varOffsetLimit(_supportOffsetJmp[i+1]-_supportOffsetJmp[i],workerOffestAndLimit_host+(i*64));
+    }
+    varOffsetLimit(_supportSize-_supportOffsetJmp[noVars-1],workerOffestAndLimit_host+((noVars-1)*64));
+
+    cudaMemcpyAsync(workerOffestAndLimit_dev, workerOffestAndLimit_host, sizeof(int)*64*noVars, cudaMemcpyHostToDevice,streams[0]);
+
+    for(int i=0;i<((_supportSize/32)+1);i++){
+        _vars_host[i]=0xffffffff;
+    }
+
+    if(_supportSize%32!=0)
+        _vars_host[(_supportSize/32)]=0xffffffff<<(32-(_supportSize%32));
 
 
     cudaMemcpyAsync(_noVars_dev, &noVars, sizeof(int), cudaMemcpyHostToDevice,streams[0]);
@@ -68,16 +77,7 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     
 
     //compute once and transfer the offsets for the streams:
-    noBlocks=(currTableSize/8)+1;
-
-
-    for(int i=0;i<noVars-1;i++){
-        varOffsetLimit(_supportOffsetJmp[i+1]-_supportOffsetJmp[i],workerOffestAndLimit_host+(i*32));
-    }
-    varOffsetLimit(_supportSize-_supportOffsetJmp[noVars-1],workerOffestAndLimit_host+((noVars-1)*32));
-
-    cudaMemcpyAsync(workerOffestAndLimit_dev, workerOffestAndLimit_host, sizeof(int)*32*noVars, cudaMemcpyHostToDevice,streams[0]);
-
+    noBlocks=(currTableSize/4)+1;
 
     cudaStreamSynchronize(streams[0]);
 }
@@ -128,7 +128,6 @@ void TableGPU::enfGACDev(){
     
   
     
-
     //pass: the supports, the changed variables + how many, the indexes for the support, the table and the size, the domains,  and 32*vars ints which tells what range of the varialbe to check according to the index of the th
     updateTableGPU<<<noBlocks,128,128*sizeof(unsigned int),streams[0]>>>(_supports_dev,_CT_svSize_sval_dev+currTableSize,_supportOffsetJmp_dev,_CT_svSize_sval_dev,_currTable_size_dev,_vars_dev,workerOffestAndLimit_dev);          
   
@@ -262,14 +261,14 @@ __global__ void updateTableGPU(unsigned int* _supports_dev,unsigned int * _svSiz
 
     //block: actual block in the stream + how many are before me in other streams
     int blockIdxx=blockIdx.x;
-    int rowsPerBlock=16;
-    int colsPerBlock=8;
+    int colsPerBlock=4;
     int varIndex=0;
-    int th_col=threadIdx.x%8; //from 0..127 to 0..7 (which column do we look at), each block looks at 8 columns, groups of 16 threads (size 8) will share the same column
-    int th_row=threadIdx.x/8; //from 0..127 to 0..15 (which row do i am part of), 8 threads will share the same row
+    int th_col=threadIdx.x%4; //from 0..127 to 0..4 (which column do we look at), each block looks at 4 columns, groups of 32 threads (size 4) will share the same column
+    int th_row=threadIdx.x/4; //from 0..127 to 0..31 (which row do i am part of), 32 threads will share the same row
 
     int th_mappedPos_stream=threadIdx.x%colsPerBlock+(colsPerBlock*blockIdxx); //it is thPos as if I didn't have to consider the other streams
-    //groups of 16 threads will share the same position
+  
+    //groups of 32 threads will share the same position
 
     //clear mask MANDATORY
     mask[threadIdx.x]=0;
@@ -278,7 +277,6 @@ __global__ void updateTableGPU(unsigned int* _supports_dev,unsigned int * _svSiz
     if(th_mappedPos_stream>=*_currTable_dev_size){
         return;
     }
-
     //each 32 threads will take care of the same var
     for(int i=0; i<_svSize_off_sval_dev[0]; i++){
         
@@ -287,34 +285,34 @@ __global__ void updateTableGPU(unsigned int* _supports_dev,unsigned int * _svSiz
 
         //the starting point of the supports for the var
         int from=_supportOffsetJmp_dev[varIndex];
-        int iterations16_th=varIndex*32+th_row; //16 values, equal for groups of 8 threads
-        int lastVal=varIndex*32+15;
-        int offset16_th=offsetsAndLimits[iterations16_th+16]; //16 values, equal for groups of 8 threads
+        int iterations32_th=varIndex*64+th_row; //32 values, equal for 4 groups of threads
+        int lastVal=varIndex*64+31;
+        int offset32_th=offsetsAndLimits[iterations32_th+32]; //32 values, equal for groups of 4 threads
 
         //1/16 of the domain, from 0 to the upper bound of each group of 16 threads
         for(int j=0; j<offsetsAndLimits[lastVal]; j++){
 
-            int wordIndex=(from+j+offset16_th)/32; //piece of row of supports, not the cell, the row piece of row the block looks at
-            int maskContains=1<<(31-j-_supportOffsetJmp_dev[varIndex]-offset16_th+wordIndex*32);
+            int wordIndex=(from+j+offset32_th)/32; //piece of row of supports, not the cell, the row piece of row the block looks at
+            int maskContains=1<<(31-j-_supportOffsetJmp_dev[varIndex]-offset32_th+wordIndex*32);
 
             if((_vars_dev[wordIndex] & maskContains) != 0){ //check if val in domain
                 //off is != for each of the 128 ths
                 //deve tener conto del 
-                int off=(j+offset16_th)*(*_currTable_dev_size)+(_supportOffsetJmp_dev[varIndex]*(*_currTable_dev_size))+blockIdxx*8+threadIdx.x%8; 
+                int off=(j+offset32_th)*(*_currTable_dev_size)+(_supportOffsetJmp_dev[varIndex]*(*_currTable_dev_size))+blockIdxx*4+th_col; 
 
                 mask[threadIdx.x]=mask[threadIdx.x] | _supports_dev[off];
             }  
             __syncthreads();          
         }
         //c'è un unroll sull'ultimo ciclo per poter inserire in syncThreads sopra
-        if(offsetsAndLimits[lastVal]<offsetsAndLimits[iterations16_th]){
-            int j=offsetsAndLimits[iterations16_th]-1;
-            int wordIndex=(from+j+offset16_th)/32; //piece of row of supports, not the cell, the row piece of row the block looks at
-            int maskContains=1<<(31-j-_supportOffsetJmp_dev[varIndex]-offset16_th+wordIndex*32);
+        if(offsetsAndLimits[lastVal]<offsetsAndLimits[iterations32_th]){
+            int j=offsetsAndLimits[iterations32_th]-1;
+            int wordIndex=(from+j+offset32_th)/32; //piece of row of supports, not the cell, the row piece of row the block looks at
+            int maskContains=1<<(31-j-_supportOffsetJmp_dev[varIndex]-offset32_th+wordIndex*32);
 
             if((_vars_dev[wordIndex] & maskContains) != 0){ //check if val in domain
                 //off is != for each of the 128 ths
-                int off=(j+offset16_th)*(*_currTable_dev_size)+(_supportOffsetJmp_dev[varIndex]*(*_currTable_dev_size))+blockIdxx*8+threadIdx.x%8; 
+                int off=(j+offset32_th)*(*_currTable_dev_size)+(_supportOffsetJmp_dev[varIndex]*(*_currTable_dev_size))+blockIdxx*4+th_col; 
 
                 mask[threadIdx.x]=mask[threadIdx.x] | _supports_dev[off];
              }            
@@ -322,13 +320,13 @@ __global__ void updateTableGPU(unsigned int* _supports_dev,unsigned int * _svSiz
         __syncthreads();
 
 
-         if(threadIdx.x<64){
+        if(threadIdx.x<64){
             //64 ths
             mask[threadIdx.x]=mask[threadIdx.x] | mask[threadIdx.x+64];
         }
         __syncthreads();
         if(threadIdx.x<32){
-            //32 ths
+            //32 thscurrTableSize
             mask[threadIdx.x]=mask[threadIdx.x] | mask[threadIdx.x+32];
         }
         __syncthreads();
@@ -338,9 +336,15 @@ __global__ void updateTableGPU(unsigned int* _supports_dev,unsigned int * _svSiz
 
        }
         __syncthreads();
-        //8 threads to this last operation
         if(threadIdx.x<8){
+            //8 ths
             mask[threadIdx.x]=mask[threadIdx.x] | mask[threadIdx.x+8];
+
+        }
+        __syncthreads();
+        //4 threads to this last operation
+        if(threadIdx.x<4){
+            mask[threadIdx.x]=mask[threadIdx.x] | mask[threadIdx.x+4];
 
             _currTable_dev[th_mappedPos_stream]=mask[threadIdx.x] & _currTable_dev[th_mappedPos_stream];   
             
@@ -392,32 +396,50 @@ __device__ void printBitsGPU(unsigned int num) {
 
 void TableGPU::varOffsetLimit(int size,int * where) {
     
-    for (int i = 0; i < 16; ++i) {
-        where[i] = size / 16;              // Divide the size by the no of streams
+    for (int i = 0; i < 32; ++i) {
+        where[i] = size / 32;              // Divide the size by the no of streams
     }
-    int remainder = size % 16;           // Calculate the remainder
+    int remainder = size % 32;           // Calculate the remainder
 
     // Distribute the remainder across the first few parts
     for (int i = 0; i < remainder; ++i) {
         where[i]++;
     }
 
-    where[16]=0;
-    where[17]=where[0];
-    where[18]=where[1]+where[17];
-    where[19]=where[2]+where[18];
-    where[20]=where[3]+where[19];
-    where[21]=where[4]+where[20];
-    where[22]=where[5]+where[21];
-    where[23]=where[6]+where[22];
-    where[24]=where[7]+where[23];
-    where[25]=where[8]+where[24];
-    where[26]=where[9]+where[25];
-    where[27]=where[10]+where[26];
-    where[28]=where[11]+where[27];
-    where[29]=where[12]+where[28];
-    where[30]=where[13]+where[29];
-    where[31]=where[14]+where[30];
+
+    where[32]=0;
+    where[33]=where[0];
+    where[34]=where[1]+where[33];
+    where[35]=where[2]+where[34];
+    where[36]=where[3]+where[35];
+    where[37]=where[4]+where[36];
+    where[38]=where[5]+where[37];
+    where[39]=where[6]+where[38];
+    where[40]=where[7]+where[39];
+    where[41]=where[8]+where[40];
+    where[42]=where[9]+where[41];
+    where[43]=where[10]+where[42];
+    where[44]=where[11]+where[43];
+    where[45]=where[12]+where[44];
+    where[46]=where[13]+where[45];
+    where[47]=where[14]+where[46];
+    where[48]=where[15]+where[47];
+    where[49]=where[16]+where[48];
+    where[50]=where[17]+where[49];
+    where[51]=where[18]+where[50];
+    where[52]=where[19]+where[51];
+    where[53]=where[20]+where[52];
+    where[54]=where[21]+where[53];
+    where[55]=where[22]+where[54];
+    where[56]=where[23]+where[55];
+    where[57]=where[24]+where[56];
+    where[58]=where[25]+where[57];
+    where[59]=where[26]+where[58];
+    where[60]=where[27]+where[59];
+    where[61]=where[28]+where[60];
+    where[62]=where[29]+where[61];
+    where[63]=where[30]+where[62];
+
 
 
 }
