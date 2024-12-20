@@ -51,12 +51,6 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
 
     cudaMemcpyAsync(workerOffestAndLimit_dev, workerOffestAndLimit_host, sizeof(int)*64*noVars, cudaMemcpyHostToDevice,streams[0]);
 
-    for(int i=0;i<((_supportSize/32)+1);i++){
-        _vars_host[i]=0xffffffff;
-    }
-
-    if(_supportSize%32!=0)
-        _vars_host[(_supportSize/32)]=0xffffffff<<(32-(_supportSize%32));
 
     
     //*_CT_MASKCT_svSize_sval_sSize_sSup_host=_currTable._words.data()->value();
@@ -105,10 +99,35 @@ void TableGPU::enfGACDev(){
     dumpDomainsGPU();
     
 
-    //dump the whole domains
+    //dump the whole domains or alternatively the changed variables 
     cudaMemcpyAsync(_vars_dev, _vars_host, sizeof(unsigned int)*((_supportSize/32)+1), cudaMemcpyHostToDevice,streams[0]);
- 
+    /*
+    int offset=0;
+    int domainSize=0;
+
+    //for each changed var copy just their domain
+    for(int i=0;i<_s_val.size();i++){
+        int index=_s_val[i];
+        offset=(_supportOffsetJmp[index])/32;
+        int words_to_reset=-1;
+        int to=-1;
+        if(index<noVars-1){
+            to=_supportOffsetJmp[index+1]/32;
+            domainSize=to-offset+1;
+        }else{
+            to=(_supportSize/32)+1;
+            domainSize=to-offset;
+        }
+
+        //cudaMemcpyAsync(_vars_dev, _vars_host, sizeof(unsigned int)*((_supportSize/32)+1), cudaMemcpyHostToDevice,streams[0]);
+        cudaMemcpyAsync(_vars_dev+offset, _vars_host+offset, sizeof(unsigned int)*domainSize, cudaMemcpyHostToDevice,streams[0]);
+    }
+    */
     
+
+
+
+
     //pass: the supports, the changed variables + how many, the indexes for the support, the table and the size, the domains,  and 32*vars ints which tells what range of the varialbe to check according to the index of the th
     updateTableGPU<<<noBlocks,128,128*sizeof(unsigned int),streams[0]>>>(_supports_dev,_CT_MASKCT_svSize_sval_sSize_sSup_dev+(2*currTableSize),_supportOffsetJmp_dev,_CT_MASKCT_svSize_sval_sSize_sSup_dev,_currTable_size_dev,_vars_dev,workerOffestAndLimit_dev);          
     //intersectGPU<<<noBlocksEmpty,128,0,streams[0]>>>(_CT_MASKCT_svSize_sval_sSize_sSup_dev,_currTable_size_dev);
