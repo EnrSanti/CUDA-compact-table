@@ -8,6 +8,6 @@ var 10..20 : xNotInTable;
 
 array [int,int] of 1..10: t = [|1,8,8|1,2,9|];
 
-constraint table([x0,x1,x2], t) ;
+constraint table([x0,x1,x2], t) :: gpu;
 
 solve satisfy;

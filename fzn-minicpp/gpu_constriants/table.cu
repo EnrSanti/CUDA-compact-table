@@ -1,5 +1,7 @@
 #include "gpu_constriants/table.cuh"
 
+#include <unordered_set>
+
 TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) : Table(vars,tuples){
     setPriority(CLOW);
     //printf("%%%%%% TableGPU constructor\n");
@@ -81,6 +83,9 @@ void TableGPU::propagate(){
 }
 void TableGPU::enfGACDev(){
 
+
+
+
     int output=0;
     
 
@@ -91,15 +96,16 @@ void TableGPU::enfGACDev(){
     //aggiungi pure ct ua
     cudaMemcpyAsync(_CT_MASKCT_svSize_sval_sSize_sSup_dev, _CT_MASKCT_svSize_sval_sSize_sSup_host, sizeof(unsigned int)*(2*currTableSize+_s_val.size()+_s_sup.size()+2), cudaMemcpyHostToDevice,streams[0]);   
     
+    //metti dump domini qui
+
     dumpDomainsGPU();
-    
 
     //dump the whole domains or alternatively the changed variables 
     cudaMemcpyAsync(_vars_dev, _vars_host, sizeof(unsigned int)*((_supportSize/32)+1), cudaMemcpyHostToDevice,streams[0]);
-    /*
+    
     int offset=0;
     int domainSize=0;
-
+    /*
     //for each changed var copy just their domain
     for(int i=0;i<_s_val.size();i++){
         int index=_s_val[i];
@@ -188,14 +194,24 @@ void TableGPU::enfGACDev(){
         }
         */
     }
+    
+    //print the current table
+    //for(int i=0;i<currTableSize;i++){
+    //    printf("%%%%%% currTable[%d]: %d\n",i,_currTable._words[i].value());
+    //}
+    //for(int i=0;i<currTableSize;i++){
+    //    printf("%%%%%% mask returned from kernel [%d]: %d\n",i,_CT_MASKCT_svSize_sval_sSize_sSup_host[i]);
+    //}
+    //printf("%%%%%% ------------------------------------------------------------------ \n");
 
 }
 void TableGPU::enfoceGAC(){
-
+    cudaDeviceSynchronize();
     _s_val.clear();
+    _s_val.shrink_to_fit();
+
     _s_sup.clear();
     _s_sup.shrink_to_fit();
-    _s_val.shrink_to_fit();
 
     int internalIndex=currTableSize*2+2;
     
@@ -207,23 +223,20 @@ void TableGPU::enfoceGAC(){
             _CT_MASKCT_svSize_sval_sSize_sSup_host[internalIndex]=i;
             internalIndex++;
             overallSize=overallSize+_vars[i]->intialSize();
-            //printf("%%%%%% var s_val: %d\n",i);
         }
     }
 
     for (int i = 0; i < _vars.size(); i++){
-        
         //update s_sup
         if(_vars[i]->size()>1){
+            _s_sup.push_back(i);
             _CT_MASKCT_svSize_sval_sSize_sSup_host[internalIndex]=i;
             internalIndex++;
-            _s_sup.push_back(i);
-            //printf("%%%%%% var s_sup: %d\n",i);
         }
     }
 
-    //printf("%%%%%% ------------------------------------------ \n");
-
+    //for each var in the table add it to ssup vector
+  
     _CT_MASKCT_svSize_sval_sSize_sSup_host[currTableSize*2]=_s_val.size();
     _CT_MASKCT_svSize_sval_sSize_sSup_host[currTableSize*2+1]=_s_sup.size();
 
@@ -243,9 +256,22 @@ void TableGPU::enfoceGAC(){
 }
 
 void TableGPU::dumpDomainsGPU(){
-    for(int i=0; i < _s_val.size(); i++){
+    
+    _s_val.insert(_s_val.end(), _s_sup.begin(), _s_sup.end());
 
-        int index=_s_val[i];
+    // Remove duplicates
+    std::unordered_set<int> seen;
+    _s_val.erase(std::remove_if(_s_val.begin(), _s_val.end(),
+                            [&seen](int x) {
+                                return !seen.insert(x).second; // Insert returns false if already present
+                            }),
+             _s_val.end());
+
+    // Sort the result
+    std::sort(_s_val.begin(), _s_val.end());
+    
+    for(int i=0; i < _s_val.size(); i++){
+        int index=_s_val[i];//_s_val[i];
         
         int starting_word=(_supportOffsetJmp[index])/32;
         int words_to_reset=-1;
@@ -268,7 +294,7 @@ void TableGPU::dumpDomainsGPU(){
             _vars_host[starting_word]=_vars_host[starting_word] & bitsFromLeft((_supportOffsetJmp[index])%32);
             
             if(index<noVars-1){
-                _vars_host[starting_word+words_to_reset]=_vars_host[starting_word+words_to_reset] & bitsFromRight((32-_supportOffsetJmp[index+1])%32);
+                _vars_host[starting_word+words_to_reset]=_vars_host[starting_word+words_to_reset] & bitsFromRight((32-_supportOffsetJmp[index+1] % 32 + 32)%32);
             }else{
                 _vars_host[starting_word+words_to_reset]=0;
             }
@@ -276,7 +302,7 @@ void TableGPU::dumpDomainsGPU(){
             //both masks on one word
             
             if(index<noVars-1){
-                _vars_host[starting_word]=_vars_host[starting_word] & ( bitsFromLeft(_supportOffsetJmp[index]%32) | bitsFromRight((32-_supportOffsetJmp[index+1])%32));
+                _vars_host[starting_word]=_vars_host[starting_word] & ( bitsFromLeft(_supportOffsetJmp[index]%32) | bitsFromRight((32-_supportOffsetJmp[index+1] % 32 + 32)%32));
 
             }else{
                 _vars_host[starting_word]=_vars_host[starting_word] & bitsFromLeft((_supportOffsetJmp[index]%32));
@@ -288,62 +314,13 @@ void TableGPU::dumpDomainsGPU(){
 
             if(_vars[index]->contains(j)){
                 int wordIndex=(j-_variablesOffsets[index]+_supportOffsetJmp[index])/32;
-                _vars_host[wordIndex]=_vars_host[wordIndex]|(0x80000000>>((_supportOffsetJmp[index]+j-_variablesOffsets[index])%32));
+                _vars_host[wordIndex]=_vars_host[wordIndex]|(0x80000000>>(((_supportOffsetJmp[index]+j-_variablesOffsets[index])% 32 + 32)%32));
 
             }
 
         }   
     }
-    
 
-    for(int i=0; i < _s_sup.size(); i++){
-
-        int index=_s_sup[i];
-        
-        int starting_word=(_supportOffsetJmp[index])/32;
-        int words_to_reset=-1;
-        int to=-1;
-        if(index<noVars-1){
-            to=_supportOffsetJmp[index+1]/32;
-            words_to_reset=to-starting_word;
-        }else{
-            to=(_supportSize/32)+1;
-            words_to_reset=to-starting_word;
-        }
-        //printf("%%%%%%  var changed: %d, it starts at %d and ends at %d \n",index,starting_word,to);
-       
-        for(int j=1;j<words_to_reset;j++){
-            _vars_host[starting_word+j]=0;
-        }
-        
-        if(words_to_reset>=1){
-            _vars_host[starting_word]=_vars_host[starting_word] & bitsFromLeft((_supportOffsetJmp[index])%32);
-            
-            if(index<noVars-1){
-                _vars_host[starting_word+words_to_reset]=_vars_host[starting_word+words_to_reset] & bitsFromRight((32-_supportOffsetJmp[index+1])%32);
-            }else{
-                _vars_host[starting_word+words_to_reset]=0;
-            }
-        }else{
-            
-            
-            if(index<noVars-1){
-                _vars_host[starting_word]=_vars_host[starting_word] & ( bitsFromLeft(_supportOffsetJmp[index]%32) | bitsFromRight((32-_supportOffsetJmp[index+1])%32));
-
-            }else{
-                _vars_host[starting_word]=_vars_host[starting_word] & bitsFromLeft((_supportOffsetJmp[index]%32));
-            }
-
-        }
-        
-        for (int j = _vars[index]->min(); j <= _vars[index]->max();  j++){ 
-
-            if(_vars[index]->contains(j)){
-                int wordIndex=(j-_variablesOffsets[index]+_supportOffsetJmp[index])/32;
-                _vars_host[wordIndex]=_vars_host[wordIndex]|(0x80000000>>((_supportOffsetJmp[index]+j-_variablesOffsets[index])%32));
-            }
-        }
-    }
 }
 
 int TableGPU::bitsFromRight(int n) {
