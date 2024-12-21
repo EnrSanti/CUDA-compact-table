@@ -34,7 +34,7 @@ class TableGPU : public Table{
 
 
         int noBlocks;
-        int noBlocksEmpty;
+        int noBlocksFilter;
         const int noStreams=1; //hardcoded, don't touch IN THIS BRANCH
 
 
@@ -62,5 +62,4 @@ class TableGPU : public Table{
 __global__ void printGPUdata(int *_supportSize_dev, int *_variablesOffsets_dev,unsigned int *_currTable_dev,unsigned int *_supports_dev,int * _supportOffsetJmp_dev, int* currTable_size_dev, unsigned int* domains);
 __device__ void printBitsGPU(unsigned int num);
 __global__ void updateTableGPU(unsigned int* _supports_dev,unsigned int * _svSize_off_sval_dev, int *_supportOffsetJmp_dev, unsigned int * _currTable_dev,int* _currTable_dev_size, unsigned int* _vars_dev, int* offsetsAndLimits);
-__global__ void  filterDomainsGPU();
-__global__ void  intersectGPU(unsigned int* _CT_MASKCT_svSize_sval_sSize_sSup_dev, int* _currTable_dev_size);
+__global__ void  filterDomainsGPU(unsigned int * _CT_MASKCT_svSize_sval_sSize_sSup_dev, int* _currTable_dev_size, unsigned int* _vars_dev, int *_supportOffsetJmp_dev, unsigned int* _supports_dev , int * supportSize_dev, int* offsetsAndLimits);

@@ -878,6 +878,8 @@ void FznConstraintHelper::addGlobalConstraintsBuilders()
         }
         else
         {
+
+            //return new (solver) TableCT(x, _t);
             return new (solver) Table(x, _t);
         }
     });

@@ -185,6 +185,7 @@ void Table::filterDomains(){
                     if(indexResidue!=-1){
                         _residues[index_x_a]=indexResidue; 
                     }else{
+                        //printf("%%%%%% removing %d from %d\n",j+_vars[index]->initialMin(),index);
                         _vars[index]->remove(j+_vars[index]->initialMin());                   
                     }
                   
