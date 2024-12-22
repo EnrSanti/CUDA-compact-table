@@ -142,7 +142,7 @@ void TableGPU::enfGACDev(){
 
     //launch filtering 
     //each block does 2 words of the domains
-    //filterDomainsGPU<<<noBlocksFilter,64,64*sizeof(unsigned int),streams[0]>>>(_CT_MASKCT_svSize_sval_sSize_sSup_dev,_currTable_size_dev,_vars_dev,_supportOffsetJmp_dev,_supports_dev, _supportSize_dev,workerOffestAndLimit_dev);
+    filterDomainsGPU<<<noBlocksFilter,64,64*sizeof(unsigned int),streams[0]>>>(_CT_MASKCT_svSize_sval_sSize_sSup_dev,_currTable_size_dev,_vars_dev,_supportOffsetJmp_dev,_supports_dev, _supportSize_dev,workerOffestAndLimit_dev);
     
     //we need to update the current table
 
@@ -157,9 +157,9 @@ void TableGPU::enfGACDev(){
     }else{
         
         //copy back the domains
-        //cudaMemcpyAsync(_vars_host, _vars_dev, sizeof(unsigned int)*((_supportSize/32)+1), cudaMemcpyDeviceToHost,streams[0]);
+        cudaMemcpyAsync(_vars_host, _vars_dev, sizeof(unsigned int)*((_supportSize/32)+1), cudaMemcpyDeviceToHost,streams[0]);
 
-        //cudaStreamSynchronize(streams[0]);
+        cudaStreamSynchronize(streams[0]);
         
         //print all the varshost
         /*
@@ -257,22 +257,11 @@ void TableGPU::enfoceGAC(){
 
 void TableGPU::dumpDomainsGPU(){
     
-    _s_val.insert(_s_val.end(), _s_sup.begin(), _s_sup.end());
+    for(int index=0; index < noVars; index++){
+        //quali variaibli skippo
+        if(!(_vars[index]->changed() || _vars[index]->size()>1))
+            continue;
 
-    // Remove duplicates
-    std::unordered_set<int> seen;
-    _s_val.erase(std::remove_if(_s_val.begin(), _s_val.end(),
-                            [&seen](int x) {
-                                return !seen.insert(x).second; // Insert returns false if already present
-                            }),
-             _s_val.end());
-
-    // Sort the result
-    std::sort(_s_val.begin(), _s_val.end());
-    
-    for(int i=0; i < _s_val.size(); i++){
-        int index=_s_val[i];//_s_val[i];
-        
         int starting_word=(_supportOffsetJmp[index])/32;
         int words_to_reset=-1;
         int to=-1;
@@ -315,7 +304,6 @@ void TableGPU::dumpDomainsGPU(){
             if(_vars[index]->contains(j)){
                 int wordIndex=(j-_variablesOffsets[index]+_supportOffsetJmp[index])/32;
                 _vars_host[wordIndex]=_vars_host[wordIndex]|(0x80000000>>(((_supportOffsetJmp[index]+j-_variablesOffsets[index])% 32 + 32)%32));
-
             }
 
         }   
