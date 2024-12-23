@@ -65,7 +65,7 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     cudaMemcpyAsync(_variablesOffsets_dev, _variablesOffsets.data(), sizeof(int)*noVars, cudaMemcpyHostToDevice,streams[0]);
     cudaMemcpyAsync(_supportOffsetJmp_dev, _supportOffsetJmp.data(), sizeof(int)*noVars, cudaMemcpyHostToDevice,streams[0]);
     cudaMemcpyAsync(&_supportOffsetJmp_dev[noVars], &_supportSize, sizeof(int), cudaMemcpyHostToDevice,streams[0]);
-    printf("%%%%%% currTableSize: %d\n",currTableSize); 
+
     cudaMemcpyAsync(_currTable_size_dev, &currTableSize, sizeof(int), cudaMemcpyHostToDevice,streams[0]);
 
 
@@ -76,9 +76,7 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     cudaStreamSynchronize(streams[0]);
 
     //print supports
-    for(int i=0;i<_supportSize;i++){
-        printf("%%%%%% support[%d]: %d\n",i,_supports[i]);
-    }
+ 
 
 }
 void TableGPU::post(){
@@ -108,22 +106,7 @@ void TableGPU::enfGACDev(){
 
     dumpDomainsGPU();
 
-    //dump the whole domains or alternatively the changed variables 
-    //print vars_host
-    for(int i=0; i<((_supportSize/32)+1); i++){
-        //print the domains
-        printf("%%%%%% _vars_host[%d]: %d \n",i,_vars_host[i]);
-    }
-    //for all the vars check the domains values
-    for(int i=0; i<noVars; i++){
-        for (int j = _vars[i]->initialMin(); j <= _vars[i]->initialMax();  j++){ 
-            if(_vars[i]->contains(j)){
-                printf("%%%%%% var %d contains %d \n",i,j);
-            }else{
-                printf("%%%%%% var %d does not contain %d \n",i,j);
-            }
-        }
-    }
+
     //fin qui è sensato
     cudaMemcpyAsync(_vars_dev, _vars_host, sizeof(int)*((_supportSize/32)+1), cudaMemcpyHostToDevice,streams[0]);
     
@@ -165,11 +148,6 @@ void TableGPU::enfGACDev(){
 
     //launch filtering 
 
-    printGPUdata<<<1,1,0,streams[0]>>>(_supportSize_dev,_variablesOffsets_dev,_CT_MASKCT_svSize_sval_sSize_sSup_dev,_supports_dev,_supportOffsetJmp_dev,_currTable_size_dev,_vars_dev);
-
-    cudaDeviceSynchronize();
-    fflush(stdout);
-
     //each block does 2 words of the domains
 
    
@@ -182,45 +160,16 @@ void TableGPU::enfGACDev(){
 
     if(_currTable.isEmpty()){
         //sync stream 0
-        printf("%%%%%% Table is empty\n");
         failNow();
     }
     //print the current table
-    printf("%%%%%% launching %d blocks \n",noBlocksFilter);
     filterDomainsGPU<<<noBlocksFilter,32,32*sizeof(unsigned int),streams[0]>>>(_CT_MASKCT_svSize_sval_sSize_sSup_dev,_currTable_size_dev,_vars_dev,_supportOffsetJmp_dev,_supports_dev, _supportSize_dev,workerOffestAndLimit_dev);
-    
-    printGPUdata<<<1,1,0,streams[0]>>>(_supportSize_dev,_variablesOffsets_dev,_CT_MASKCT_svSize_sval_sSize_sSup_dev,_supports_dev,_supportOffsetJmp_dev,_currTable_size_dev,_vars_dev);
 
-    cudaDeviceSynchronize();
-    fflush(stdout);
     //copy back the domains
     cudaMemcpyAsync(_vars_to_remove_host, _vars_dev, sizeof(int)*((_supportSize/32)+1), cudaMemcpyDeviceToHost,streams[0]);
 
     cudaStreamSynchronize(streams[0]);
     
-    //print all the varshost
-    
-    for(int i=0; i<((_supportSize/32)+1); i++){
-        //print the domains
-        printf("%%%%%% _vars_to_remove_host[%d]: %d \n",i,_vars_to_remove_host[i]);
-    }
-
-    printf("%%%%%% _s_sup: \n");
-    for(int i=0; i<_s_sup.size(); ++i){
-        printf("%%%%%% var %d \n",_s_sup[i]);
-    }
-    
-    
-    for(int i=0; i<noVars; i++){
-        for (int j = _vars[i]->initialMin(); j <= _vars[i]->initialMax();  j++){ 
-            if(_vars[i]->contains(j)){
-                printf("%%%%%% var %d contains %d \n",i,j);
-            }else{
-                printf("%%%%%% var %d does not contain %d \n",i,j);
-            }
-        }   
-    }
-    printf("%%%%%% to remove: %d: \n",_vars_to_remove_host[0]);
     //for all the vars in ssup
     for(int i=0;i<_s_sup.size();i++){
 
@@ -231,7 +180,6 @@ void TableGPU::enfGACDev(){
         //from the min to the max (can be changed);
         for (int j = _vars[index]->min(); j <= _vars[index]->max();  j++){ 
             if((_vars_to_remove_host[starting_word] & (0x80000000>>starting_bit))!=0){
-                printf("%%%%%% I'd Remove %d from var %d \n",j,index);
                 //_vars[index]->remove(j);
             }
             starting_bit++;
@@ -295,14 +243,13 @@ void TableGPU::enfoceGAC(){
     
     enfGACDev();
 
-    
+  
     
     //}else{
     //    updateTable();
     //}
 
     filterDomains();
-    printf("%%%%%% ------------------------------------------------------------------ \n");
         
 }
 
@@ -313,7 +260,6 @@ void TableGPU::dumpDomainsGPU(){
         if(!(_vars[index]->changed() || _vars[index]->size()>1))
             continue;
 
-        printf("%%%%%% dumping var %d \n",index);
         int starting_word=(_supportOffsetJmp[index])/32;
         int words_to_reset=-1;
         int to=-1;
@@ -516,7 +462,7 @@ __global__ void  filterDomainsGPU(unsigned int * _CT_MASKCT_svSize_sval_sSize_sS
                 
                     //if the intersection is not empyt i can't have partial res empty
                     partialRes[threadIdx.x]=partialRes[threadIdx.x] | (_CT_MASKCT_svSize_sval_sSize_sSup_dev[ctW+threadIdx.x] & _supports_dev[index_x_a+ctW]);
-                    printf("%%%%%% GPU: th: %d, OR between ct=%d and supports[%d]=%d, partialRes: %d\n",threadIdx.x,_CT_MASKCT_svSize_sval_sSize_sSup_dev[ctW+threadIdx.x],index_x_a+ctW,_supports_dev[index_x_a+ctW],partialRes[threadIdx.x]);                    
+                    //printf("%%%%%% GPU: th: %d, OR between ct=%d and supports[%d]=%d, partialRes: %d\n",threadIdx.x,_CT_MASKCT_svSize_sval_sSize_sSup_dev[ctW+threadIdx.x],index_x_a+ctW,_supports_dev[index_x_a+ctW],partialRes[threadIdx.x]);                    
                 }
                 __syncthreads();
                              
@@ -554,15 +500,15 @@ __global__ void  filterDomainsGPU(unsigned int * _CT_MASKCT_svSize_sval_sSize_sS
             //reduction from 2 to 1
             if(threadIdx.x<1){
                 partialRes[threadIdx.x]=partialRes[threadIdx.x] | partialRes[threadIdx.x+1];
-                printf("%%%%%% GPU: th: %d, partialRes: %d\n",threadIdx.x,partialRes[threadIdx.x]);
+                //printf("%%%%%% GPU: th: %d, partialRes: %d\n",threadIdx.x,partialRes[threadIdx.x]);
                 if(partialRes[threadIdx.x]==0){  //put 1 in the right position to signal "remove from domain"
                     _vars_dev[th_mappedPos_domain_word]= mask | _vars_dev[th_mappedPos_domain_word];
-                    printf("%%%%%% GPU: value in pos %d value removed (1) \n",mask);
+                    //printf("%%%%%% GPU: value in pos %d value removed (1) \n",mask);
                 }else{ //put 0 in the right position to signal "keep in domain"
                     _vars_dev[th_mappedPos_domain_word]= ~mask & _vars_dev[th_mappedPos_domain_word];
-                    printf("%%%%%% GPU: value in pos %d value KEPT (0) \n",mask);
+                    //printf("%%%%%% GPU: value in pos %d value KEPT (0) \n",mask);
                 }
-                printf("%%%%%% ++++++++++++++++++++++++++++ \n");
+                //printf("%%%%%% ++++++++++++++++++++++++++++ \n");
             }
             __syncthreads();
         }
