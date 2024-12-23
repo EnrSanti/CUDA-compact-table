@@ -169,27 +169,38 @@ void Table::updateTable(){
 }
 
 void Table::filterDomains(){
+
+    printf("%%%%%% filtering domains\n");
+    for(int i=0; i<3; i++){
+        for (int j = _vars[i]->initialMin(); j <= _vars[i]->initialMax();  j++){ 
+            if(_vars[i]->contains(j)){
+                printf("%%%%%% var %d contains %d \n",i,j);
+            }else{
+                printf("%%%%%% var %d does not contain %d \n",i,j);
+            }
+        }
+    }
     for(int i=0; i < _s_sup.size(); ++i){
         int index=_s_sup[i];
         //printf("%%%%%% filtering domain for var %d\n",index);
-        for (int j = 0; j < _vars[index]->size(); j++){
-            if(_vars[index]->contains(j+_vars[index]->initialMin())){ //i.e. a \in dom(x)
-
-                int index_x_a=_supportOffsetJmp[index]+j;
+        for (int j = _vars[index]->min(); j <= _vars[index]->max(); j++){
+            
+            if(_vars[index]->contains(j)){ //i.e. a \in dom(x)
+                int index_x_a=_supportOffsetJmp[index]+j-_vars[index]->initialMin();
                 int indexResidue=_residues[index_x_a].value();
 
-                if((_currTable._words[indexResidue] & _supports[(index_x_a)*currTableSize+indexResidue] ) == 0x00000000){
-                
+                //if((_currTable._words[indexResidue] & _supports[(index_x_a)*currTableSize+indexResidue] ) == 0x00000000){
                     indexResidue=intersectIndexSparse(&_supports[index_x_a*currTableSize],_currTable);
                     
                     if(indexResidue!=-1){
                         _residues[index_x_a]=indexResidue; 
                     }else{
                         //printf("%%%%%% removing %d from %d\n",j+_vars[index]->initialMin(),index);
-                        _vars[index]->remove(j+_vars[index]->initialMin());                   
+                        _vars[index]->remove(j);        
+                        printf("%%%%%% ACTUALLY removing %d from %d, checked CT %d with support of index %d\n",j+_vars[index]->initialMin(),index,_currTable._words[0].value(),index_x_a*currTableSize);           
                     }
                   
-                }
+                //a}
                 
             }
         }

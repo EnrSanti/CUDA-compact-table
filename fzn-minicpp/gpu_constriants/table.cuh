@@ -20,12 +20,12 @@ class TableGPU : public Table{
         int * _supportSize_dev; //just a pointer to a single element
         int * _supportOffsetJmp_dev; //array
         int * _variablesOffsets_dev; //array
-        unsigned int * _vars_dev; //array (matrix) (the domains)
+        int * _vars_dev; //array (matrix) (the domains)
         int currTableSize;
         int noVars;
         int *_noVars_dev;
         int *_vars_host;
-
+        unsigned int * _vars_to_remove_host;
 
 
 
@@ -59,7 +59,7 @@ class TableGPU : public Table{
         void enfGACDev();
 };
 
-__global__ void printGPUdata(int *_supportSize_dev, int *_variablesOffsets_dev,unsigned int *_currTable_dev,unsigned int *_supports_dev,int * _supportOffsetJmp_dev, int* currTable_size_dev, unsigned int* domains);
+__global__ void printGPUdata(int *_supportSize_dev, int *_variablesOffsets_dev,unsigned int *_currTable_dev,unsigned int *_supports_dev,int * _supportOffsetJmp_dev, int* currTable_size_dev, int* domains);
 __device__ void printBitsGPU(unsigned int num);
-__global__ void updateTableGPU(unsigned int* _supports_dev,unsigned int * _svSize_off_sval_dev, int *_supportOffsetJmp_dev, unsigned int * _currTable_dev,int* _currTable_dev_size, unsigned int* _vars_dev, int* offsetsAndLimits);
-__global__ void  filterDomainsGPU(unsigned int * _CT_MASKCT_svSize_sval_sSize_sSup_dev, int* _currTable_dev_size, unsigned int* _vars_dev, int *_supportOffsetJmp_dev, unsigned int* _supports_dev , int * supportSize_dev, int* offsetsAndLimits);
+__global__ void updateTableGPU(unsigned int* _supports_dev,unsigned int * _svSize_off_sval_dev, int *_supportOffsetJmp_dev, unsigned int * _currTable_dev,int* _currTable_dev_size, int* _vars_dev, int* offsetsAndLimits);
+__global__ void  filterDomainsGPU(unsigned int * _CT_MASKCT_svSize_sval_sSize_sSup_dev, int* _currTable_dev_size, int* _vars_dev, int *_supportOffsetJmp_dev, unsigned int* _supports_dev , int * supportSize_dev, int* offsetsAndLimits);
