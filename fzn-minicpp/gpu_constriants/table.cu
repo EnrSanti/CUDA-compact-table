@@ -176,6 +176,7 @@ void TableGPU::enfGACDev(){
     
     cudaStreamSynchronize(streams[0]);
 
+    filterDomainsGPU<<<noBlocksFilter,32,32*sizeof(unsigned int),streams[0]>>>(_CT_MASKCT_svSize_sval_sSize_sSup_dev,_currTable_size_dev,_vars_dev,_supportOffsetJmp_dev,_supports_dev, _supportSize_dev,workerOffestAndLimit_dev);
     //launch filtering 
 
     //each block does 2 words of the domains
@@ -193,9 +194,6 @@ void TableGPU::enfGACDev(){
         failNow();
     }
 
-    
-
-    filterDomainsGPU<<<noBlocksFilter,32,32*sizeof(unsigned int),streams[0]>>>(_CT_MASKCT_svSize_sval_sSize_sSup_dev,_currTable_size_dev,_vars_dev,_supportOffsetJmp_dev,_supports_dev, _supportSize_dev,workerOffestAndLimit_dev);
 
     //copy back the domains
     cudaMemcpyAsync(_vars_to_remove_host, _vars_dev, sizeof(int)*((_supportSize/32)+1), cudaMemcpyDeviceToHost,streams[0]);
@@ -222,15 +220,6 @@ void TableGPU::enfGACDev(){
             }
         }
     }
-        
-    //print the current table
-    //for(int i=0;i<currTableSize;i++){
-    //    printf("%%%%%% currTable[%d]: %d\n",i,_currTable._words[i].value());
-    //}
-    //for(int i=0;i<currTableSize;i++){
-    //    printf("%%%%%% mask returned from kernel [%d]: %d\n",i,_CT_MASKCT_svSize_sval_sSize_sSup_host[i]);
-    //}
-    //printf("%%%%%% ------------------------------------------------------------------ \n");
 
 }
 void TableGPU::enfoceGAC(){
@@ -456,12 +445,9 @@ __global__ void  filterDomainsGPU(unsigned int * _CT_MASKCT_svSize_sval_sSize_sS
 
     extern __shared__ unsigned int partialRes[]; //mask (32 ints)
 
-
-    int blockIdxx=blockIdx.x;
-    int colsPerBlock=1;//2;
     //int th_col=threadIdx.x/32; //from 0..64 to 0..1 (which column do we look at), each block looks at 2 columns, groups of 32 threads will share the same column
 
-    int th_mappedPos_domain_word=/*th_col+*/(colsPerBlock*blockIdxx); //it is thPos as if I didn't have to consider the other streams
+    int th_mappedPos_domain_word=blockIdx.x; //it is thPos as if I didn't have to consider the other streams
     
     int reminder=(*_currTable_dev_size)%32;
 
@@ -479,10 +465,10 @@ __global__ void  filterDomainsGPU(unsigned int * _CT_MASKCT_svSize_sval_sSize_sS
 
 
         //if value in the domain then we intersect (either all thread are here or none is)
-        if((_vars_dev[i/32+colsPerBlock*blockIdxx] & mask)!=0){
+        if((_vars_dev[i/32+blockIdx.x] & mask)!=0){
         
             //fino qui sono ok
-            int index_x_a=colsPerBlock*blockIdxx*32+i;
+            int index_x_a=blockIdx.x*32+i;
 
             //if value in the domain then we intersect (either all thread are here or none is)
             // we do a parallel reduction on the ct
