@@ -75,8 +75,15 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
 
     cudaStreamSynchronize(streams[0]);
 
+    printf("%%%%%% support size: %d \n",_supportSize);
+    printf("%%%%%% ct size: %d \n",currTableSize);
     //print supports
- 
+    for(int i=0;i<_supportSize*currTableSize;i++){
+        if (i%3==0){
+            printf("%%%%%% \n");
+        }
+        printf("%%%%%% supports[%d]: %d ",i,_supports[i]);
+    }
 
 }
 void TableGPU::post(){
@@ -162,7 +169,31 @@ void TableGPU::enfGACDev(){
         //sync stream 0
         failNow();
     }
+
+    
+    //print the vars in ssup and sval
+    for(int i=0;i<_s_val.size();i++){
+        printf("%%%%%% sval[%d]: %d \n",i,_s_val[i]);
+    }
+    for(int i=0;i<_s_sup.size();i++){
+        printf("%%%%%% ssup[%d]: %d \n",i,_s_sup[i]);
+    }
+    //print the domains (vars_host)
+    for(int i=0;i<(_supportSize/32)+1;i++){
+        printf("%%%%%% vars_host[%d]: %d \n",i,_vars_host[i]);
+    }
+    printf("%%%%%% ++++++++++++++++ \n");
+    for(int i=0; i<noVars; i++){
+        for(int j=_vars[i]->initialMin();j<=_vars[i]->initialMax();j++){
+            if(_vars[i]->contains(j)){
+                printf("%%%%%% var[%d] contains %d\n",i,j);
+            }else{
+                printf("%%%%%% var[%d] NOT contain %d\n",i,j);
+            }
+        }
+    }
     //print the current table
+    printf("%%%%%% launching %d blocks for filter \n",noBlocksFilter);
     filterDomainsGPU<<<noBlocksFilter,32,32*sizeof(unsigned int),streams[0]>>>(_CT_MASKCT_svSize_sval_sSize_sSup_dev,_currTable_size_dev,_vars_dev,_supportOffsetJmp_dev,_supports_dev, _supportSize_dev,workerOffestAndLimit_dev);
 
     //copy back the domains
@@ -181,6 +212,7 @@ void TableGPU::enfGACDev(){
         for (int j = _vars[index]->min(); j <= _vars[index]->max();  j++){ 
             if((_vars_to_remove_host[starting_word] & (0x80000000>>starting_bit))!=0){
                 //_vars[index]->remove(j);
+                printf("%%%%%% I'd remove value %d from var %d\n",j,index);
             }
             starting_bit++;
             if(starting_bit==32){
@@ -190,8 +222,6 @@ void TableGPU::enfGACDev(){
         }
     }
         
-
-    
     //print the current table
     //for(int i=0;i<currTableSize;i++){
     //    printf("%%%%%% currTable[%d]: %d\n",i,_currTable._words[i].value());
@@ -250,6 +280,9 @@ void TableGPU::enfoceGAC(){
     //}
 
     filterDomains();
+
+    printf("%%%%%% ------------------------------------------------------------------ \n");
+    
         
 }
 
@@ -420,7 +453,7 @@ __global__ void updateTableGPU(unsigned int* _supports_dev,unsigned int * _svSiz
 __global__ void  filterDomainsGPU(unsigned int * _CT_MASKCT_svSize_sval_sSize_sSup_dev, int* _currTable_dev_size, int* _vars_dev, int *_supportOffsetJmp_dev, unsigned int* _supports_dev , int* supportSize_dev, int* offsetsAndLimits){
     
 
-    extern __shared__ unsigned int partialRes[]; //mask (64 ints)
+    extern __shared__ unsigned int partialRes[]; //mask (32 ints)
 
 
     int blockIdxx=blockIdx.x;
@@ -443,12 +476,10 @@ __global__ void  filterDomainsGPU(unsigned int * _CT_MASKCT_svSize_sval_sSize_sS
 
         partialRes[threadIdx.x]=0;
 
-        
-        __syncthreads();
 
         //if value in the domain then we intersect (either all thread are here or none is)
         if((_vars_dev[i/32+colsPerBlock*blockIdxx] & mask)!=0){
-            
+        
             //fino qui sono ok
             int index_x_a=colsPerBlock*blockIdxx*32+i;
 
@@ -459,10 +490,12 @@ __global__ void  filterDomainsGPU(unsigned int * _CT_MASKCT_svSize_sval_sSize_sS
                 
                
                 if(ctW+threadIdx.x < *_currTable_dev_size){
-                
+
                     //if the intersection is not empyt i can't have partial res empty
-                    partialRes[threadIdx.x]=partialRes[threadIdx.x] | (_CT_MASKCT_svSize_sval_sSize_sSup_dev[ctW+threadIdx.x] & _supports_dev[index_x_a+ctW]);
+                    partialRes[threadIdx.x]=partialRes[threadIdx.x] | (_CT_MASKCT_svSize_sval_sSize_sSup_dev[ctW+threadIdx.x] & _supports_dev[index_x_a*(*_currTable_dev_size)+ctW+threadIdx.x]);
                     //printf("%%%%%% GPU: th: %d, OR between ct=%d and supports[%d]=%d, partialRes: %d\n",threadIdx.x,_CT_MASKCT_svSize_sval_sSize_sSup_dev[ctW+threadIdx.x],index_x_a+ctW,_supports_dev[index_x_a+ctW],partialRes[threadIdx.x]);                    
+                    printf("%%%%%% GPU: th: %d there's a one in pos %d, accessing row of support: %d, partialRes: %d\n",threadIdx.x,mask, index_x_a*(*_currTable_dev_size)+ctW+threadIdx.x,partialRes[threadIdx.x]);
+                   
                 }
                 __syncthreads();
                              
@@ -472,7 +505,7 @@ __global__ void  filterDomainsGPU(unsigned int * _CT_MASKCT_svSize_sval_sSize_sS
             //there may be a part of the ct left
             if(threadIdx.x<reminder){
                 //todo check
-                partialRes[threadIdx.x]=partialRes[threadIdx.x] | (_CT_MASKCT_svSize_sval_sSize_sSup_dev[*_currTable_dev_size-(*_currTable_dev_size%32)+threadIdx.x] & _supports_dev[index_x_a+*_currTable_dev_size-(*_currTable_dev_size%32)]);
+                partialRes[threadIdx.x]=partialRes[threadIdx.x] | (_CT_MASKCT_svSize_sval_sSize_sSup_dev[*_currTable_dev_size-(*_currTable_dev_size%32)+threadIdx.x] & _supports_dev[index_x_a*(*_currTable_dev_size)+*_currTable_dev_size-(*_currTable_dev_size%32)]);
                 //printf("%%%%%% GPU: th: %d, (mask %d), OR between ct[%d]=%d and supports[%d+%d]=%d, partialRes: %d\n",threadIdx.x,mask,ctW+threadIdx.x,_CT_MASKCT_svSize_sval_sSize_sSup_dev[ctW+threadIdx.x],index_x_a,ctW,_supports_dev[index_x_a+ctW],partialRes[threadIdx.x]);
             }
 
@@ -503,10 +536,10 @@ __global__ void  filterDomainsGPU(unsigned int * _CT_MASKCT_svSize_sval_sSize_sS
                 //printf("%%%%%% GPU: th: %d, partialRes: %d\n",threadIdx.x,partialRes[threadIdx.x]);
                 if(partialRes[threadIdx.x]==0){  //put 1 in the right position to signal "remove from domain"
                     _vars_dev[th_mappedPos_domain_word]= mask | _vars_dev[th_mappedPos_domain_word];
-                    //printf("%%%%%% GPU: value in pos %d value removed (1) \n",mask);
+                    printf("%%%%%% GPU: value in pos %d value removed (1) \n",mask);
                 }else{ //put 0 in the right position to signal "keep in domain"
                     _vars_dev[th_mappedPos_domain_word]= ~mask & _vars_dev[th_mappedPos_domain_word];
-                    //printf("%%%%%% GPU: value in pos %d value KEPT (0) \n",mask);
+                    printf("%%%%%% GPU: value in pos %d value KEPT (0) \n",mask);
                 }
                 //printf("%%%%%% ++++++++++++++++++++++++++++ \n");
             }

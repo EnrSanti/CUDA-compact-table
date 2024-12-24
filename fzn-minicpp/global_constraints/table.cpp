@@ -176,6 +176,7 @@ void Table::filterDomains(){
         //printf("%%%%%% filtering domain for var %d\n",index);
         for (int j = _vars[index]->min(); j <= _vars[index]->max(); j++){
             if(_vars[index]->contains(j)){ //i.e. a \in dom(x)
+
                 int index_x_a=_supportOffsetJmp[index]+j-_vars[index]->initialMin();
                 int indexResidue=_residues[index_x_a].value();
 
@@ -185,7 +186,7 @@ void Table::filterDomains(){
                     if(indexResidue!=-1){
                         _residues[index_x_a]=indexResidue; 
                     }else{
-                        //printf("%%%%%% removing %d from %d\n",j+_vars[index]->initialMin(),index);
+                        printf("%%%%%% REMOVING %d from %d\n",j,index);
                         _vars[index]->remove(j);        
                     }
                   
