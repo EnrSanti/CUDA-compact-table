@@ -186,7 +186,7 @@ void Table::filterDomains(){
                     if(indexResidue!=-1){
                         _residues[index_x_a]=indexResidue; 
                     }else{
-                        printf("%%%%%% REMOVING %d from %d\n",j,index);
+                        //printf("%%%%%% REMOVING %d from %d\n",j,index);
                         _vars[index]->remove(j);        
                     }
                   
