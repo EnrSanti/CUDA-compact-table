@@ -6,21 +6,21 @@ import time
 
 # List of model files
 modelsSAT = [
-"serial/SAT/",
-"CUDA/SAT/",
+#"serial/SAT/",
+#"CUDA/SAT/",
 "TestGenerator & more tests/testsSAT/",
 "TestGenerator & more tests/testsSAT_CUDA/",
 "TestGenerator & more tests/testsSAT_bigger/",
 "TestGenerator & more tests/testsSAT_CUDA_bigger/",
 "TestGenerator & more tests/testsSAT_even_bigger/",
 "TestGenerator & more tests/testsSAT_CUDA_even_bigger/",
-#"TestGenerator & more tests/testsSAT_CUDA_even_even_bigger/",
-#"TestGenerator & more tests/testsSAT_even_even_bigger/" 
+"TestGenerator & more tests/testsSAT_even_even_bigger/",
+"TestGenerator & more tests/testsSAT_CUDA_even_even_bigger/"
 ]
 
 modelsUNSAT = [
-"serial/UNSAT/",
-"CUDA/UNSAT/",
+#"serial/UNSAT/",
+#"CUDA/UNSAT/",
 "TestGenerator & more tests/testsUNSAT/",
 "TestGenerator & more tests/testsUNSAT_CUDA/",
 "TestGenerator & more tests/testsUNSAT_bigger/",
@@ -28,9 +28,7 @@ modelsUNSAT = [
 "TestGenerator & more tests/testsUNSAT_even_bigger/",
 "TestGenerator & more tests/testsUNSAT_CUDA_even_bigger/",
 "TestGenerator & more tests/testsUNSAT_even_even_bigger/",
-"TestGenerator & more tests/testsUNSAT_CUDA_even_even_bigger/",
-#"TestGenerator & more tests/testsUNSAT_CUDA_even_even_bigger/",
-#"TestGenerator & more tests/testsUNSAT_even_even_bigger/"
+"TestGenerator & more tests/testsUNSAT_CUDA_even_even_bigger/"
 ]
 
 solver="MiniCpp"
@@ -41,7 +39,7 @@ totalErrors=0
 
 def run_sat_models(prefix):
     global totalErrors
-    
+    resultsSAT=""
 
     for folderIndex in range(0,len(modelsSAT),2):
         
@@ -104,13 +102,12 @@ def run_sat_models(prefix):
             
         if (errors==0):
             print("\033[92m\n\nInstances passed SERIAL: "+str(serialFolderTime)+", CUDA: "+str(cudaFolderTime)+ "\033[00m")
-
+            resultsSAT+="SERIAL ("+folder+"): "+str(serialFolderTime)+", CUDA: "+str(cudaFolderTime)+ "\n"
         print("-------------------------------------------------------------------------------------------\n")
-
+    return resultsSAT
 def run_unsat_models(prefix):
     global totalErrors
-
-
+    resultsUNSAT=""
 
     for folderIndex in range(0,len(modelsUNSAT),2):
 
@@ -170,21 +167,30 @@ def run_unsat_models(prefix):
             
             else:
                 print(f"\033[93mmatching file not found for "+str(instance)+", SKIPPING\033[00m")
+                
                 continue
             
         if (errors==0):
             print("\033[92m\n\nInstances passed SERIAL: "+str(serialFolderTime)+", CUDA: "+str(cudaFolderTime)+ "\033[00m")
+            resultsUNSAT+="SERIAL ("+folder+"): "+str(serialFolderTime)+", CUDA: "+str(cudaFolderTime)+ "\n"
+ 
 
         print("-------------------------------------------------------------------------------------------\n")
+    return resultsUNSAT
+
+resultsSAT=run_sat_models("./SimpleTables/")
+resultsUNSAT=run_unsat_models("./SimpleTables/")
 
 
-run_sat_models("./SimpleTables/")
-run_unsat_models("./SimpleTables/")
+#run_sat_models("./SmartTables/")
+#run_unsat_models("./SmartTables/")
 
-run_sat_models("./SmartTables/")
-run_unsat_models("./SmartTables/")
 
 if(totalErrors==0):
     print("\n\n\033[92m ************** All instances passed **************\033[00m \n\n")
+    print("SAT recap:\n")
+    print(resultsSAT)
+    print("UNSAT recap:\n")
+    print(resultsUNSAT)
 else:
     print("\n\n \033[91m ************** {totalErrors} instances failed **************\033[00m \n\n")
