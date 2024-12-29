@@ -33,6 +33,12 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     cudaMallocHost((void**)&_vars_host, sizeof(unsigned int)*((_supportSize/32)+1)); //matrix
     cudaMallocHost((void**)&_vars_to_remove_host, sizeof(unsigned int)*((_supportSize/32)+1)); //matrix
 
+    cudaMallocHost((void**)&dumped, sizeof(bool)*noVars); 
+    //initialize it to false
+    for(int i=0;i<noVars;i++){
+        dumped[i]=false;
+    }
+
     cudaMallocHost((void**)&workerOffestAndLimit_host,sizeof(int)*64*noVars);
 
 
@@ -74,24 +80,6 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     noBlocksFilter=((_supportSize/32)+1);
 
     cudaStreamSynchronize(streams[0]);
-
-
-    /*
-    printf("%%%%%% blocks to launch for filter %d \n",noBlocksFilter);
-    //print ctsize
-    printf("%%%%%% currTableSize %d \n",currTableSize);
-    //print support size
-    printf("%%%%%% no of ints32 in support %d \n",_supportSize*currTableSize);
-    //print the supports 
-    for(int i=0;i<_supportSize*currTableSize;i++){
-        if(i%currTableSize==0){
-            printf("\n");
-        }
-        printf("%%%%%% supp[%d]: %d ",i,_supports[i]);
-        
-    }
-    */
-    
 
 }
 void TableGPU::post(){
@@ -211,7 +199,6 @@ void TableGPU::enfGACDev(){
         for (int j = _vars[index]->min(); j <= _vars[index]->max();  j++){ 
             if((_vars_to_remove_host[starting_word] & (0x80000000>>starting_bit))!=0){
                 _vars[index]->remove(j);
-                //printf("%%%%%% I'd remove %d removed from var %d\n",j,index);
             }
             starting_bit++;
             if(starting_bit==32){
@@ -280,8 +267,13 @@ void TableGPU::dumpDomainsGPU(){
     
     for(int index=0; index < noVars; index++){
         //quali variaibli skippo
-        if(!(_vars[index]->changed() || _vars[index]->size()>1))
+
+        if(!(_vars[index]->changed()) && _vars[index]->size()==1)
             continue;
+
+        if(dumped[index] && !(_vars[index]->changed()))
+            continue;
+        
 
         int starting_word=(_supportOffsetJmp[index])/32;
         int words_to_reset=-1;
@@ -327,6 +319,9 @@ void TableGPU::dumpDomainsGPU(){
             }
 
         }   
+        
+        dumped[index]=true;
+
     }
 
 }
@@ -454,9 +449,11 @@ __global__ void  filterDomainsGPU(unsigned int * _CT_MASKCT_svSize_sval_sSize_sS
     if(th_mappedPos_domain_word>=(*supportSize_dev)/32+1){
         return;
     }
+    if(_vars_dev[blockIdx.x]==0){
+        return;
+    }
 
-    //int ssupSize=_CT_MASKCT_svSize_sval_sSize_sSup_dev[(*_currTable_dev_size)*2+1];
-    //for each bit in the two words
+    //for each bit in the word
     for(int i=0; i<32; i++){  
         
         int mask=1<<(31-(i%32));
@@ -465,7 +462,7 @@ __global__ void  filterDomainsGPU(unsigned int * _CT_MASKCT_svSize_sval_sSize_sS
 
 
         //if value in the domain then we intersect (either all thread are here or none is)
-        if((_vars_dev[i/32+blockIdx.x] & mask)!=0){
+        if((_vars_dev[blockIdx.x] & mask)!=0){
         
             //fino qui sono ok
             int index_x_a=blockIdx.x*32+i;

@@ -27,16 +27,12 @@ class TableGPU : public Table{
         int *_vars_host;
         unsigned int * _vars_to_remove_host;
 
-
-
         unsigned int* _CT_MASKCT_svSize_sval_sSize_sSup_host;
         unsigned int* _CT_MASKCT_svSize_sval_sSize_sSup_dev;
-
 
         int noBlocks;
         int noBlocksFilter;
         const int noStreams=1; //hardcoded, don't touch IN THIS BRANCH
-
 
         cudaStream_t* streams;
 
@@ -44,6 +40,7 @@ class TableGPU : public Table{
         int internalIndex;
         int *workerOffestAndLimit_host;
 
+        bool *dumped;
 
     public:
         TableGPU(vector<var<int>::Ptr> & vars,  vector<vector<int>> & tuples);
