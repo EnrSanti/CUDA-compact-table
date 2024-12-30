@@ -6,21 +6,21 @@ import time
 
 # List of model files
 modelsSAT = [
-#"serial/SAT/",
-#"CUDA/SAT/",
+"serial/SAT/",
+"CUDA/SAT/",
 "TestGenerator & more tests/testsSAT/",
 "TestGenerator & more tests/testsSAT_CUDA/",
-"TestGenerator & more tests/testsSAT_bigger/",
-"TestGenerator & more tests/testsSAT_CUDA_bigger/",
-"TestGenerator & more tests/testsSAT_even_bigger/",
-"TestGenerator & more tests/testsSAT_CUDA_even_bigger/",
-"TestGenerator & more tests/testsSAT_even_even_bigger/",
-"TestGenerator & more tests/testsSAT_CUDA_even_even_bigger/"
+#"TestGenerator & more tests/testsSAT_bigger/",
+#"TestGenerator & more tests/testsSAT_CUDA_bigger/",
+#"TestGenerator & more tests/testsSAT_even_bigger/",
+#"TestGenerator & more tests/testsSAT_CUDA_even_bigger/",
+#"TestGenerator & more tests/testsSAT_even_even_bigger/",
+#"TestGenerator & more tests/testsSAT_CUDA_even_even_bigger/"
 ]
 
 modelsUNSAT = [
-#"serial/UNSAT/",
-#"CUDA/UNSAT/",
+"serial/UNSAT/",
+"CUDA/UNSAT/",
 "TestGenerator & more tests/testsUNSAT/",
 "TestGenerator & more tests/testsUNSAT_CUDA/",
 "TestGenerator & more tests/testsUNSAT_bigger/",
