@@ -10,12 +10,12 @@ modelsSAT = [
 "CUDA/SAT/",
 "TestGenerator & more tests/testsSAT/",
 "TestGenerator & more tests/testsSAT_CUDA/",
-#"TestGenerator & more tests/testsSAT_bigger/",
-#"TestGenerator & more tests/testsSAT_CUDA_bigger/",
-#"TestGenerator & more tests/testsSAT_even_bigger/",
-#"TestGenerator & more tests/testsSAT_CUDA_even_bigger/",
-#"TestGenerator & more tests/testsSAT_even_even_bigger/",
-#"TestGenerator & more tests/testsSAT_CUDA_even_even_bigger/"
+"TestGenerator & more tests/testsSAT_bigger/",
+"TestGenerator & more tests/testsSAT_CUDA_bigger/",
+"TestGenerator & more tests/testsSAT_even_bigger/",
+"TestGenerator & more tests/testsSAT_CUDA_even_bigger/",
+"TestGenerator & more tests/testsSAT_even_even_bigger/",
+"TestGenerator & more tests/testsSAT_CUDA_even_even_bigger/"
 ]
 
 modelsUNSAT = [
