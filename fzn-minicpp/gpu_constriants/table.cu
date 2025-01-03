@@ -109,29 +109,13 @@ void TableGPU::enfGACDev(){
 
     dumpDomainsGPU();
 
-    //for each varaible
-    /*
-    for(int i=0;i<noVars;i++){
-        for(int j=_vars[i]->min();j<=_vars[i]->max();j++){
-            if(_vars[i]->contains(j)){
-                printf("%%%%%% Var %d contains %d\n",i,j);
-            }else{
-                printf("%%%%%% Var %d NOT contain %d\n",i,j);
-            }
-        }
-    }
-    //print the content of vars_host
-    for(int i=0;i<(_supportSize/32)+1;i++){
-        printf("%%%%%% vars_host[%d]: %d\n",i,_vars_host[i]);
-    }
-    */
-    //fin qui è sensato
     cudaMemcpyAsync(_vars_dev, _vars_host, sizeof(int)*((_supportSize/32)+1), cudaMemcpyHostToDevice,streams[0]);
+
     
+    /*    
     int offset=0;
     int domainSize=0;
 
-    /*
     //for each changed var copy just their domain
     for(int i=0;i<_s_val.size();i++){
         int index=_s_val[i];
@@ -160,10 +144,6 @@ void TableGPU::enfGACDev(){
     //si copio mask in ct per semplcità
     cudaMemcpyAsync(_CT_MASKCT_svSize_sval_sSize_sSup_host, _CT_MASKCT_svSize_sval_sSize_sSup_dev, currTableSize*sizeof(unsigned int), cudaMemcpyDeviceToHost,streams[0]);
 
-    _currTable.clearMask();
-    
-    cudaStreamSynchronize(streams[0]);
-
     filterDomainsGPU<<<noBlocksFilter,32,32*sizeof(unsigned int),streams[0]>>>(_CT_MASKCT_svSize_sval_sSize_sSup_dev,_currTable_size_dev,_vars_dev,_supportOffsetJmp_dev,_supports_dev, _supportSize_dev,workerOffestAndLimit_dev);
     //launch filtering 
 
@@ -171,6 +151,9 @@ void TableGPU::enfGACDev(){
 
    
     //we need to update the current table
+
+    cudaStreamSynchronize(streams[0]);
+    cudaMemcpyAsync(_vars_to_remove_host, _vars_dev, sizeof(int)*((_supportSize/32)+1), cudaMemcpyDeviceToHost,streams[0]);
 
     _currTable.addToMaskArray(_CT_MASKCT_svSize_sval_sSize_sSup_host);
     
@@ -184,8 +167,7 @@ void TableGPU::enfGACDev(){
 
 
     //copy back the domains
-    cudaMemcpyAsync(_vars_to_remove_host, _vars_dev, sizeof(int)*((_supportSize/32)+1), cudaMemcpyDeviceToHost,streams[0]);
-
+    
     cudaStreamSynchronize(streams[0]);
     
     //for all the vars in ssup
@@ -219,14 +201,14 @@ void TableGPU::enfoceGAC(){
 
     int internalIndex=currTableSize*2+2;
     
-    int overallSize=0;
+    //int overallSize=0;
     for (int i = 0; i < _vars.size(); i++){
         //update s_val and the deltas
         if(_vars[i]->changed()){
             _s_val.push_back(i);
             _CT_MASKCT_svSize_sval_sSize_sSup_host[internalIndex]=i;
             internalIndex++;
-            overallSize=overallSize+_vars[i]->intialSize();
+            //overallSize=overallSize+_vars[i]->intialSize();
         }
     }
 
@@ -444,7 +426,6 @@ __global__ void  filterDomainsGPU(unsigned int * _CT_MASKCT_svSize_sval_sSize_sS
 
     int th_mappedPos_domain_word=blockIdx.x; //it is thPos as if I didn't have to consider the other streams
     
-    int reminder=(*_currTable_dev_size)%32;
 
     if(th_mappedPos_domain_word>=(*supportSize_dev)/32+1){
         return;
@@ -511,14 +492,9 @@ __global__ void  filterDomainsGPU(unsigned int * _CT_MASKCT_svSize_sval_sSize_sS
                 //printf("%%%%%% GPU: th: %d, partialRes: %d\n",threadIdx.x,partialRes[threadIdx.x]);
                 if(partialRes[threadIdx.x]==0){  //put 1 in the right position to signal "remove from domain"
                     _vars_dev[th_mappedPos_domain_word]= mask | _vars_dev[th_mappedPos_domain_word];
-                    //if(blockIdxx==0)
-                        //printf("%%%%%% GPU: value in pos %d value removed (1), current domain: %d  \n",mask,_vars_dev[th_mappedPos_domain_word]);
                 }else{ //put 0 in the right position to signal "keep in domain"
                     _vars_dev[th_mappedPos_domain_word]= ~mask & _vars_dev[th_mappedPos_domain_word];
-                    //if(blockIdxx==0)
-                       // printf("%%%%%% GPU: value in pos %d value KEPT (0), current domain: %d  \n",mask,_vars_dev[th_mappedPos_domain_word]);
                 }
-                //printf("%%%%%% ++++++++++++++++++++++++++++ \n");
             }
             __syncthreads();
         }
@@ -526,49 +502,6 @@ __global__ void  filterDomainsGPU(unsigned int * _CT_MASKCT_svSize_sval_sSize_sS
 
 }
 
-__global__ void printGPUdata(int *_supportSize_dev, int *_variablesOffsets_dev,unsigned int *_CT_MASKCT_svSize_sval_sSize_sSup_dev,unsigned int *_supports_dev,int * _supportOffsetJmp_dev, int* currTable_size_dev, int* domains){
-    printf("%%%%%% -------------------------- printGPUdata -------------------------- \n");
-    /*
-    printf("%%%%%% threadIdx.x: %d\n",threadIdx.x);
-    printf("%%%%%% _supportSize_dev: %d\n",*_supportSize_dev);
-    //printing the offsets
-    int k=0;
-    int off=0;
-    
-    
-    printf("%%%%%% currTable\n");
-    for(int j=0;j<*currTable_size_dev;j++){
-        printf("%%%%%% [%d] ", j);
-        printBitsGPU(_CT_MASKCT_svSize_sval_sSize_sSup_dev[j]);
-    }
-    */
-
-    printf("%%%%%% domains: \n");
-    for(int i=0;i<*_supportSize_dev/32+1;i++){
-        printf("%%%%%% vars_dev[%d]: %d \n", i,domains[i]);
-    }
-
-
-    /*
-    for (int i = 0; i < 8; i++)
-    {
-        printf("%%%%%% _CT_MASKCT_svSize_sval_sSize_sSup_dev[%d]: %d\n",i,_CT_MASKCT_svSize_sval_sSize_sSup_dev[i]);
-    }
-    */
-   printf("%%%%%% -------------------------- ------------ -------------------------- \n");
-}
-
-
-__device__ void printBitsGPU(unsigned int num) {
-    // Extracting each bit of the int and printing it
-    //yes rather weird function, but since we need to print %%%%%
-    char str[32] = {'0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0'};
-    for (int i = 31; i >= 0; i--) {
-        str[i] = (num >> i) & 1; 
-        printf("%d",str[i]);
-    }
-    printf("\n%%%%%% \n");
-}
 
 void TableGPU::varOffsetLimit(int size,int * where) {
     
@@ -615,7 +548,4 @@ void TableGPU::varOffsetLimit(int size,int * where) {
     where[61]=where[28]+where[60];
     where[62]=where[29]+where[61];
     where[63]=where[30]+where[62];
-
-
-
 }   
