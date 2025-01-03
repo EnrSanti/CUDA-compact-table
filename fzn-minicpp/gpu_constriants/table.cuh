@@ -13,7 +13,6 @@ using namespace Gpu::Memory;
 class TableGPU : public Table{
 
     private:
-        u32 sm_count;
 
         unsigned int *_supports_dev; //array of arrays linearized
         int * _currTable_size_dev; //just a pointer to a single element
@@ -49,12 +48,13 @@ class TableGPU : public Table{
         void enfoceGAC();
         void print();
     private:
-        int bitsFromRight(int n);
-        int bitsFromLeft(int n);
         void dumpDomainsGPU();
-        void varOffsetLimit(int size,int * where);
         void enfGACDev();
 };
 
 __global__ void updateTableGPU(unsigned int* _supports_dev,unsigned int * _svSize_off_sval_dev, int *_supportOffsetJmp_dev, unsigned int * _currTable_dev,int* _currTable_dev_size, int* _vars_dev, int* offsetsAndLimits);
 __global__ void  filterDomainsGPU(unsigned int * _CT_MASKCT_svSize_sval_sSize_sSup_dev, int* _currTable_dev_size, int* _vars_dev, int *_supportOffsetJmp_dev, unsigned int* _supports_dev , int * supportSize_dev, int* offsetsAndLimits);
+
+void varOffsetLimit(int size,int * where);
+int bitsFromRight(int n);
+int bitsFromLeft(int n);

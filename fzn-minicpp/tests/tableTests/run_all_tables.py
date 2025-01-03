@@ -182,8 +182,8 @@ resultsSAT=run_sat_models("./SimpleTables/")
 resultsUNSAT=run_unsat_models("./SimpleTables/")
 
 
-#run_sat_models("./SmartTables/")
-#run_unsat_models("./SmartTables/")
+resultsSAT_smart=run_sat_models("./SmartTables/")
+resultsUNSAT_smart=run_unsat_models("./SmartTables/")
 
 
 if(totalErrors==0):
@@ -192,5 +192,11 @@ if(totalErrors==0):
     print(resultsSAT)
     print("UNSAT recap:\n")
     print(resultsUNSAT)
+    print("-------------------\n")
+    print("Smart SAT recap:\n")
+    print(resultsSAT_smart)
+    print("Smart UNSAT recap:\n")
+    print(resultsUNSAT_smart)
+
 else:
     print("\n\n \033[91m ************** {totalErrors} instances failed **************\033[00m \n\n")

@@ -15,42 +15,31 @@ class SmartTable : public Constraint {
         vector<std::vector<int>> _signs;
         
 
-
         SparseBitSet _currTable; 
 
         int _supportSize; //the length (no of rows) of the supports bitset (CONSTANT)
 
-        vector<SparseBitSet> _supports; //table of which values for each variable are required in a constraint
-        //************************************
-        //if no incremental update is used the following three vectors are USELESS
-        //************************************
-        vector<SparseBitSet> _supportsShort;
-        vector<SparseBitSet> _supportsMax;
-        vector<SparseBitSet> _supportsMin;
-        
-        //vector<SparseBitSet>  _deltaXs; //deltaXs[i] is the delta of the ith variable 
-        //vector<SparseBitSet> _lastVarsValues; //_lastVarsValues[i] is the snapshot of the domain of ith variable at the previous step
-        
+        unsigned int *_supports; //table of which values for each variable are required in a constraint
+        int currTableSize;
+    
+
         vector<int> _s_val; //indexes of the vars not yet instanciated whose domain changed from last iteration (could be replaced by a bitset)
         vector<int> _s_sup; //indexes of the vars not yet inst. with at least one value in their domain for which no support has yet been found (could be replaced by a bitset)
-        vector<trail<int>> _residues; 
-
-  
+       
         vector<int> _supportOffsetJmp; //for each var the index of the row in "supports" in which such variable starts (CONSTANT)
-        
-        //c'è in vars[i]->initialMin(); 
-        vector<int> _variablesOffsets; //offset of the variables, used in accessing the support rows (not all variables start from 0, eg  90..120, variablesOffsets[i]=90) 
-       //doing things from scratch could have been easier...
+       
+        vector<int> _variablesOffsets;
 
     public:
         SmartTable(vector<var<int>::Ptr> & vars,  vector<std::vector<int>> & tuples, vector<std::vector<int>> & signs);
         void post() override;
         void propagate() override;
-    private:
+    protected:
         void intializeTable(int, int);
         void enfoceGAC();
-        void filterDomains();
-        void updateDelta(int);
         void updateTable();
+        void filterDomains();
+        void addToMaskInt(unsigned int* mask,int value);
+        int intersectIndexSparse(unsigned int* words,SparseBitSet& m);
         
 };

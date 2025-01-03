@@ -308,14 +308,6 @@ void TableGPU::dumpDomainsGPU(){
 
 }
 
-int TableGPU::bitsFromRight(int n) {
-    return (1 << (n)) - 1;
-   
-}
-int TableGPU::bitsFromLeft(int n) {
-    if (n == 0) return 0;       
-    return ~0 << (32 - n);
-}
 
 // 1 th per support row
 __global__ void updateTableGPU(unsigned int* _supports_dev,unsigned int * _svSize_off_sval_dev, int *_supportOffsetJmp_dev, unsigned int * _CT_mask_dev,int* _currTable_dev_size, int* _vars_dev, int* offsetsAndLimits){
@@ -502,8 +494,17 @@ __global__ void  filterDomainsGPU(unsigned int * _CT_MASKCT_svSize_sval_sSize_sS
 
 }
 
+int bitsFromRight(int n) {
+    return (1 << (n)) - 1;
+   
+}
+int bitsFromLeft(int n) {
+    if (n == 0) return 0;       
+    return ~0 << (32 - n);
+}
 
-void TableGPU::varOffsetLimit(int size,int * where) {
+
+void varOffsetLimit(int size,int * where) {
     
     for (int i = 0; i < 32; ++i) {
         where[i] = size / 32;              // Divide the size by the no of streams

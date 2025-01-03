@@ -5,35 +5,27 @@ enum SmartTableOp {Eq=1, All=2 ,LtInt=3, GtInt=5 /*, LtVar=4 /*, GtVar=6*/};
 SmartTable::SmartTable(vector<var<int>::Ptr> & vars,  vector<vector<int>> & tuples, vector<vector<int>> & signs) :
     Constraint(vars[0]->getSolver()), _vars(vars), _tuples(tuples), _signs(signs), _currTable(SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),tuples.size())){
 
-    setPriority(CLOW);
-        
-    int noTuples=_tuples.size();
-    int noVars=_vars.size();
-
+    
+    int noTuples=tuples.size();
+    int noVars=vars.size();
+    
     _s_val= vector<int>();
     _s_sup= vector<int>();
     _supportOffsetJmp=vector<int>(noVars);
     _variablesOffsets=vector<int>(noVars);
-    //_deltaXs=vector<SparseBitSet>(noVars,SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),0));
-    //_lastVarsValues=vector<SparseBitSet>(noVars,SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),0));
-
 
     _currTable=SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),tuples.size());
 
-    for (int i = 0; i < noVars; i++){        
+    for (int i = 0; i < noVars; i++){      
+
         //calculating the number of rows in the support bitset
         _supportSize+=vars[i]->intialSize();
         //we store the offset
-        _variablesOffsets[i]=vars[i]->min();
-
-        //we allocate the delta and lastVarsValues
-        //_deltaXs[i]=SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),_vars[i]->max()+1);
-        //_lastVarsValues[i]=SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),_vars[i]->max()+1);
-
-        //initialize lastVarsValues
+        _variablesOffsets[i]=vars[i]->min();      
         //vars[i]->dumpInSparseBitSet(i,_variablesOffsets[i],vars[i]->min(),vars[i]->initialMin(),vars[i]->max(),_lastVarsValues[i]);
 
     }
+
 
     //calculating the offset of the variables, used in accessing the support rows    
     _supportOffsetJmp[0]=0;
@@ -42,26 +34,16 @@ SmartTable::SmartTable(vector<var<int>::Ptr> & vars,  vector<vector<int>> & tupl
     }
 
     //we allocate and initialize the support bitsets
-    _supports=vector<SparseBitSet>(_supportSize,SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),noTuples));
-    _residues= vector<trail<int>>(_supportSize);
+    currTableSize=(noTuples/32)+1; 
+    _supports=(unsigned int*) malloc(sizeof(unsigned int)*_supportSize*currTableSize);
+    //check allocation
+    
 
     //we allocate and initialize the support bitsets
-    for (int i = 0; i < _supportSize; i++){
-        _supports[i]=SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),noTuples);//the content doesn't make sense yet, later we need to update the mask and intersect it
+    for (int i = 0; i < _supportSize*currTableSize; i++){
+        _supports[i]=0x00000000;
     }
 
-    //we allocate and initialize the supports bitsets
-
-    _supportsShort=vector<SparseBitSet>(_supportSize,SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),noTuples));
-    _supportsMin=vector<SparseBitSet>(_supportSize,SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),noTuples));
-    _supportsMax=vector<SparseBitSet>(_supportSize,SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),noTuples));
-   
-    //we allocate and initialize the support bitsets
-    for (int i = 0; i < _supportSize; i++){
-        _supportsShort[i]=SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),noTuples);
-        _supportsMax[i]=SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),noTuples);
-        _supportsMin[i]=SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),noTuples);
-    }
 
     intializeTable(noVars,noTuples);
 
@@ -80,15 +62,10 @@ void SmartTable::intializeTable(int noVars,int noTuples){
                 //* entry (we update all the supports in the same way)                
                 case SmartTableOp::All:{
                     //set all the bits for the variable in support
-                    int offset=_supportOffsetJmp[v];
+                    int offset=_supportOffsetJmp[v]*currTableSize;
                     for(int i=0; i<_vars[v]->intialSize(); i++){
-                        _supports[offset+i].addToMaskInt(t+1);
-                        _supportsMax[offset+i].addToMaskInt(t+1);
-                        _supportsMin[offset+i].addToMaskInt(t+1);
-                        //don't set anything for supportsShort
+                        addToMaskInt(&(_supports[offset+i]),t+1);
                     }
-                    //don't set anything for supportsShort
-
                     found=true;
                     tuplesOfSingletons[v]=t;
                     break;
@@ -96,23 +73,11 @@ void SmartTable::intializeTable(int noVars,int noTuples){
                 case SmartTableOp::Eq:{
                     
                     if(_vars[v]->contains(_tuples[t][v])){
-                        int entryValue=_tuples[t][v]-_variablesOffsets[v];   
-                        int offset=_supportOffsetJmp[v]+entryValue;
-                        //if it's not a *, add one bit to both supports
-                        _supports[offset].addToMaskInt(t+1); 
-                        _supportsShort[offset].addToMaskInt(t+1);
 
-                        //if the value is not the maximum we need to set the bits in supportsMin
-                        for(int i=0; i<_vars[v]->intialSize()-entryValue; i++){
-                            _supportsMin[offset+i].addToMaskInt(t+1);
-                            //don't set anything for supportsShort
-                        }
-                        
-                        //if the value is not the minimum we need to set the bits in supportsMax
-                        for(int i=0; i<=entryValue; i++){
-                            _supportsMax[_supportOffsetJmp[v]+i].addToMaskInt(t+1);
-                            //don't set anything for supportsShort
-                        }
+                        int entryValue=_tuples[t][v]-_variablesOffsets[v];   
+                        int offset=(_supportOffsetJmp[v]+entryValue)*currTableSize;
+                        //if it's not a *, add one bit to both supports
+                        addToMaskInt(&(_supports[offset]),t+1);                       
                         found=true;
                         tuplesOfSingletons[v]=t;
                         
@@ -131,25 +96,18 @@ void SmartTable::intializeTable(int noVars,int noTuples){
                         int entryValue=_tuples[t][v]-_variablesOffsets[v];   //value of the entry-initial min  
                         if(entryValue>_vars[v]->initialMax())
                             entryValue=_vars[v]->initialMax();
-                        int offset=_supportOffsetJmp[v]; //starting point of the supports 
+                        int offset=_supportOffsetJmp[v]*currTableSize; //starting point of the supports 
                       
                         
                             
                         for(int i=0; i<entryValue; i++){
-                            _supports[offset+i].addToMaskInt(t+1);
+
+                           addToMaskInt(&(_supports[offset+i]),t+1);
                             //don't set anything for supportsShort
                         }
 
                         //if the value is not the minimum we need to set the bits in supportsMin
-                        for(int i=0; i<entryValue; i++){
-                            _supportsMin[_supportOffsetJmp[v]+i].addToMaskInt(t+1);
-                            //don't set anything for supportsShort
-                        }
-                        //We need to set all the bits in supportsMax
-                        for(int i=0; i<_vars[v]->intialSize(); i++){
-                            _supportsMax[offset+i].addToMaskInt(t+1);
-                            //don't set anything for supportsShort
-                        }
+                       
                         found=true;
                         tuplesOfSingletons[v]=t;
                         
@@ -166,25 +124,13 @@ void SmartTable::intializeTable(int noVars,int noTuples){
                         //if i have x [28,50] but i have a constraint x>30, i need to set the supports from 31 to 50
                         if(entryValue<0)
                             entryValue=-1;
-                        int offset=_supportOffsetJmp[v];
+                        int offset=_supportOffsetJmp[v]*currTableSize;
                         
                         for(int i=entryValue+1; i<_vars[v]->intialSize()-1; i++){
                             
-                            _supports[offset+i].addToMaskInt(t+1);
-                            //don't set anything for supportsShort
+                            addToMaskInt(&(_supports[offset+i]),t+1);
                         }
-                        
-                        //We need to set all the bits in supportsMax
-                        for(int i=0; i<_vars[v]->intialSize(); i++){
-                            _supportsMin[offset+i].addToMaskInt(t+1);
-                            //don't set anything for supportsShort
-                        }
-                        //if the value is not the minimum we need to set the bits in supportsMin
-                        for(int i=_vars[v]->intialSize()-1; i>entryValue; i--){
-                            _supportsMax[_supportOffsetJmp[v]+i].addToMaskInt(t+1);
-                            //don't set anything for supportsShort
-                        }
-                        
+                   
                         found=true;
                         tuplesOfSingletons[v]=t;
                         
@@ -208,38 +154,6 @@ void SmartTable::intializeTable(int noVars,int noTuples){
     _currTable.clearMask();
 
     
-    //printing the supports
-
-
-
-    int bitsPerWord=32;
-
-    for (int i = 0; i < _supportSize; ++i){  
-        _supports[i].intersectWithMask();
-        _supportsShort[i].intersectWithMask();
-        _supportsMin[i].intersectWithMask();
-        _supportsMax[i].intersectWithMask();
-
-        _supports[i].clearMask();
-        _supportsShort[i].clearMask();
-        _supportsMin[i].clearMask();
-        _supportsMax[i].clearMask();
-        
-        //we initialize residues
-        bool broken=false;
-        for(int j=0; j<noTuples; j++){
-            if(_supports[i]._words[j/bitsPerWord].value()!=0x00000000 && !broken){
-                _residues[i]=trail<int>(_vars[0]->getSolver()->getStateManager(), j); 
-                broken=true;
-            }else{
-                _residues[i]=trail<int>(_vars[0]->getSolver()->getStateManager(), 0); 
-            }
-        }
-    }
-   
-
-   
-   
     //forall vars
     for (int i = 0; i < noVars; i++){
         if(_vars[i]->size()==1){
@@ -273,50 +187,21 @@ void SmartTable::propagate(){
 void SmartTable::updateTable(){
     //forall var x in s_val
     int index=0;
-    
-    for(int i=0; i < _s_val.size(); ++i){ 
+
+    for(int i=0; i < _s_val.size(); ++i){
         _currTable.clearMask();
         index=_s_val[i];
-        /*
-        if(_deltaXs[index].countOnes()+2 < _vars[index]->size()){//_deltaXs[index].countOnes() < _vars[index]->size()
-            //incremental update
-          
-            for (int j = 0; j < _vars[index]->intialSize(); j++){
-                //printf("%%%%%% deltaXs[%d] contains 1 at pos %d? ",index,_vars[index]->initialMin()+j);
-                //now, the value must be  dom(index).min < < dom(index).max   
-                if(_deltaXs[index].getIthBit(j+_vars[index]->initialMin())==1 && _vars[index]->min()<j+_vars[index]->initialMin() && j+_vars[index]->initialMin()<_vars[index]->max()){     
-                    int index_x_a=_supportOffsetJmp[index]+j;
-                    _currTable.addToMaskVector(_supportsShort[index_x_a]._words);
-                }
-            }    
+        //reset based update
 
-            _currTable.reverseMask();
+        for (int j = _vars[index]->min(); j <= _vars[index]->max();  j++){ 
 
-            if(_vars[index]->changedMin()){
-                int offset=0;
-                if(index>0)
-                    offset=_supportOffsetJmp[index-1];
-                int minIndex=(_vars[index]->min()-_vars[index]->initialMin()+offset)/32;
-                _currTable.addToMaskVector(_supportsMax[minIndex]._words);
+            if(_vars[index]->contains(j)){
+                int index_x_a=(_supportOffsetJmp[index]+j-_variablesOffsets[index])*currTableSize;
+                _currTable.addToMaskArray(&(_supports[index_x_a]));
             }
-            if(_vars[index]->changedMax()){
-                int offset=0;
-                if(index>0)
-                    offset=_supportOffsetJmp[index-1];
-                int maxIndex=(_vars[index]->max()-_vars[index]->initialMin()+offset)/32;
-                _currTable.addToMaskVector(_supportsMax[maxIndex]._words);
-            }
-
-        }else{*/
-            //reset based update
-            //printf("%%%%%% reset based update \n");
-            vector<int> dom=_vars[index]->dumpDomainToVec();
-            
-            for (int j = 0; j < dom.size(); j++){ 
-                int index_x_a=_supportOffsetJmp[index]+dom[j]-_variablesOffsets[index];
-                _currTable.addToMaskVector(_supports[index_x_a]._words);
-            } 
-        //}
+           
+        } 
+    
 
         _currTable.intersectWithMask();
 
@@ -329,63 +214,66 @@ void SmartTable::updateTable(){
 }
 
 void SmartTable::filterDomains(){
-    for(int i=0; i < _s_sup.size(); ++i){
+
+
+    for(int i=0; i < _s_sup.size(); i++){
         int index=_s_sup[i];
-        
-        for (int j = 0; j < _vars[index]->size(); j++){
-            if(_vars[index]->contains(j+_vars[index]->initialMin())){ //i.e. a \in dom(x)
+        for (int j = _vars[index]->min(); j <= _vars[index]->max(); j++){
+            if(_vars[index]->contains(j)){ //i.e. a \in dom(x)
 
-                int index_x_a=_supportOffsetJmp[index]+j;
-                int indexResidue=_residues[index_x_a].value();
+                int index_x_a=_supportOffsetJmp[index]+j-_vars[index]->initialMin();
 
-                if((_currTable._words[indexResidue] & _supports[index_x_a]._words[indexResidue] ) == 0x00000000){
+                int indexResidue=intersectIndexSparse(&_supports[index_x_a*currTableSize],_currTable);
                 
-                    indexResidue=_supports[index_x_a].intersectIndexSparse(_currTable);
-                    
-                    if(indexResidue!=-1){
-                        _residues[index_x_a].setValue(indexResidue); //ok setVal
-                    }else{
-                        _vars[index]->remove(j+_vars[index]->initialMin());                   
-                    }
-                  
-                }
+                if(indexResidue==-1){
+                    _vars[index]->remove(j);        
+                }               
                 
             }
         }
-    }    
+    }
 }
-
 void SmartTable::enfoceGAC(){
     //update the table
-    
     _s_val.clear();
     _s_sup.clear();
+    _s_val.shrink_to_fit();
+    _s_sup.shrink_to_fit();
 	for (int i = 0; i < _vars.size(); i++){
-		//update s_val and the deltas
+		
         if(_vars[i]->changed()){
             _s_val.push_back(i);
-            //updateDelta(i);
         }
-		//update s_sup
+        
         if(_vars[i]->size()>1){
             _s_sup.push_back(i);
         }
 	}
+    
 	updateTable();
-	
+    //safe
 	filterDomains();
     
 }
 
+void SmartTable::addToMaskInt(unsigned int* mask,int value){  
+	int offset;
+    int bitsPerWord=32;
+	unsigned int wordToOr=(unsigned int) 1<<(bitsPerWord-(value%bitsPerWord));
+   
+	int wordIndex=floor(value/bitsPerWord);
+	if(value%bitsPerWord==0){
+		wordIndex--;
+	}
+	mask[wordIndex]=mask[wordIndex] | wordToOr;
+}
+int SmartTable::intersectIndexSparse(unsigned int* words,SparseBitSet& m) {
 
-/*void SmartTable::updateDelta(int i){
-
-    _vars[i]->dumpInSparseBitSet(i,_variablesOffsets[i],_vars[i]->min(),_vars[i]->initialMin(),_vars[i]->max(),_deltaXs[i]);
-
-    //we calculate the delta by xoring the words
-    for (int j = 0; j < _vars[i]->getSizeOfBitSet(); j++){
-        _deltaXs[i]._words[j].setValue(_deltaXs[i]._words[j].value()^_lastVarsValues[i]._words[j].value()); //BEWARE, BROKEN THE DATA STRUCTURE can be replaced with x XOR y = (x AND (NOT y)) OR ((NOT x) AND y)
-    }
-    //printf("%%%%%% this DELTA contain the changes %d \n",i);
-    //_deltaXs[i].printNoMask(0);
-}*/
+   int offset;
+   for (int i = 0; i < currTableSize; i++) {
+   
+      if ((words[i] & m[i]) != 0)
+         return i;
+   }
+   return -1;
+}
