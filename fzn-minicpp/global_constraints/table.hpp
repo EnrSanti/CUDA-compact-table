@@ -56,9 +56,7 @@ class Table : public Constraint{
 
         vector<int> _s_val; //indexes of the vars not yet instanciated whose domain changed from last iteration (could be replaced by a bitset)
         vector<int> _s_sup; //indexes of the vars not yet inst. with at least one value in their domain for which no support has yet been found (could be replaced by a bitset)
-        vector<trail<int>> _residues; 
-
-       
+   
         vector<int> _supportOffsetJmp; //for each var the index of the row in "supports" in which such variable starts (CONSTANT)
        
         vector<int> _variablesOffsets; //offset of the variables, used in accessing the support rows (not all variables start from 0, eg  90..120, variablesOffsets[i]=90) 
@@ -73,7 +71,7 @@ class Table : public Constraint{
         void filterDomains();
         void addToMaskInt(unsigned int* mask,int value);
         int intersectIndexSparse(unsigned int* words,SparseBitSet& m);
-        void printBits(unsigned int value);
+
 };
 
 

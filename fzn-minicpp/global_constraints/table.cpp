@@ -41,9 +41,6 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     _supports=(unsigned int*) malloc(sizeof(unsigned int)*_supportSize*currTableSize);
     //check allocation
     
-    _residues= vector<trail<int>>(_supportSize);
-
-
     //we allocate and initialize the support bitsets
     for (int i = 0; i < _supportSize*currTableSize; i++){
         _supports[i]=0x00000000;
@@ -83,23 +80,7 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     _currTable.clearMask();
 
     
-    
-    int bitsPerWord=32;
-
-    for (int i = 0; i < _supportSize; ++i){  
-        
-        //we initialize residues
-        bool broken=false;
-        for(int j=0; j<noTuples; j++){
-            if(_supports[i*currTableSize+(j/bitsPerWord)]!=0x00000000 && !broken){
-                _residues[i]=trail<int>(vars[0]->getSolver()->getStateManager(), j); 
-                broken=true;
-            }else{
-                _residues[i]=trail<int>(vars[0]->getSolver()->getStateManager(), 0); 
-            }
-        }
-    }
-    
+   
     //forall vars
     for (int i = 0; i < noVars; i++){
         if(_vars[i]->size()==1){
@@ -178,19 +159,14 @@ void Table::filterDomains(){
             if(_vars[index]->contains(j)){ //i.e. a \in dom(x)
 
                 int index_x_a=_supportOffsetJmp[index]+j-_vars[index]->initialMin();
-                int indexResidue=_residues[index_x_a].value();
-
-                if((_currTable._words[indexResidue] & _supports[(index_x_a)*currTableSize+indexResidue] ) == 0x00000000){
-                    indexResidue=intersectIndexSparse(&_supports[index_x_a*currTableSize],_currTable);
+                int indexResidue=intersectIndexSparse(&_supports[index_x_a*currTableSize],_currTable);
                     
-                    if(indexResidue!=-1){
-                        _residues[index_x_a]=indexResidue; 
-                    }else{
-                        //printf("%%%%%% REMOVING %d from %d\n",j,index);
-                        _vars[index]->remove(j);        
-                    }
-                  
+                if(indexResidue==-1){
+                    //printf("%%%%%% REMOVING %d from %d\n",j,index);
+                    _vars[index]->remove(j);        
                 }
+                  
+                
                 
             }
         }
@@ -240,15 +216,4 @@ int Table::intersectIndexSparse(unsigned int* words,SparseBitSet& m) {
          return i;
    }
    return -1;
-}
-void Table::printBits(unsigned int num) {
-    // Extracting each bit of the int and printing it
-    //yes rather weird function, but since we need to print %%%%%
-    char str[32] = {'0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0'};
-    for (int i = 31; i >= 0; i--) {
-        str[i] = (num >> i) & 1; 
-        printf("%d",str[i]);
-    }
-
-    printf(" \n");
 }
