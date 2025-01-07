@@ -144,7 +144,7 @@ void TableGPU::enfGACDev(){
     //si copio mask in ct per semplcità
     cudaMemcpyAsync(_CT_MASKCT_svSize_sval_sSize_sSup_host, _CT_MASKCT_svSize_sval_sSize_sSup_dev, currTableSize*sizeof(unsigned int), cudaMemcpyDeviceToHost,streams[0]);
 
-    filterDomainsGPU<<<noBlocksFilter,32,32*sizeof(unsigned int),streams[0]>>>(_CT_MASKCT_svSize_sval_sSize_sSup_dev,_currTable_size_dev,_vars_dev,_supportOffsetJmp_dev,_supports_dev, _supportSize_dev,workerOffestAndLimit_dev);
+    filterDomainsGPU<<<noBlocksFilter,32,32*sizeof(unsigned int),streams[0]>>>(_CT_MASKCT_svSize_sval_sSize_sSup_dev,_currTable_size_dev,_vars_dev,_supportOffsetJmp_dev,_supports_dev, _supportSize_dev);
     //launch filtering 
 
     //each block does 2 words of the domains
@@ -283,14 +283,12 @@ void TableGPU::dumpDomainsGPU(){
             }
         }else{
             //both masks on one word
-            
             if(index<noVars-1){
                 _vars_host[starting_word]=_vars_host[starting_word] & ( bitsFromLeft(_supportOffsetJmp[index]%32) | bitsFromRight((32-_supportOffsetJmp[index+1] % 32 + 32)%32));
 
             }else{
                 _vars_host[starting_word]=_vars_host[starting_word] & bitsFromLeft((_supportOffsetJmp[index]%32));
             }
-
         }
         
         for (int j = _vars[index]->min(); j <= _vars[index]->max();  j++){ 
@@ -306,6 +304,32 @@ void TableGPU::dumpDomainsGPU(){
 
     }
 
+
+    for(int j=0; j<noVars; j++){
+        printf("%%%%%%  var %d\n",j);
+        for (int k = _vars[j]->initialMin(); k <= _vars[j]->initialMax();  k++){ 
+
+            if(_vars[j]->contains(k)){
+                printf("%%%%%%  var %d contains %d\n",j,k);
+            }else{
+                printf("%%%%%%  var %d NOT %d \n",j,k);
+            }
+
+        }
+         
+        unsigned int* dom=mallocHost<unsigned int>(sizeof(unsigned int)*(_supportSize/32)+1);
+        _vars[j]->dump(_vars[j]->initialMin(),_vars[j]->initialMax(),dom);
+        for(int i=0; i<(_supportSize/32)+1; i++){
+            printf("%%%%%%  dom[%d]: %d\n",i,dom[i]);
+        }   
+        dom=mallocHost<unsigned int>(sizeof(unsigned int)*(_supportSize/32)+1);
+        _vars[j]->dumpWithOffset(_vars[j]->initialMin(),_vars[j]->initialMax(),dom,_supportOffsetJmp[j]%32);
+        for(int i=0; i<(_supportSize/32)+1; i++){
+            printf("%%%%%%  withOffset dom[%d]: %d\n",i,dom[i]);
+        }   
+
+    }
+    printf("%%%%%% ------------------------------------------------------------------ \n");
 }
 
 
@@ -409,7 +433,7 @@ __global__ void updateTableGPU(unsigned int* _supports_dev,unsigned int * _svSiz
 }
 
 
-__global__ void  filterDomainsGPU(unsigned int * _CT_MASKCT_svSize_sval_sSize_sSup_dev, int* _currTable_dev_size, int* _vars_dev, int *_supportOffsetJmp_dev, unsigned int* _supports_dev , int* supportSize_dev, int* offsetsAndLimits){
+__global__ void  filterDomainsGPU(unsigned int * _CT_MASKCT_svSize_sval_sSize_sSup_dev, int* _currTable_dev_size, int* _vars_dev, int *_supportOffsetJmp_dev, unsigned int* _supports_dev , int* supportSize_dev){
     
 
     extern __shared__ unsigned int partialRes[]; //mask (32 ints)

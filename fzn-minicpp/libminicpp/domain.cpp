@@ -336,59 +336,90 @@ void BitDomain::dump(int min, int max, unsigned int * dump) const
         }
     }
 }
-void BitDomain::dumpInSparseBitSet(int varNo,int offset, int min, int initialMin, int max, SparseBitSet & dump) const {
 
-
-    int min_dom_offset = initialMin-_imin;
-    int min_dom_word_idx = min_dom_offset / 32;
-    int min_dom_bit_idx = min_dom_offset % 32;
-    unsigned int min_word_mask = getRightFilledMask32(min_dom_bit_idx);
+void BitDomain::dumpWithOffset(int min, int max, unsigned int * dump,int offset) const
+{
+    assert(min <= _min);
+    assert(_max <= max);
     
+    if(offset > initialMin()%32){
+        offset -= initialMin()%32;
+        int min_dom_offset = _min - _imin;
+        int min_dom_word_idx = min_dom_offset / 32;
+        int min_dom_bit_idx = min_dom_offset % 32;
+        unsigned int min_word_mask = getRightFilledMask32(min_dom_bit_idx);
+        int max_dom_offset = _max - _imin;
+        int max_dom_word_idx = max_dom_offset / 32;
+        int max_dom_bit_idx = max_dom_offset % 32;
+        unsigned int max_word_mask = getLeftFilledMask32(max_dom_bit_idx);
 
-    int max_dom_offset = max-_imin; //cambia con initialMax
-    int max_dom_word_idx = max_dom_offset / 32;
-    int max_dom_bit_idx = max_dom_offset % 32;
-    unsigned int max_word_mask = getLeftFilledMask32(max_dom_bit_idx);
+        printf("%%%%%% check correttezza offset %d, min index %d, max index %d\n",offset,min_dom_word_idx, max_dom_word_idx);
+        int dom_dump_offset = _imin - min;
+        int dom_dump_offset_words = dom_dump_offset / 32;
 
-    int dom_dump_offset = initialMin;
-    int dom_dump_offset_words = dom_dump_offset / 32;
-
-    printf("%%%%%% initialMin: %d, min: %d,min_dom_word_idx: %d,min_dom_bit_idx: %d,mask: %d, dom_dump_offset_words: %d\n",initialMin,min,min_dom_word_idx,min_dom_bit_idx,min_word_mask,dom_dump_offset_words);
-    if(min_dom_word_idx == max_dom_word_idx)
-    {
-        for (int i = 0; i < min_dom_word_idx; i++)
+        if(min_dom_word_idx == max_dom_word_idx)
         {
-            dump._words[i].setValue(0);
+            dump[dom_dump_offset_words + min_dom_word_idx] = (_dom[min_dom_word_idx] & min_word_mask & max_word_mask) >> offset;
         }
-        dump._words[dom_dump_offset_words + min_dom_word_idx].setValue(_dom[min_dom_word_idx].value() & min_word_mask & max_word_mask);
-        //dump[dom_dump_offset_words + min_dom_word_idx] = _dom[min_dom_word_idx] & min_word_mask & max_word_mask;
-    } else {
-        printf("%%%%%% more words\n");
+        else
+        {
+            dump[dom_dump_offset_words + min_dom_word_idx] = (_dom[min_dom_word_idx] & min_word_mask) >> offset;
+
+
+            unsigned int mask = getRightFilledMask32(32-offset);    
+            unsigned int mask2 = getLeftFilledMask32(31-offset);    
+            
+            unsigned int prevWord = (_dom[min_dom_word_idx] & mask) << (32-offset);
+            printf("%%%%%% check correttezza prevWord %d, mask %d, mask 2:  %d\n",prevWord, mask,mask2);
+            for(int dom_word_idx = min_dom_word_idx; dom_word_idx < max_dom_word_idx; dom_word_idx += 1)
+            {
+                printf("%%%%%% check correttezza INSIDE LOOP %d, dom[]: %d mask%d\n",dom_word_idx,_dom[dom_word_idx],mask);
+                dump[dom_dump_offset_words + dom_word_idx+1]= prevWord | ((_dom[dom_word_idx+1] &  mask2) >> offset);
+                prevWord = (_dom[min_dom_word_idx+1] & mask) << (32-offset);
+            }
+            if(prevWord != 0){
+                dump[dom_dump_offset_words + max_dom_word_idx +1] = prevWord;
+            }
+        }
+
+    }else{
         
-        for (int i = 0; i < min_dom_word_idx; i++)
-        {
-            dump._words[i].setValue(0);
-        }
+        offset = (initialMin()%32 - offset);
+        int min_dom_offset = _min - _imin;
+        int min_dom_word_idx = min_dom_offset / 32;
+        int min_dom_bit_idx = min_dom_offset % 32;
+        unsigned int min_word_mask = getRightFilledMask32(min_dom_bit_idx);
+        int max_dom_offset = _max - _imin;
+        int max_dom_word_idx = max_dom_offset / 32;
+        int max_dom_bit_idx = max_dom_offset % 32;
+        unsigned int max_word_mask = getLeftFilledMask32(max_dom_bit_idx);
 
-        dump._words[dom_dump_offset_words + min_dom_word_idx].setValue(_dom[min_dom_word_idx].value() & min_word_mask);
-        dump._words[dom_dump_offset_words + max_dom_word_idx].setValue(_dom[max_dom_word_idx].value() & max_word_mask);
-       
-        for(int dom_word_idx = min_dom_word_idx + 1; dom_word_idx <  max_dom_word_idx; dom_word_idx += 1)
-        {
-            dump._words[dom_dump_offset_words+dom_word_idx].setValue(_dom[dom_word_idx].value());
-        }
 
-      
+        int dom_dump_offset = _imin - min;
+        int dom_dump_offset_words = dom_dump_offset / 32;
+
+        if(min_dom_word_idx == max_dom_word_idx)
+        {
+            dump[dom_dump_offset_words + min_dom_word_idx] = (_dom[min_dom_word_idx] & min_word_mask & max_word_mask)<<offset;
+        }
+        else
+        {
+            dump[dom_dump_offset_words + min_dom_word_idx] = (_dom[min_dom_word_idx] & min_word_mask)<< offset;
+            dump[dom_dump_offset_words + max_dom_word_idx] = (_dom[max_dom_word_idx] & max_word_mask)<< offset;
+            unsigned prevWord = _dom[min_dom_word_idx] << (31-offset);
+            unsigned int mask = getRightFilledMask32(32-offset);    
+            for(int dom_word_idx = min_dom_word_idx + 1; dom_word_idx < max_dom_word_idx; dom_word_idx += 1)
+            {
+                dump[dom_dump_offset_words + dom_word_idx]= prevWord | ((_dom[dom_word_idx] &  mask) << offset);
+                prevWord = _dom[dom_word_idx] << (31-offset);
+            }
+        }   
+        printf("%%%%%% check correttezza \n");
     }
 
-
-
-    for (int i = 0; i <= max_dom_word_idx+dom_dump_offset_words; i++)
-    {
-        printf("%%%%%% varno: %d, word %d, value %d \n",varNo,i,dump._words[i].value());
-    }
-    
+   
 }
+
 int BitDomain::getIthVal(int index) const
 {
     int min_offset = _min - _imin;

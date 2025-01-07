@@ -58,7 +58,7 @@ public:
     bool memberBase(int v) const noexcept { return GETBIT(v);}
     int getIthVal(int index) const;
     void dump(int min, int max, unsigned int * dump) const;
-    void dumpInSparseBitSet(int index,int offset,int min, int intialMin,int max, SparseBitSet & dump) const;
+    void dumpWithOffset(int min, int max, unsigned int * dump,int offset) const;
     std::vector<int> dumpToVecOfInts();
     const int getNoWords() {return _words_count;}
     void assign(int v,IntNotifier& x);
