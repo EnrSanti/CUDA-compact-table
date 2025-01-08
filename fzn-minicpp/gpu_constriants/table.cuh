@@ -28,6 +28,7 @@ class TableGPU : public Table{
 
         unsigned int* _CT_MASKCT_svSize_sval_sSize_sSup_host;
         unsigned int* _CT_MASKCT_svSize_sval_sSize_sSup_dev;
+        
 
         int noBlocks;
         int noBlocksFilter;
@@ -40,6 +41,8 @@ class TableGPU : public Table{
         int *workerOffestAndLimit_host;
 
         bool *dumped;
+
+        unsigned int* buffer;
 
     public:
         TableGPU(vector<var<int>::Ptr> & vars,  vector<vector<int>> & tuples);

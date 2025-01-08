@@ -34,6 +34,9 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     cudaMallocHost((void**)&_vars_to_remove_host, sizeof(unsigned int)*((_supportSize/32)+1)); //matrix
 
     cudaMallocHost((void**)&dumped, sizeof(bool)*noVars); 
+    
+    //calloc of buffer
+    buffer=(unsigned int*)calloc(_supportSize/32+1,sizeof(unsigned int));
     //initialize it to false
     for(int i=0;i<noVars;i++){
         dumped[i]=false;
@@ -258,76 +261,54 @@ void TableGPU::dumpDomainsGPU(){
         
 
         int starting_word=(_supportOffsetJmp[index])/32;
-        int words_to_reset=-1;
         int to=-1;
         if(index<noVars-1){
             to=_supportOffsetJmp[index+1]/32;
-            words_to_reset=to-starting_word;
         }else{
             to=(_supportSize/32)+1;
-            words_to_reset=to-starting_word;
-            
-        }
-
-        for(int j=1;j<words_to_reset;j++){
-            _vars_host[starting_word+j]=0;
         }
         
-        if(words_to_reset>=1){
-            _vars_host[starting_word]=_vars_host[starting_word] & bitsFromLeft((_supportOffsetJmp[index])%32);
-            
-            if(index<noVars-1){
-                _vars_host[starting_word+words_to_reset]=_vars_host[starting_word+words_to_reset] & bitsFromRight((32-_supportOffsetJmp[index+1] % 32 + 32)%32);
-            }else{
-                _vars_host[starting_word+words_to_reset]=0;
-            }
-        }else{
-            //both masks on one word
-            if(index<noVars-1){
-                _vars_host[starting_word]=_vars_host[starting_word] & ( bitsFromLeft(_supportOffsetJmp[index]%32) | bitsFromRight((32-_supportOffsetJmp[index+1] % 32 + 32)%32));
+        
+        
+        free(buffer);
+        buffer=(unsigned int*)calloc(_supportSize/32+1,sizeof(unsigned int));
 
-            }else{
-                _vars_host[starting_word]=_vars_host[starting_word] & bitsFromLeft((_supportOffsetJmp[index]%32));
-            }
+        _vars[index]->dumpWithOffset(_vars[index]->initialMin(),_vars[index]->initialMax(),buffer,_supportOffsetJmp[index]%32);
+
+        printf("%%%%%%  starting with var %d from word %d\n",index,_supportOffsetJmp[index]/32);
+        for(int j=0; j<(_supportSize/32)+1; j++){
+            printf("%%%%%%  dump[%d]: %d\n",j,buffer[j]);
         }
-        
-        for (int j = _vars[index]->min(); j <= _vars[index]->max();  j++){ 
-
-            if(_vars[index]->contains(j)){
-                int wordIndex=(j-_variablesOffsets[index]+_supportOffsetJmp[index])/32;
-                _vars_host[wordIndex]=_vars_host[wordIndex]|(0x80000000>>(((_supportOffsetJmp[index]+j-_variablesOffsets[index])% 32 + 32)%32));
-            }
-
-        }   
-        
+        for(int j=0; j<(_supportSize/32)+1; j++){
+            printf("%%%%%%  domBefore[%d]: %d\n",j,_vars_host[j]);
+        }
+        _vars_host[starting_word]=buffer[0] | _vars_host[starting_word] & bitsFromLeft(_supportOffsetJmp[index]%32);
+        int index2=1;
+        for(int j=starting_word+1; j<to-1; j++){
+            _vars_host[j]=buffer[index2];
+            index2++;
+        }
+        _vars_host[to-1]=buffer[index2] | _vars_host[to-1] & bitsFromRight((_supportOffsetJmp[index+1])%32);
+        for(int j=0; j<(_supportSize/32)+1; j++){
+            printf("%%%%%%  domAfter[%d]: %d\n",j,_vars_host[j]);
+        }
         dumped[index]=true;
+
+        printf("%%%%%%  var %d\n",index);
+        for (int k = _vars[index]->initialMin(); k <= _vars[index]->initialMax();  k++){ 
+
+            if(_vars[index]->contains(k)){
+                printf("%%%%%%  var %d contains %d\n",index,k);
+            }else{
+                printf("%%%%%%  var %d NOT %d \n",index,k);
+            }
+
+        }
 
     }
 
-
-    for(int j=0; j<noVars; j++){
-        printf("%%%%%%  var %d\n",j);
-        for (int k = _vars[j]->initialMin(); k <= _vars[j]->initialMax();  k++){ 
-
-            if(_vars[j]->contains(k)){
-                printf("%%%%%%  var %d contains %d\n",j,k);
-            }else{
-                printf("%%%%%%  var %d NOT %d \n",j,k);
-            }
-
-        }
-         
-        unsigned int* dom=mallocHost<unsigned int>(sizeof(unsigned int)*(_supportSize/32)+1);
-        _vars[j]->dump(_vars[j]->initialMin(),_vars[j]->initialMax(),dom);
-        for(int i=0; i<(_supportSize/32)+1; i++){
-            printf("%%%%%%  dom[%d]: %d\n",i,dom[i]);
-        }   
-        dom=mallocHost<unsigned int>(sizeof(unsigned int)*(_supportSize/32)+1);
-        _vars[j]->dumpWithOffset(_vars[j]->initialMin(),_vars[j]->initialMax(),dom,_supportOffsetJmp[j]%32);
-        for(int i=0; i<(_supportSize/32)+1; i++){
-            printf("%%%%%%  withOffset dom[%d]: %d\n",i,dom[i]);
-        }   
-
+    for(int j=0; j<(_supportSize/32)+1; j++){
+        printf("%%%%%%  dom[%d]: %d\n",j,_vars_host[j]);
     }
     printf("%%%%%% ------------------------------------------------------------------ \n");
 }
