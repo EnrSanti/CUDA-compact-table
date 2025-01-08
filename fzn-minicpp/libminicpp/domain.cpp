@@ -343,6 +343,7 @@ void BitDomain::dumpWithOffset(int min, int max, unsigned int * dump,int offset)
     assert(_max <= max);
     
     if(offset > initialMin()%32){
+        printf("%%%%%% then offset %d \n",offset);
         offset -= initialMin()%32;
         int min_dom_offset = _min - _imin;
         int min_dom_word_idx = min_dom_offset / 32;
@@ -357,13 +358,24 @@ void BitDomain::dumpWithOffset(int min, int max, unsigned int * dump,int offset)
         int dom_dump_offset = _imin - min;
         int dom_dump_offset_words = dom_dump_offset / 32;
 
+
+        if(offset >= 32 || offset <= 0){
+            printf("%%%%%% ERROR offset then %d \n", offset);
+        }
+
         if(min_dom_word_idx == max_dom_word_idx)
         {
+            printf("%%%%%% then same word \n ");
             dump[dom_dump_offset_words + min_dom_word_idx] = (_dom[min_dom_word_idx] & min_word_mask & max_word_mask) >> offset;
         }
         else
         {
+
+            printf("%%%%%% then more words \n ");
             dump[dom_dump_offset_words + min_dom_word_idx] = (_dom[min_dom_word_idx] & min_word_mask) >> offset;
+            if(offset == 0 || offset > 31){
+                printf("%%%%%% ERROR offset INSIDE then %d \n", offset);
+            }
             unsigned int mask = getRightFilledMask32(32-offset);    
             unsigned int mask2 = getLeftFilledMask32(31-offset);    
             
@@ -381,8 +393,14 @@ void BitDomain::dumpWithOffset(int min, int max, unsigned int * dump,int offset)
         }
 
     }else{
+
+        printf("%%%%%% else offset %d \n ",offset);
         //printf("%%%%%% check correttezza ELSE intialMin %d, offset %d \n",initialMin(), offset);
         offset = (initialMin()%32 - offset);
+
+        if(offset >= 32 || offset <= 0){
+            printf("%%%%%% ERROR offset else %d \n", offset);
+        }
         int min_dom_offset = _min - _imin;
         int min_dom_word_idx = min_dom_offset / 32;
         int min_dom_bit_idx = min_dom_offset % 32;
@@ -399,10 +417,17 @@ void BitDomain::dumpWithOffset(int min, int max, unsigned int * dump,int offset)
         if(min_dom_word_idx == max_dom_word_idx)
         {
             //printf("%%%%%% same word \n ");
+            printf("%%%%%% else same word \n ");
             dump[dom_dump_offset_words + min_dom_word_idx] = (_dom[min_dom_word_idx] & min_word_mask & max_word_mask) << offset;
         }
         else
         {
+
+
+            printf("%%%%%% else more words \n ");
+            if(offset < 0){
+                printf("%%%%%% ERROR offset INSIDE else %d \n", offset);
+            }
             unsigned int mask= getLeftFilledMask32(offset-1);
 
             unsigned int succW=(_dom[ min_dom_word_idx + 1] & mask) >> (32-offset);

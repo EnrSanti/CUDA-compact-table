@@ -261,34 +261,57 @@ void TableGPU::dumpDomainsGPU(){
         
 
         int starting_word=(_supportOffsetJmp[index])/32;
+        int words_to_reset=-1;
         int to=-1;
+        int maskRight=0;
         if(index<noVars-1){
             to=_supportOffsetJmp[index+1]/32;
+            words_to_reset=to-starting_word;
+            maskRight=(_supportOffsetJmp[index+1])%32;
+
+            printf("%%%%%%  var %d more word to reset %d \n",index,buffer[0]);
         }else{
+            maskRight=-1;
             to=(_supportSize/32)+1;
+            words_to_reset=to-starting_word;
+            printf("%%%%%%  var %d 1 word to reset %d \n",index,buffer[0]);
         }
-        
-        
-        
+
+
+
         free(buffer);
         buffer=(unsigned int*)calloc(_supportSize/32+1,sizeof(unsigned int));
 
         _vars[index]->dumpWithOffset(_vars[index]->initialMin(),_vars[index]->initialMax(),buffer,_supportOffsetJmp[index]%32);
-
+        
         printf("%%%%%%  starting with var %d from word %d\n",index,_supportOffsetJmp[index]/32);
+        
         for(int j=0; j<(_supportSize/32)+1; j++){
             printf("%%%%%%  dump[%d]: %d\n",j,buffer[j]);
         }
         for(int j=0; j<(_supportSize/32)+1; j++){
             printf("%%%%%%  domBefore[%d]: %d\n",j,_vars_host[j]);
         }
-        _vars_host[starting_word]=buffer[0] | _vars_host[starting_word] & bitsFromLeft(_supportOffsetJmp[index]%32);
-        int index2=1;
-        for(int j=starting_word+1; j<to-1; j++){
-            _vars_host[j]=buffer[index2];
-            index2++;
+
+        if(words_to_reset>=1){
+            
+            _vars_host[starting_word]=buffer[0] | (_vars_host[starting_word] & bitsFromLeft(_supportOffsetJmp[index]%32));
+            int index2=1;
+            for(int j=starting_word+1; j<to-1; j++){
+                _vars_host[j]=buffer[index2];
+                index2++;
+            }
+            _vars_host[to-1]=buffer[index2] | (_vars_host[to-1] & maskRight);
+
+        }else{
+            printf("%%%%%%  var %d 1 word to reset %d, add it to %d , maskLeft %d, maskRight %d \n",index,buffer[0],_vars_host[starting_word],bitsFromLeft(_supportOffsetJmp[index]%32), maskRight);  
+            _vars_host[starting_word]=buffer[0] | (_vars_host[starting_word] & (bitsFromLeft(_supportOffsetJmp[index]%32) | maskRight));
         }
-        _vars_host[to-1]=buffer[index2] | _vars_host[to-1] & bitsFromRight((_supportOffsetJmp[index+1])%32);
+        
+        
+        
+        
+        
         for(int j=0; j<(_supportSize/32)+1; j++){
             printf("%%%%%%  domAfter[%d]: %d\n",j,_vars_host[j]);
         }
@@ -500,11 +523,20 @@ __global__ void  filterDomainsGPU(unsigned int * _CT_MASKCT_svSize_sval_sSize_sS
 }
 
 int bitsFromRight(int n) {
+    //assert 
+    if(!(n >= 0 && n < 32)){
+        printf("%%%%%% Error: bitsFromRight: n must be between 0 and 31 %d \n",n);
+    }
     return (1 << (n)) - 1;
    
 }
 int bitsFromLeft(int n) {
-    if (n == 0) return 0;       
+
+    
+    if (n == 0) return 0;    
+    if((n <= 0 || n > 32)){
+        printf("%%%%%% Error: bitsFromLeft: n must be between 0 and 31, %d\n",n);
+    }   
     return ~0 << (32 - n);
 }
 
