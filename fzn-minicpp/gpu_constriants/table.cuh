@@ -42,7 +42,7 @@ class TableGPU : public Table{
 
         bool *dumped;
 
-        unsigned int* buffer;
+        unsigned int* buffer; //just for playing with a new dump
 
     public:
         TableGPU(vector<var<int>::Ptr> & vars,  vector<vector<int>> & tuples);
@@ -53,6 +53,7 @@ class TableGPU : public Table{
     private:
         void dumpDomainsGPU();
         void enfGACDev();
+        void dumpDomainsGPU2();
 };
 
 __global__ void updateTableGPU(unsigned int* _supports_dev,unsigned int * _svSize_off_sval_dev, int *_supportOffsetJmp_dev, unsigned int * _currTable_dev,int* _currTable_dev_size, int* _vars_dev, int* offsetsAndLimits);

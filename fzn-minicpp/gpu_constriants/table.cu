@@ -1,11 +1,12 @@
 #include "gpu_constriants/table.cuh"
 
-#include <unordered_set>
+#include <chrono>
+
 
 TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) : Table(vars,tuples){
     setPriority(CLOW);
-    //printf("%%%%%% TableGPU constructor\n");
 
+    auto start = std::chrono::high_resolution_clock::now();
     int noTuples=tuples.size();
     noVars=vars.size();
     
@@ -14,19 +15,30 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     
 
     // Memory allocation
-    _noVars_dev=mallocDevice<int>(sizeof(int));
-    _CT_MASKCT_svSize_sval_sSize_sSup_dev = mallocDevice<unsigned int >(sizeof(unsigned int)*(2*currTableSize+2*noVars+2)); 
-    _supports_dev = mallocDevice<unsigned int>(sizeof(unsigned int)*_supportSize*currTableSize);
-    _supportSize_dev = mallocDevice<int>(sizeof(int));
-    _variablesOffsets_dev = mallocDevice<int>(sizeof(int)*noVars);
-    _supportOffsetJmp_dev = mallocDevice<int>(sizeof(int)*(noVars+1));
-    _currTable_size_dev=mallocDevice<int>(sizeof(int));
-    _vars_dev=mallocDevice<int>(sizeof(int)*((_supportSize/32)+1)); //matrix
+
+
+    auto start2 = std::chrono::high_resolution_clock::now();
     
-    workerOffestAndLimit_dev=mallocDevice<int>(sizeof(int)*64*noVars);
+    cudaMalloc((void**)&_noVars_dev, sizeof(int));
+    cudaMalloc((void**)&_CT_MASKCT_svSize_sval_sSize_sSup_dev, sizeof(unsigned int)*(2*currTableSize+2*noVars+2));
+    cudaMalloc((void**)&_supports_dev, sizeof(unsigned int)*_supportSize*currTableSize);
+    cudaMalloc((void**)&_supportSize_dev, sizeof(int));
+    cudaMalloc((void**)&_variablesOffsets_dev, sizeof(int)*noVars);
+    cudaMalloc((void**)&_supportOffsetJmp_dev, sizeof(int)*(noVars+1));
+    cudaMalloc((void**)&_currTable_size_dev, sizeof(int));
+    cudaMalloc((void**)&_vars_dev, sizeof(int)*((_supportSize/32)+1)); //matrix
+    
+    cudaMalloc((void**)&workerOffestAndLimit_dev, sizeof(int)*64*noVars);
+    
+    
+    auto end2 = std::chrono::high_resolution_clock::now();
+    auto duration2 = std::chrono::duration_cast<std::chrono::microseconds>(end2 - start2);
+    //printf("%%%%%% Time taken for CUDAMALLOC: %ld microseconds\n", duration2.count());
     
     
 
+    start2 = std::chrono::high_resolution_clock::now();
+    
     //on host side we create simpler structures to then copy the data
 
     cudaMallocHost((void**)&_CT_MASKCT_svSize_sval_sSize_sSup_host, sizeof(unsigned int)*2*(noVars+1+currTableSize));
@@ -38,36 +50,41 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     //calloc of buffer
     buffer=(unsigned int*)calloc(_supportSize/32+1,sizeof(unsigned int));
     //initialize it to false
-    for(int i=0;i<noVars;i++){
-        dumped[i]=false;
-    }
 
     cudaMallocHost((void**)&workerOffestAndLimit_host,sizeof(int)*64*noVars);
 
 
-    streams=(cudaStream_t*)malloc(sizeof(cudaStream_t)*noStreams);
 
-
+    end2 = std::chrono::high_resolution_clock::now();
+    duration2 = std::chrono::duration_cast<std::chrono::microseconds>(end2 - start2);
+    //printf("%%%%%% Time taken for CUDAMALLOC (HOST): %ld microseconds\n", duration2.count());
     
+
+    streams=(cudaStream_t*)malloc(sizeof(cudaStream_t)*noStreams);
 
     cudaError_t err = cudaStreamCreate(&streams[0]);
     
-    if (err != cudaSuccess) {
-        printf("%%%%%% Error creating stream: %s\n", cudaGetErrorString(err));
-    }
+    
 
     for(int i=0;i<noVars-1;i++){
         varOffsetLimit(_supportOffsetJmp[i+1]-_supportOffsetJmp[i],workerOffestAndLimit_host+(i*64));
+        dumped[i]=false;
     }
+    dumped[noVars-1]=false;
+
+    
+    
     varOffsetLimit(_supportSize-_supportOffsetJmp[noVars-1],workerOffestAndLimit_host+((noVars-1)*64));
+
 
     cudaMemcpyAsync(workerOffestAndLimit_dev, workerOffestAndLimit_host, sizeof(int)*64*noVars, cudaMemcpyHostToDevice,streams[0]);
 
-
+    start2 = std::chrono::high_resolution_clock::now();
 
     cudaMemcpyAsync(_noVars_dev, &noVars, sizeof(int), cudaMemcpyHostToDevice,streams[0]);
     
     //Memory copy
+    
 
     cudaMemcpyAsync(_supports_dev, _supports, sizeof(unsigned int)*_supportSize*currTableSize, cudaMemcpyHostToDevice,streams[0]);
     cudaMemcpyAsync(_supportSize_dev, &_supportSize, sizeof(int), cudaMemcpyHostToDevice,streams[0]);
@@ -78,11 +95,21 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     cudaMemcpyAsync(_currTable_size_dev, &currTableSize, sizeof(int), cudaMemcpyHostToDevice,streams[0]);
 
 
+    end2 = std::chrono::high_resolution_clock::now();
+    duration2 = std::chrono::duration_cast<std::chrono::microseconds>(end2 - start2);
+   // printf("%%%%%% Time taken for CUDA cpy: %ld microseconds\n", duration2.count());
+
     //compute once and transfer the offsets for the streams:
     noBlocks=(currTableSize/4)+1;
     noBlocksFilter=((_supportSize/32)+1);
 
     cudaStreamSynchronize(streams[0]);
+
+    
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    //printf("%%%%%% Time taken INIT CUDA: %ld microseconds\n", duration.count());
+    
 
 }
 void TableGPU::post(){
@@ -91,16 +118,22 @@ void TableGPU::post(){
     }
 }
 void TableGPU::propagate(){
+
+    auto start = std::chrono::high_resolution_clock::now();
     enfoceGAC();
+
+    auto end = std::chrono::high_resolution_clock::now();
+    
+    
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    //printf("%%%%%% Time taken enfGAC: %ld microseconds\n", duration.count());
+    //fflush(stdout);
+    
 }
 void TableGPU::enfGACDev(){
 
-
-
-
     int output=0;
     
-
     for(int i=0;i<currTableSize;i++){
         _CT_MASKCT_svSize_sval_sSize_sSup_host[i]=_currTable._words[i].value();
     }
@@ -109,7 +142,6 @@ void TableGPU::enfGACDev(){
     cudaMemcpyAsync(_CT_MASKCT_svSize_sval_sSize_sSup_dev, _CT_MASKCT_svSize_sval_sSize_sSup_host, sizeof(unsigned int)*(2*currTableSize+_s_val.size()+_s_sup.size()+2), cudaMemcpyHostToDevice,streams[0]);   
     
     //metti dump domini qui
-
     dumpDomainsGPU();
 
     cudaMemcpyAsync(_vars_dev, _vars_host, sizeof(int)*((_supportSize/32)+1), cudaMemcpyHostToDevice,streams[0]);
@@ -195,7 +227,7 @@ void TableGPU::enfGACDev(){
 
 }
 void TableGPU::enfoceGAC(){
-    cudaDeviceSynchronize();
+    
     _s_val.clear();
     _s_val.shrink_to_fit();
 
@@ -211,7 +243,6 @@ void TableGPU::enfoceGAC(){
             _s_val.push_back(i);
             _CT_MASKCT_svSize_sval_sSize_sSup_host[internalIndex]=i;
             internalIndex++;
-            //overallSize=overallSize+_vars[i]->intialSize();
         }
     }
 
@@ -230,25 +261,84 @@ void TableGPU::enfoceGAC(){
     _CT_MASKCT_svSize_sval_sSize_sSup_host[currTableSize*2+1]=_s_sup.size();
 
     
-
-    //if(overallSize>300){ //to better see advantages when testing remove and do only enfGACDev();
-    
     enfGACDev();
 
   
     
-    //}else{
-    //    updateTable();
-    //}
-
-    //filterDomains();
-
     
-    //printf("%%%%%% ------------------------------------------------------------------ \n");
-        
 }
 
 void TableGPU::dumpDomainsGPU(){
+
+    //start a timer here, get t0
+    //auto start = std::chrono::high_resolution_clock::now();
+
+
+    for(int index=0; index < noVars; index++){
+        //quali variaibli skippo
+
+        if(!(_vars[index]->changed()) && _vars[index]->size()==1)
+            continue;
+
+        if(dumped[index] && !(_vars[index]->changed()))
+            continue;
+        
+
+        int starting_word=(_supportOffsetJmp[index])/32;
+        int words_to_reset=-1;
+        int to=-1;
+        if(index<noVars-1){
+            to=_supportOffsetJmp[index+1]/32;
+            words_to_reset=to-starting_word;
+        }else{
+            to=(_supportSize/32)+1;
+            words_to_reset=to-starting_word;
+            
+        }
+
+        for(int j=1;j<words_to_reset;j++){
+            _vars_host[starting_word+j]=0;
+        }
+        
+        if(words_to_reset>=1){
+            _vars_host[starting_word]=_vars_host[starting_word] & bitsFromLeft((_supportOffsetJmp[index])%32);
+            
+            if(index<noVars-1){
+                _vars_host[starting_word+words_to_reset]=_vars_host[starting_word+words_to_reset] & bitsFromRight((32-_supportOffsetJmp[index+1] % 32 + 32)%32);
+            }else{
+                _vars_host[starting_word+words_to_reset]=0;
+            }
+        }else{
+            //both masks on one word
+            
+            if(index<noVars-1){
+                _vars_host[starting_word]=_vars_host[starting_word] & ( bitsFromLeft(_supportOffsetJmp[index]%32) | bitsFromRight((32-_supportOffsetJmp[index+1] % 32 + 32)%32));
+
+            }else{
+                _vars_host[starting_word]=_vars_host[starting_word] & bitsFromLeft((_supportOffsetJmp[index]%32));
+            }
+
+        }
+        
+        for (int j = _vars[index]->min(); j <= _vars[index]->max();  j++){ 
+
+            if(_vars[index]->contains(j)){
+                int wordIndex=(j-_variablesOffsets[index]+_supportOffsetJmp[index])/32;
+                _vars_host[wordIndex]=_vars_host[wordIndex]|(0x80000000>>(((_supportOffsetJmp[index]+j-_variablesOffsets[index])% 32 + 32)%32));
+            }
+
+        }   
+        
+        dumped[index]=true;
+
+    }
+
+  
+}
+
+void TableGPU::dumpDomainsGPU2(){
+
+    
     
     for(int index=0; index < noVars; index++){
         //quali variaibli skippo
@@ -267,13 +357,16 @@ void TableGPU::dumpDomainsGPU(){
         if(index<noVars-1){
             to=_supportOffsetJmp[index+1]/32;
             words_to_reset=to-starting_word;
-            maskRight=(_supportOffsetJmp[index+1])%32;
-
-            printf("%%%%%%  var %d more word to reset %d \n",index,buffer[0]);
+            if(_supportOffsetJmp[index+1]%32!=0)
+                maskRight=bitsFromRight(32-_supportOffsetJmp[index+1]%32);
+            else
+                maskRight=-1;
+            printf("%%%%%%  var %d more word to reset %d the next support starts at %d\n",index,buffer[0],_supportOffsetJmp[index+1]);
         }else{
             maskRight=-1;
             to=(_supportSize/32)+1;
             words_to_reset=to-starting_word;
+
             printf("%%%%%%  var %d 1 word to reset %d \n",index,buffer[0]);
         }
 
@@ -281,6 +374,20 @@ void TableGPU::dumpDomainsGPU(){
 
         free(buffer);
         buffer=(unsigned int*)calloc(_supportSize/32+1,sizeof(unsigned int));
+
+        for(int j=0; j<(_supportSize/32)+1; j++){
+            printf("%%%%%% buffer %d\n",buffer[j]);
+        }
+        printf("%%%%%%  var %d\n",index);
+        for (int k = _vars[index]->initialMin(); k <= _vars[index]->initialMax();  k++){ 
+
+            if(_vars[index]->contains(k)){
+                printf("%%%%%%  var %d contains %d\n",index,k);
+            }else{
+                printf("%%%%%%  var %d NOT %d \n",index,k);
+            }
+
+        }
 
         _vars[index]->dumpWithOffset(_vars[index]->initialMin(),_vars[index]->initialMax(),buffer,_supportOffsetJmp[index]%32);
         
@@ -301,6 +408,7 @@ void TableGPU::dumpDomainsGPU(){
                 _vars_host[j]=buffer[index2];
                 index2++;
             }
+
             _vars_host[to-1]=buffer[index2] | (_vars_host[to-1] & maskRight);
 
         }else{
@@ -317,26 +425,16 @@ void TableGPU::dumpDomainsGPU(){
         }
         dumped[index]=true;
 
-        printf("%%%%%%  var %d\n",index);
-        for (int k = _vars[index]->initialMin(); k <= _vars[index]->initialMax();  k++){ 
-
-            if(_vars[index]->contains(k)){
-                printf("%%%%%%  var %d contains %d\n",index,k);
-            }else{
-                printf("%%%%%%  var %d NOT %d \n",index,k);
-            }
-
-        }
-
+        
+        printf("%%%%%% ******************************** \n");
     }
 
     for(int j=0; j<(_supportSize/32)+1; j++){
         printf("%%%%%%  dom[%d]: %d\n",j,_vars_host[j]);
     }
-    printf("%%%%%% ------------------------------------------------------------------ \n");
+    printf("%%%%%% ------------------------------------------------------------------------- \n");
+    
 }
-
-
 // 1 th per support row
 __global__ void updateTableGPU(unsigned int* _supports_dev,unsigned int * _svSize_off_sval_dev, int *_supportOffsetJmp_dev, unsigned int * _CT_mask_dev,int* _currTable_dev_size, int* _vars_dev, int* offsetsAndLimits){
 

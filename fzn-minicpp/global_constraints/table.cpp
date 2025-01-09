@@ -1,11 +1,13 @@
 #include "table.hpp"
 #include <unistd.h>
+#include <chrono>
 Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     Constraint(vars[0]->getSolver()), 
     _vars(vars), _tuples(tuples), 
     _currTable(SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),tuples.size())){
     
     
+    auto start = std::chrono::high_resolution_clock::now();
     int noTuples=tuples.size();
     int noVars=vars.size();
     
@@ -18,15 +20,10 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     _currTable=SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),tuples.size());
 
     for (int i = 0; i < noVars; i++){        
-        //_deltaXs[i]=SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),_vars[i]->max()+1);
-        //_lastVarsValues[i]=SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),_vars[i]->max()+1);
-
         //calculating the number of rows in the support bitset
         _supportSize+=vars[i]->intialSize();
-        //we store the offset
+        //store the offset
         _variablesOffsets[i]=vars[i]->min();      
-        //vars[i]->dumpInSparseBitSet(i,_variablesOffsets[i],vars[i]->min(),vars[i]->initialMin(),vars[i]->max(),_lastVarsValues[i]);
-
     }
 
 
@@ -38,15 +35,8 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
 
     //we allocate and initialize the support bitsets
     currTableSize=(noTuples/32)+1; 
-    _supports=(unsigned int*) malloc(sizeof(unsigned int)*_supportSize*currTableSize);
-    //check allocation
-    
-    //we allocate and initialize the support bitsets
-    for (int i = 0; i < _supportSize*currTableSize; i++){
-        _supports[i]=0x00000000;
-    }
+    _supports=(unsigned int*) calloc(_supportSize*currTableSize,sizeof(unsigned int));
 
-    
     
     bool found=false;
     int tuplesOfSingletons[noVars];
@@ -69,7 +59,6 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
             }
         }
         if (found==false){
-            //printf("%%%%%% EMPTY DOMAIN\n");
             failNow();
             return;
         }
@@ -85,30 +74,46 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     for (int i = 0; i < noVars; i++){
         if(_vars[i]->size()==1){
             if(tuplesOfSingletons[i]==-1){
-                //printf("%%%%%% EMPTY DOMAIN 2\n");
                 failNow();
                 return;
             }
         }
     }
     if(_currTable.isEmpty()){
-        //printf("%%%%%% EMPTY DOMAIN 3\n");
         failNow();
         return;
     }
 
+    
+    //auto end = std::chrono::high_resolution_clock::now();
+    //auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    //printf("%%%%%% Time taken INIT: %ld microseconds\n", duration.count());
+    
 }
 
 void Table::post()
 {
+
+    //auto start = std::chrono::high_resolution_clock::now();
+
     for (auto const & v : _vars){
        v->propagateOnBoundChange(this);
     }
+
+    //auto end = std::chrono::high_resolution_clock::now();
+    //auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    //printf("%%%%%% Time taken to post: %ld microseconds\n", duration.count());
 }
 
 void Table::propagate()
 {
+    //auto start = std::chrono::high_resolution_clock::now();
     enfoceGAC();
+
+    //auto end = std::chrono::high_resolution_clock::now();
+    //auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    //printf("%%%%%% Time taken enfGAC: %ld microseconds\n", duration.count());
+    //fflush(stdout);
 }
 
 
@@ -125,13 +130,11 @@ void Table::updateTable(){
     for(int i=0; i < _s_val.size(); ++i){
         _currTable.clearMask();
         index=_s_val[i];
-        //reset based update
 
+        //reset based update
         for (int j = _vars[index]->min(); j <= _vars[index]->max();  j++){ 
 
-            //printf("%%%%%% var %d contains %d ",index, j);
             if(_vars[index]->contains(j)){
-                //printf("YES \n");
                 int index_x_a=(_supportOffsetJmp[index]+j-_variablesOffsets[index])*currTableSize;
                 _currTable.addToMaskArray(&(_supports[index_x_a]));
             }
@@ -154,7 +157,6 @@ void Table::filterDomains(){
 
     for(int i=0; i < _s_sup.size(); ++i){
         int index=_s_sup[i];
-        //printf("%%%%%% filtering domain for var %d\n",index);
         for (int j = _vars[index]->min(); j <= _vars[index]->max(); j++){
             if(_vars[index]->contains(j)){ //i.e. a \in dom(x)
 
@@ -162,19 +164,14 @@ void Table::filterDomains(){
                 int indexResidue=intersectIndexSparse(&_supports[index_x_a*currTableSize],_currTable);
                     
                 if(indexResidue==-1){
-                    //printf("%%%%%% REMOVING %d from %d\n",j,index);
                     _vars[index]->remove(j);        
-                }
-                  
-                
-                
+                }     
             }
         }
     }
 }
 
 void Table::enfoceGAC(){
-    //update the table
     _s_val.clear();
     _s_sup.clear();
     _s_val.shrink_to_fit();
@@ -191,9 +188,8 @@ void Table::enfoceGAC(){
 	}
     
 	updateTable();
-    //safe
 	filterDomains();
-    
+
 }
 
 void Table::addToMaskInt(unsigned int* mask,int value){  
