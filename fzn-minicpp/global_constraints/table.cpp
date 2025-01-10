@@ -7,7 +7,7 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     _currTable(SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),tuples.size())){
     
     
-    auto start = std::chrono::high_resolution_clock::now();
+    //auto start = std::chrono::high_resolution_clock::now();
     int noTuples=tuples.size();
     int noVars=vars.size();
     
@@ -85,9 +85,9 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     }
 
     
-    auto end = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-    printf("%%%%%% Time taken INIT: %ld microseconds\n", duration.count());
+    //auto end = std::chrono::high_resolution_clock::now();
+    //auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    //printf("%%%%%% Time taken INIT: %ld microseconds\n", duration.count());
     
 }
 
@@ -101,13 +101,13 @@ void Table::post()
 
 void Table::propagate()
 {
-    auto start = std::chrono::high_resolution_clock::now();
+    //auto start = std::chrono::high_resolution_clock::now();
     enfoceGAC();
 
-    auto end = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-    printf("%%%%%% Time taken enfGAC: %ld microseconds\n", duration.count());
-    fflush(stdout);
+    //auto end = std::chrono::high_resolution_clock::now();
+    //auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    //printf("%%%%%% Time taken enfGAC: %ld microseconds\n", duration.count());
+    //fflush(stdout);
 }
 
 

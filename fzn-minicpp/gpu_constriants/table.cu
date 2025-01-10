@@ -6,7 +6,7 @@
 TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) : Table(vars,tuples){
     setPriority(CLOW);
 
-    auto start = std::chrono::high_resolution_clock::now();
+    //auto start = std::chrono::high_resolution_clock::now();
     int noTuples=tuples.size();
     noVars=vars.size();
     
@@ -17,7 +17,7 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     // Memory allocation
 
 
-    auto start2 = std::chrono::high_resolution_clock::now();
+    //auto start2 = std::chrono::high_resolution_clock::now();
     
     cudaMalloc((void**)&_noVars_dev, sizeof(int));
     cudaMalloc((void**)&_CT_MASKCT_svSize_sval_sSize_sSup_dev, sizeof(unsigned int)*(2*currTableSize+2*noVars+2));
@@ -31,13 +31,13 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     cudaMalloc((void**)&workerOffestAndLimit_dev, sizeof(int)*64*noVars);
     
     
-    auto end2 = std::chrono::high_resolution_clock::now();
-    auto duration2 = std::chrono::duration_cast<std::chrono::microseconds>(end2 - start2);
-    printf("%%%%%% Time taken for CUDAMALLOC: %ld microseconds\n", duration2.count());
+    //auto end2 = std::chrono::high_resolution_clock::now();
+    //auto duration2 = std::chrono::duration_cast<std::chrono::microseconds>(end2 - start2);
+    //printf("%%%%%% Time taken for CUDAMALLOC: %ld microseconds\n", duration2.count());
     
     
 
-    start2 = std::chrono::high_resolution_clock::now();
+    //start2 = std::chrono::high_resolution_clock::now();
     
     //on host side we create simpler structures to then copy the data
 
@@ -55,9 +55,9 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
 
 
 
-    end2 = std::chrono::high_resolution_clock::now();
-    duration2 = std::chrono::duration_cast<std::chrono::microseconds>(end2 - start2);
-    printf("%%%%%% Time taken for CUDAMALLOC (HOST): %ld microseconds\n", duration2.count());
+    //end2 = std::chrono::high_resolution_clock::now();
+    //duration2 = std::chrono::duration_cast<std::chrono::microseconds>(end2 - start2);
+    //printf("%%%%%% Time taken for CUDAMALLOC (HOST): %ld microseconds\n", duration2.count());
     
 
     streams=(cudaStream_t*)malloc(sizeof(cudaStream_t)*noStreams);
@@ -79,7 +79,7 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
 
     cudaMemcpyAsync(workerOffestAndLimit_dev, workerOffestAndLimit_host, sizeof(int)*64*noVars, cudaMemcpyHostToDevice,streams[0]);
 
-    start2 = std::chrono::high_resolution_clock::now();
+    //start2 = std::chrono::high_resolution_clock::now();
 
     cudaMemcpyAsync(_noVars_dev, &noVars, sizeof(int), cudaMemcpyHostToDevice,streams[0]);
     
@@ -95,9 +95,15 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     cudaMemcpyAsync(_currTable_size_dev, &currTableSize, sizeof(int), cudaMemcpyHostToDevice,streams[0]);
 
 
-    end2 = std::chrono::high_resolution_clock::now();
-    duration2 = std::chrono::duration_cast<std::chrono::microseconds>(end2 - start2);
-    printf("%%%%%% Time taken for CUDA cpy: %ld microseconds\n", duration2.count());
+    int buffSize=0;   
+    for(int i=0;i<noVars;i++){
+        buffSize=max(buffSize,vars[i]->size()/32+2);
+    }
+    buffer=(unsigned int*)calloc(buffSize,sizeof(unsigned int));
+
+    //end2 = std::chrono::high_resolution_clock::now();
+    //duration2 = std::chrono::duration_cast<std::chrono::microseconds>(end2 - start2);
+    //printf("%%%%%% Time taken for CUDA cpy: %ld microseconds\n", duration2.count());
 
     //compute once and transfer the offsets for the streams:
     noBlocks=(currTableSize/4)+1;
@@ -106,9 +112,9 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     cudaStreamSynchronize(streams[0]);
 
     
-    auto end = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-    printf("%%%%%% Time taken INIT CUDA: %ld microseconds\n", duration.count());
+    //auto end = std::chrono::high_resolution_clock::now();
+    //auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    //printf("%%%%%% Time taken INIT CUDA: %ld microseconds\n", duration.count());
     
 
 }
@@ -119,15 +125,16 @@ void TableGPU::post(){
 }
 void TableGPU::propagate(){
 
-    auto start = std::chrono::high_resolution_clock::now();
+    //printf("%%%%%% ::::::::::::::::::::::::::::::::::::: \n");
+    //auto start = std::chrono::high_resolution_clock::now();
     enfoceGAC();
 
-    auto end = std::chrono::high_resolution_clock::now();
+    //auto end = std::chrono::high_resolution_clock::now();
     
     
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-    printf("%%%%%% Time taken enfGAC: %ld microseconds\n", duration.count());
-    fflush(stdout);
+    //auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    //printf("%%%%%% Time taken enfGAC: %ld microseconds\n", duration.count());
+    //fflush(stdout);
     
 }
 void TableGPU::enfGACDev(){
@@ -197,7 +204,6 @@ void TableGPU::enfGACDev(){
 
     if(_currTable.isEmpty()){
         //sync stream 0
-        printf("%%%%%% BACKTRACK__________________\n");
         failNow();
     }
 
@@ -332,7 +338,6 @@ void TableGPU::dumpDomainsGPU(){
 
     }
 
-
     auto end = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
     printf("%%%%%% Time of which by dump: %ld microseconds\n", duration.count());
@@ -342,8 +347,9 @@ void TableGPU::dumpDomainsGPU(){
 
 void TableGPU::dumpDomainsGPU2(){
 
+    //auto start = std::chrono::high_resolution_clock::now();
     for(int index=0; index < noVars; index++){
-        //quali variaibli skippo
+        //quali variaibli skip
 
         if(!(_vars[index]->changed()) && _vars[index]->size()==1)
             continue;
@@ -351,10 +357,8 @@ void TableGPU::dumpDomainsGPU2(){
         if(dumped[index] && !(_vars[index]->changed()))
             continue;
         
-        printf("%%%%%%  var %d changed? %d, size? %d, dumped? %d\n",index,_vars[index]->changed(),_vars[index]->size(),dumped[index]);
-
-
-
+        
+        
         int starting_word=(_supportOffsetJmp[index])/32;
         int words_to_reset=-1;
         int to=-1;
@@ -392,13 +396,6 @@ void TableGPU::dumpDomainsGPU2(){
 
         }
 
-
-
-
-
-
-
-
         starting_word=(_supportOffsetJmp[index]-_variablesOffsets[index]+_vars[index]->min())/32;
         int ending_word=(_supportOffsetJmp[index]-_variablesOffsets[index]+_vars[index]->max())/32;
         words_to_reset=ending_word-starting_word;
@@ -411,69 +408,37 @@ void TableGPU::dumpDomainsGPU2(){
         int maskLeft=0;
         if(starting_word==((_supportOffsetJmp[index]-_variablesOffsets[index]+_vars[index]->initialMin())/32))
             maskLeft=bitsFromLeft((_supportOffsetJmp[index]-_variablesOffsets[index]+_vars[index]->initialMin())%32);
-            
+
         if(ending_word==((_supportOffsetJmp[index]-_variablesOffsets[index]+_vars[index]->initialMax())/32))
             maskRight=bitsFromRight(31-(_supportOffsetJmp[index]-_variablesOffsets[index]+_vars[index]->initialMax())%32);
         
-        
-
-        free(buffer);
-        buffer=(unsigned int*)calloc(_supportSize/32+1,sizeof(unsigned int));
-
-        for(int j=0; j<(_supportSize/32)+1; j++){
-            printf("%%%%%% buffer %d\n",buffer[j]);
+        for(int i=0;i<words_to_reset;i++){
+            buffer[i]=0;
         }
 
-        printf("%%%%%%  var %d\n",index);
-        for (int k = _vars[index]->initialMin(); k <= _vars[index]->initialMax();  k++){ 
-            if(_vars[index]->contains(k)){
-                printf("%%%%%%  var %d contains %d\n",index,k);
-            }else{
-                printf("%%%%%%  var %d NOT %d \n",index,k);
-            }
-        }
 
         _vars[index]->dumpWithOffset(_vars[index]->min(),_vars[index]->max(),buffer,starting_bit);
         
-        for(int j=0; j<(_supportSize/32)+1; j++){
-            printf("%%%%%%  dump[%d]: %d\n",j,buffer[j]);
-        }
         
         if(words_to_reset>=1){
-            
-            printf("%%%%%%  TABLE MORE words to reset %d %d \n",starting_word,ending_word);
-
             _vars_host[starting_word]=buffer[0] | (_vars_host[starting_word] & maskLeft);
-
             int index2=1;
             for(int j=starting_word+1; j<ending_word; j++){
                 _vars_host[j]=buffer[index2];
                 index2++;
             }
-
             _vars_host[ending_word]=buffer[index2] | (_vars_host[ending_word] & maskRight);
 
-        }else{
-            printf("%%%%%%  TABLE 1 word to reset, maskL %d, maskR %d\n",maskLeft,maskRight);
+        }else{   
             _vars_host[starting_word]=buffer[0] | (_vars_host[starting_word] & (maskLeft | maskRight));
         }
-        
-    
-        for(int j=0; j<(_supportSize/32)+1; j++){
-            printf("%%%%%%  domAfter[%d]: %d\n",j,_vars_host[j]);
-        }
-        
-        printf("%%%%%%  var %d SET TO dumped (%d)\n",index,true);
         dumped[index]=true;
-
-        
-        printf("%%%%%% ******************************** \n");
     }
 
-    for(int j=0; j<(_supportSize/32)+1; j++){
-        printf("%%%%%%  dom[%d]: %d\n",j,_vars_host[j]);
-    }
-    printf("%%%%%% ------------------------------------------------------------------------- \n");
+    //auto end = std::chrono::high_resolution_clock::now();
+    //auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    //printf("%%%%%% Time of which by dump 2: %ld microseconds\n", duration.count());
+    //fflush(stdout);
     
 }
 // 1 th per support row
