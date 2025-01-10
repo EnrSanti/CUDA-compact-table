@@ -33,7 +33,7 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     
     auto end2 = std::chrono::high_resolution_clock::now();
     auto duration2 = std::chrono::duration_cast<std::chrono::microseconds>(end2 - start2);
-    //printf("%%%%%% Time taken for CUDAMALLOC: %ld microseconds\n", duration2.count());
+    printf("%%%%%% Time taken for CUDAMALLOC: %ld microseconds\n", duration2.count());
     
     
 
@@ -57,7 +57,7 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
 
     end2 = std::chrono::high_resolution_clock::now();
     duration2 = std::chrono::duration_cast<std::chrono::microseconds>(end2 - start2);
-    //printf("%%%%%% Time taken for CUDAMALLOC (HOST): %ld microseconds\n", duration2.count());
+    printf("%%%%%% Time taken for CUDAMALLOC (HOST): %ld microseconds\n", duration2.count());
     
 
     streams=(cudaStream_t*)malloc(sizeof(cudaStream_t)*noStreams);
@@ -97,7 +97,7 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
 
     end2 = std::chrono::high_resolution_clock::now();
     duration2 = std::chrono::duration_cast<std::chrono::microseconds>(end2 - start2);
-   // printf("%%%%%% Time taken for CUDA cpy: %ld microseconds\n", duration2.count());
+    printf("%%%%%% Time taken for CUDA cpy: %ld microseconds\n", duration2.count());
 
     //compute once and transfer the offsets for the streams:
     noBlocks=(currTableSize/4)+1;
@@ -108,7 +108,7 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     
     auto end = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-    //printf("%%%%%% Time taken INIT CUDA: %ld microseconds\n", duration.count());
+    printf("%%%%%% Time taken INIT CUDA: %ld microseconds\n", duration.count());
     
 
 }
@@ -126,8 +126,8 @@ void TableGPU::propagate(){
     
     
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-    //printf("%%%%%% Time taken enfGAC: %ld microseconds\n", duration.count());
-    //fflush(stdout);
+    printf("%%%%%% Time taken enfGAC: %ld microseconds\n", duration.count());
+    fflush(stdout);
     
 }
 void TableGPU::enfGACDev(){
@@ -142,7 +142,7 @@ void TableGPU::enfGACDev(){
     cudaMemcpyAsync(_CT_MASKCT_svSize_sval_sSize_sSup_dev, _CT_MASKCT_svSize_sval_sSize_sSup_host, sizeof(unsigned int)*(2*currTableSize+_s_val.size()+_s_sup.size()+2), cudaMemcpyHostToDevice,streams[0]);   
     
     //metti dump domini qui
-    dumpDomainsGPU();
+    dumpDomainsGPU2();
 
     cudaMemcpyAsync(_vars_dev, _vars_host, sizeof(int)*((_supportSize/32)+1), cudaMemcpyHostToDevice,streams[0]);
 
@@ -197,6 +197,7 @@ void TableGPU::enfGACDev(){
 
     if(_currTable.isEmpty()){
         //sync stream 0
+        printf("%%%%%% BACKTRACK__________________\n");
         failNow();
     }
 
@@ -270,8 +271,7 @@ void TableGPU::enfoceGAC(){
 
 void TableGPU::dumpDomainsGPU(){
 
-    //start a timer here, get t0
-    //auto start = std::chrono::high_resolution_clock::now();
+    auto start = std::chrono::high_resolution_clock::now();
 
 
     for(int index=0; index < noVars; index++){
@@ -328,18 +328,20 @@ void TableGPU::dumpDomainsGPU(){
             }
 
         }   
-        
         dumped[index]=true;
 
     }
 
+
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    printf("%%%%%% Time of which by dump: %ld microseconds\n", duration.count());
+    
   
 }
 
 void TableGPU::dumpDomainsGPU2(){
 
-    
-    
     for(int index=0; index < noVars; index++){
         //quali variaibli skippo
 
@@ -349,28 +351,71 @@ void TableGPU::dumpDomainsGPU2(){
         if(dumped[index] && !(_vars[index]->changed()))
             continue;
         
+        printf("%%%%%%  var %d changed? %d, size? %d, dumped? %d\n",index,_vars[index]->changed(),_vars[index]->size(),dumped[index]);
+
+
 
         int starting_word=(_supportOffsetJmp[index])/32;
         int words_to_reset=-1;
         int to=-1;
-        int maskRight=0;
         if(index<noVars-1){
             to=_supportOffsetJmp[index+1]/32;
             words_to_reset=to-starting_word;
-            if(_supportOffsetJmp[index+1]%32!=0)
-                maskRight=bitsFromRight(32-_supportOffsetJmp[index+1]%32);
-            else
-                maskRight=-1;
-            printf("%%%%%%  var %d more word to reset %d the next support starts at %d\n",index,buffer[0],_supportOffsetJmp[index+1]);
         }else{
-            maskRight=-1;
             to=(_supportSize/32)+1;
             words_to_reset=to-starting_word;
+            
+        }
 
-            printf("%%%%%%  var %d 1 word to reset %d \n",index,buffer[0]);
+        for(int j=1;j<words_to_reset;j++){
+            _vars_host[starting_word+j]=0;
         }
 
 
+        if(words_to_reset>=1){
+            _vars_host[starting_word]=_vars_host[starting_word] & bitsFromLeft((_supportOffsetJmp[index])%32);
+            
+            if(index<noVars-1){
+                _vars_host[starting_word+words_to_reset]=_vars_host[starting_word+words_to_reset] & bitsFromRight((32-_supportOffsetJmp[index+1] % 32 + 32)%32);
+            }else{
+                _vars_host[starting_word+words_to_reset]=0;
+            }
+        }else{
+            //both masks on one word
+            
+            if(index<noVars-1){
+                _vars_host[starting_word]=_vars_host[starting_word] & ( bitsFromLeft(_supportOffsetJmp[index]%32) | bitsFromRight((32-_supportOffsetJmp[index+1] % 32 + 32)%32));
+
+            }else{
+                _vars_host[starting_word]=_vars_host[starting_word] & bitsFromLeft((_supportOffsetJmp[index]%32));
+            }
+
+        }
+
+
+
+
+
+
+
+
+        starting_word=(_supportOffsetJmp[index]-_variablesOffsets[index]+_vars[index]->min())/32;
+        int ending_word=(_supportOffsetJmp[index]-_variablesOffsets[index]+_vars[index]->max())/32;
+        words_to_reset=ending_word-starting_word;
+        int starting_bit=(_supportOffsetJmp[index]-_variablesOffsets[index]+_vars[index]->min())%32;
+        int ending_bit=(_variablesOffsets[index]+_vars[index]->max()-_variablesOffsets[index])%32;
+        
+
+
+        int maskRight=0;
+        int maskLeft=0;
+        if(starting_word==((_supportOffsetJmp[index]-_variablesOffsets[index]+_vars[index]->initialMin())/32))
+            maskLeft=bitsFromLeft((_supportOffsetJmp[index]-_variablesOffsets[index]+_vars[index]->initialMin())%32);
+            
+        if(ending_word==((_supportOffsetJmp[index]-_variablesOffsets[index]+_vars[index]->initialMax())/32))
+            maskRight=bitsFromRight(31-(_supportOffsetJmp[index]-_variablesOffsets[index]+_vars[index]->initialMax())%32);
+        
+        
 
         free(buffer);
         buffer=(unsigned int*)calloc(_supportSize/32+1,sizeof(unsigned int));
@@ -378,51 +423,47 @@ void TableGPU::dumpDomainsGPU2(){
         for(int j=0; j<(_supportSize/32)+1; j++){
             printf("%%%%%% buffer %d\n",buffer[j]);
         }
+
         printf("%%%%%%  var %d\n",index);
         for (int k = _vars[index]->initialMin(); k <= _vars[index]->initialMax();  k++){ 
-
             if(_vars[index]->contains(k)){
                 printf("%%%%%%  var %d contains %d\n",index,k);
             }else{
                 printf("%%%%%%  var %d NOT %d \n",index,k);
             }
-
         }
 
-        _vars[index]->dumpWithOffset(_vars[index]->initialMin(),_vars[index]->initialMax(),buffer,_supportOffsetJmp[index]%32);
-        
-        printf("%%%%%%  starting with var %d from word %d\n",index,_supportOffsetJmp[index]/32);
+        _vars[index]->dumpWithOffset(_vars[index]->min(),_vars[index]->max(),buffer,starting_bit);
         
         for(int j=0; j<(_supportSize/32)+1; j++){
             printf("%%%%%%  dump[%d]: %d\n",j,buffer[j]);
         }
-        for(int j=0; j<(_supportSize/32)+1; j++){
-            printf("%%%%%%  domBefore[%d]: %d\n",j,_vars_host[j]);
-        }
-
+        
         if(words_to_reset>=1){
             
-            _vars_host[starting_word]=buffer[0] | (_vars_host[starting_word] & bitsFromLeft(_supportOffsetJmp[index]%32));
+            printf("%%%%%%  TABLE MORE words to reset %d %d \n",starting_word,ending_word);
+
+            _vars_host[starting_word]=buffer[0] | (_vars_host[starting_word] & maskLeft);
+
             int index2=1;
-            for(int j=starting_word+1; j<to-1; j++){
+            for(int j=starting_word+1; j<ending_word; j++){
                 _vars_host[j]=buffer[index2];
                 index2++;
             }
 
-            _vars_host[to-1]=buffer[index2] | (_vars_host[to-1] & maskRight);
+            _vars_host[ending_word]=buffer[index2] | (_vars_host[ending_word] & maskRight);
 
         }else{
-            printf("%%%%%%  var %d 1 word to reset %d, add it to %d , maskLeft %d, maskRight %d \n",index,buffer[0],_vars_host[starting_word],bitsFromLeft(_supportOffsetJmp[index]%32), maskRight);  
-            _vars_host[starting_word]=buffer[0] | (_vars_host[starting_word] & (bitsFromLeft(_supportOffsetJmp[index]%32) | maskRight));
+            printf("%%%%%%  TABLE 1 word to reset, maskL %d, maskR %d\n",maskLeft,maskRight);
+            _vars_host[starting_word]=buffer[0] | (_vars_host[starting_word] & (maskLeft | maskRight));
         }
         
-        
-        
-        
-        
+    
         for(int j=0; j<(_supportSize/32)+1; j++){
             printf("%%%%%%  domAfter[%d]: %d\n",j,_vars_host[j]);
         }
+        
+        printf("%%%%%%  var %d SET TO dumped (%d)\n",index,true);
         dumped[index]=true;
 
         

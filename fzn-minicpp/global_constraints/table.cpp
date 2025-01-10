@@ -85,35 +85,29 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     }
 
     
-    //auto end = std::chrono::high_resolution_clock::now();
-    //auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-    //printf("%%%%%% Time taken INIT: %ld microseconds\n", duration.count());
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    printf("%%%%%% Time taken INIT: %ld microseconds\n", duration.count());
     
 }
 
 void Table::post()
 {
-
-    //auto start = std::chrono::high_resolution_clock::now();
-
     for (auto const & v : _vars){
        v->propagateOnBoundChange(this);
     }
 
-    //auto end = std::chrono::high_resolution_clock::now();
-    //auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-    //printf("%%%%%% Time taken to post: %ld microseconds\n", duration.count());
 }
 
 void Table::propagate()
 {
-    //auto start = std::chrono::high_resolution_clock::now();
+    auto start = std::chrono::high_resolution_clock::now();
     enfoceGAC();
 
-    //auto end = std::chrono::high_resolution_clock::now();
-    //auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-    //printf("%%%%%% Time taken enfGAC: %ld microseconds\n", duration.count());
-    //fflush(stdout);
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    printf("%%%%%% Time taken enfGAC: %ld microseconds\n", duration.count());
+    fflush(stdout);
 }
 
 
