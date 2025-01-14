@@ -23,14 +23,14 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
         //calculating the number of rows in the support bitset
         _supportSize+=vars[i]->intialSize();
         //store the offset
-        _variablesOffsets[i]=vars[i]->min();      
+        _variablesOffsets[i]=vars[i]->initialMin();      
     }
 
 
     //calculating the offset of the variables, used in accessing the support rows    
     _supportOffsetJmp[0]=0;
     for (int i = 1; i < noVars; i++){
-        _supportOffsetJmp[i]=_supportOffsetJmp[i-1]+vars[i-1]->size();
+        _supportOffsetJmp[i]=_supportOffsetJmp[i-1]+vars[i-1]->intialSize();
     }
 
     //we allocate and initialize the support bitsets
@@ -44,7 +44,7 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     for (int v = 0; v < noVars; v++){
         tuplesOfSingletons[v]=-1;
         for (int t = 0; t < noTuples; t++){
-            if(tuples[t][v]>=_vars[v]->min() && tuples[t][v]<=_vars[v]->max()){
+            if(tuples[t][v]>=_vars[v]->initialMin() && tuples[t][v]<=_vars[v]->initialMax()){
                 //classical entry (we update all the supports in the same way)
                 int entryValue=tuples[t][v]-_variablesOffsets[v];   
                 
@@ -93,6 +93,7 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
 
 void Table::post()
 {
+    propagate();
     for (auto const & v : _vars){
        v->propagateOnBoundChange(this);
     }

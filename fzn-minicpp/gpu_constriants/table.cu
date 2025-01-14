@@ -119,6 +119,7 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
 
 }
 void TableGPU::post(){
+    propagate();
     for (auto const & v : _vars){
        v->propagateOnBoundChange(this);
     }

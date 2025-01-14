@@ -82,7 +82,7 @@ int noTuples=tuples.size();
 }
 
 void SmartTableGPU::post(){
-    //printf("%%%%%% post GPU\n");
+    
     for (auto const & v : _vars){
        v->propagateOnBoundChange(this);
     }

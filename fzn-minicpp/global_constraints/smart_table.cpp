@@ -35,14 +35,7 @@ SmartTable::SmartTable(vector<var<int>::Ptr> & vars,  vector<vector<int>> & tupl
 
     //we allocate and initialize the support bitsets
     currTableSize=(noTuples/32)+1; 
-    _supports=(unsigned int*) malloc(sizeof(unsigned int)*_supportSize*currTableSize);
-    //check allocation
-    
-
-    //we allocate and initialize the support bitsets
-    for (int i = 0; i < _supportSize*currTableSize; i++){
-        _supports[i]=0x00000000;
-    }
+    _supports=(unsigned int*) calloc(_supportSize*currTableSize,sizeof(unsigned int));
 
 
     intializeTable(noVars,noTuples);
@@ -169,6 +162,7 @@ void SmartTable::intializeTable(int noVars,int noTuples){
     }
 }
 void SmartTable::post(){
+    
     for (auto const & v : _vars){
        v->propagateOnBoundChange(this);
     }
