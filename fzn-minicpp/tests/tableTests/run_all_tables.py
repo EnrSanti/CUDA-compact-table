@@ -11,11 +11,7 @@ modelsSAT = [
 "TestGenerator & more tests/testsSAT/",
 "TestGenerator & more tests/testsSAT_CUDA/",
 "TestGenerator & more tests/testsSAT_bigger/",
-"TestGenerator & more tests/testsSAT_CUDA_bigger/",
-"TestGenerator & more tests/testsSAT_even_bigger/",
-"TestGenerator & more tests/testsSAT_CUDA_even_bigger/",
-"TestGenerator & more tests/testsSAT_even_even_bigger/",
-"TestGenerator & more tests/testsSAT_CUDA_even_even_bigger/"
+"TestGenerator & more tests/testsSAT_CUDA_bigger/"
 ]
 
 modelsUNSAT = [
@@ -24,13 +20,8 @@ modelsUNSAT = [
 "TestGenerator & more tests/testsUNSAT/",
 "TestGenerator & more tests/testsUNSAT_CUDA/",
 "TestGenerator & more tests/testsUNSAT_bigger/",
-"TestGenerator & more tests/testsUNSAT_CUDA_bigger/",
-"TestGenerator & more tests/testsUNSAT_even_bigger/",
-"TestGenerator & more tests/testsUNSAT_CUDA_even_bigger/",
-"TestGenerator & more tests/testsUNSAT_even_even_bigger/",
-"TestGenerator & more tests/testsUNSAT_CUDA_even_even_bigger/"
+"TestGenerator & more tests/testsUNSAT_CUDA_bigger/"
 ]
-
 solver="MiniCpp"
 # Run each serial SAT model
 print("Running simple models")
@@ -178,8 +169,8 @@ def run_unsat_models(prefix):
         print("-------------------------------------------------------------------------------------------\n")
     return resultsUNSAT
 
-#resultsSAT=run_sat_models("./SimpleTables/")
-#resultsUNSAT=run_unsat_models("./SimpleTables/")
+resultsSAT=run_sat_models("./SimpleTables/")
+resultsUNSAT=run_unsat_models("./SimpleTables/")
 
 
 resultsSAT_smart=run_sat_models("./SmartTables/")

@@ -12,16 +12,16 @@ int noTuples=tuples.size();
     
 
     // Memory allocation
-    _noVars_dev=mallocDevice<int>(sizeof(int));
-    _CT_MASKCT_svSize_sval_sSize_sSup_dev = mallocDevice<unsigned int >(sizeof(unsigned int)*(2*currTableSize+2*noVars+2)); 
-    _supports_dev = mallocDevice<unsigned int>(sizeof(unsigned int)*_supportSize*currTableSize);
-    _supportSize_dev = mallocDevice<int>(sizeof(int));
-    _variablesOffsets_dev = mallocDevice<int>(sizeof(int)*noVars);
-    _supportOffsetJmp_dev = mallocDevice<int>(sizeof(int)*(noVars+1));
-    _currTable_size_dev=mallocDevice<int>(sizeof(int));
-    _vars_dev=mallocDevice<int>(sizeof(int)*((_supportSize/32)+1)); //matrix
+    cudaMalloc((void**)&_noVars_dev, sizeof(int));
+    cudaMalloc((void**)&_CT_MASKCT_svSize_sval_sSize_sSup_dev, sizeof(unsigned int)*(2*currTableSize+2*noVars+2));
+    cudaMalloc((void**)&_supports_dev, sizeof(unsigned int)*_supportSize*currTableSize);
+    cudaMalloc((void**)&_supportSize_dev, sizeof(int));
+    cudaMalloc((void**)&_variablesOffsets_dev, sizeof(int)*noVars);
+    cudaMalloc((void**)&_supportOffsetJmp_dev, sizeof(int)*(noVars+1));
+    cudaMalloc((void**)&_currTable_size_dev, sizeof(int));
+    cudaMalloc((void**)&_vars_dev, sizeof(int)*((_supportSize/32)+1)); //matrix
     
-    workerOffestAndLimit_dev=mallocDevice<int>(sizeof(int)*64*noVars);
+    cudaMalloc((void**)&workerOffestAndLimit_dev, sizeof(int)*64*noVars);
     
     
 
@@ -30,14 +30,10 @@ int noTuples=tuples.size();
     cudaMallocHost((void**)&_CT_MASKCT_svSize_sval_sSize_sSup_host, sizeof(unsigned int)*2*(noVars+1+currTableSize));
     cudaMallocHost((void**)&_vars_host, sizeof(unsigned int)*((_supportSize/32)+1)); //matrix
     cudaMallocHost((void**)&_vars_to_remove_host, sizeof(unsigned int)*((_supportSize/32)+1)); //matrix
-
-    cudaMallocHost((void**)&dumped, sizeof(bool)*noVars); 
-    //initialize it to false
-    for(int i=0;i<noVars;i++){
-        dumped[i]=false;
-    }
-
     cudaMallocHost((void**)&workerOffestAndLimit_host,sizeof(int)*64*noVars);
+
+    dumped=(bool*)calloc(noVars,sizeof(bool));
+
 
 
     streams=(cudaStream_t*)malloc(sizeof(cudaStream_t)*noStreams);
@@ -47,29 +43,18 @@ int noTuples=tuples.size();
 
     cudaError_t err = cudaStreamCreate(&streams[0]);
     
-    if (err != cudaSuccess) {
-        printf("%%%%%% Error creating stream: %s\n", cudaGetErrorString(err));
-    }
-
     for(int i=0;i<noVars-1;i++){
         varOffsetLimit(_supportOffsetJmp[i+1]-_supportOffsetJmp[i],workerOffestAndLimit_host+(i*64));
     }
     varOffsetLimit(_supportSize-_supportOffsetJmp[noVars-1],workerOffestAndLimit_host+((noVars-1)*64));
 
     cudaMemcpyAsync(workerOffestAndLimit_dev, workerOffestAndLimit_host, sizeof(int)*64*noVars, cudaMemcpyHostToDevice,streams[0]);
-
-
-
     cudaMemcpyAsync(_noVars_dev, &noVars, sizeof(int), cudaMemcpyHostToDevice,streams[0]);
-    
-    //Memory copy
-
     cudaMemcpyAsync(_supports_dev, _supports, sizeof(unsigned int)*_supportSize*currTableSize, cudaMemcpyHostToDevice,streams[0]);
     cudaMemcpyAsync(_supportSize_dev, &_supportSize, sizeof(int), cudaMemcpyHostToDevice,streams[0]);
     cudaMemcpyAsync(_variablesOffsets_dev, _variablesOffsets.data(), sizeof(int)*noVars, cudaMemcpyHostToDevice,streams[0]);
     cudaMemcpyAsync(_supportOffsetJmp_dev, _supportOffsetJmp.data(), sizeof(int)*noVars, cudaMemcpyHostToDevice,streams[0]);
     cudaMemcpyAsync(&_supportOffsetJmp_dev[noVars], &_supportSize, sizeof(int), cudaMemcpyHostToDevice,streams[0]);
-
     cudaMemcpyAsync(_currTable_size_dev, &currTableSize, sizeof(int), cudaMemcpyHostToDevice,streams[0]);
 
     int buffSize=0;   
@@ -93,7 +78,6 @@ void SmartTableGPU::post(){
     }
 }
 void SmartTableGPU::propagate(){
-    //printf("%%%%%% propagate on GPU\n");
     enfoceGAC();
 }
 
