@@ -72,6 +72,11 @@ int noTuples=tuples.size();
 
     cudaMemcpyAsync(_currTable_size_dev, &currTableSize, sizeof(int), cudaMemcpyHostToDevice,streams[0]);
 
+    int buffSize=0;   
+    for(int i=0;i<noVars;i++){
+        buffSize=max(buffSize,vars[i]->size()/32+2);
+    }
+    buffer=(unsigned int*)calloc(buffSize,sizeof(unsigned int));
 
     //compute once and transfer the offsets for the streams:
     noBlocks=(currTableSize/4)+1;
@@ -82,7 +87,7 @@ int noTuples=tuples.size();
 }
 
 void SmartTableGPU::post(){
-    
+    propagate();
     for (auto const & v : _vars){
        v->propagateOnBoundChange(this);
     }
@@ -96,10 +101,6 @@ void SmartTableGPU::enfGACDev(){
 
 
 
-
-    int output=0;
-    
-
     for(int i=0;i<currTableSize;i++){
         _CT_MASKCT_svSize_sval_sSize_sSup_host[i]=_currTable._words[i].value();
     }
@@ -109,35 +110,11 @@ void SmartTableGPU::enfGACDev(){
     
     //metti dump domini qui
 
-    dumpDomainsGPU();
+    dumpDomainsGPU2();
 
     cudaMemcpyAsync(_vars_dev, _vars_host, sizeof(int)*((_supportSize/32)+1), cudaMemcpyHostToDevice,streams[0]);
 
     
-    /*    
-    int offset=0;
-    int domainSize=0;
-
-    //for each changed var copy just their domain
-    for(int i=0;i<_s_val.size();i++){
-        int index=_s_val[i];
-        offset=(_supportOffsetJmp[index])/32;
-        int words_to_reset=-1;
-        int to=-1;
-        if(index<noVars-1){
-            to=_supportOffsetJmp[index+1]/32;
-            domainSize=to-offset+1;
-        }else{
-            to=(_supportSize/32)+1;
-            domainSize=to-offset;
-        }
-
-        //cudaMemcpyAsync(_vars_dev, _vars_host, sizeof(unsigned int)*((_supportSize/32)+1), cudaMemcpyHostToDevice,streams[0]);
-        cudaMemcpyAsync(_vars_dev+offset, _vars_host+offset, sizeof(unsigned int)*domainSize, cudaMemcpyHostToDevice,streams[0]);
-    }
-    */
-    
-
     //pass: the supports, the changed variables + how many, the indexes for the support, the table and the size, the domains,  and 32*vars ints which tells what range of the varialbe to check according to the index of the th (modifies CT with CT & mask)
     updateTableGPU<<<noBlocks,128,128*sizeof(unsigned int),streams[0]>>>(_supports_dev,_CT_MASKCT_svSize_sval_sSize_sSup_dev+(2*currTableSize),_supportOffsetJmp_dev,_CT_MASKCT_svSize_sval_sSize_sSup_dev,_currTable_size_dev,_vars_dev,workerOffestAndLimit_dev);          
 
@@ -193,10 +170,10 @@ void SmartTableGPU::enfGACDev(){
 
 }
 void SmartTableGPU::enfoceGAC(){
-    cudaDeviceSynchronize();
+
+
     _s_val.clear();
     _s_val.shrink_to_fit();
-
     _s_sup.clear();
     _s_sup.shrink_to_fit();
 
@@ -227,29 +204,15 @@ void SmartTableGPU::enfoceGAC(){
     _CT_MASKCT_svSize_sval_sSize_sSup_host[currTableSize*2]=_s_val.size();
     _CT_MASKCT_svSize_sval_sSize_sSup_host[currTableSize*2+1]=_s_sup.size();
 
-    
-
-    //if(overallSize>300){ //to better see advantages when testing remove and do only enfGACDev();
-    
     enfGACDev();
-
-  
-    
-    //}else{
-    //    updateTable();
-    //}
-
-    //filterDomains();
-
-    
-    //printf("%%%%%% ------------------------------------------------------------------ \n");
         
 }
 
-void SmartTableGPU::dumpDomainsGPU(){
-    
+void SmartTableGPU::dumpDomainsGPU2(){
+
+    //auto start = std::chrono::high_resolution_clock::now();
     for(int index=0; index < noVars; index++){
-        //quali variaibli skippo
+        //quali variaibli skip
 
         if(!(_vars[index]->changed()) && _vars[index]->size()==1)
             continue;
@@ -257,7 +220,8 @@ void SmartTableGPU::dumpDomainsGPU(){
         if(dumped[index] && !(_vars[index]->changed()))
             continue;
         
-
+        
+        
         int starting_word=(_supportOffsetJmp[index])/32;
         int words_to_reset=-1;
         int to=-1;
@@ -273,7 +237,8 @@ void SmartTableGPU::dumpDomainsGPU(){
         for(int j=1;j<words_to_reset;j++){
             _vars_host[starting_word+j]=0;
         }
-        
+
+
         if(words_to_reset>=1){
             _vars_host[starting_word]=_vars_host[starting_word] & bitsFromLeft((_supportOffsetJmp[index])%32);
             
@@ -293,18 +258,49 @@ void SmartTableGPU::dumpDomainsGPU(){
             }
 
         }
-        
-        for (int j = _vars[index]->min(); j <= _vars[index]->max();  j++){ 
 
-            if(_vars[index]->contains(j)){
-                int wordIndex=(j-_variablesOffsets[index]+_supportOffsetJmp[index])/32;
-                _vars_host[wordIndex]=_vars_host[wordIndex]|(0x80000000>>(((_supportOffsetJmp[index]+j-_variablesOffsets[index])% 32 + 32)%32));
+        starting_word=(_supportOffsetJmp[index]-_variablesOffsets[index]+_vars[index]->min())/32;
+        int ending_word=(_supportOffsetJmp[index]-_variablesOffsets[index]+_vars[index]->max())/32;
+        words_to_reset=ending_word-starting_word;
+        int starting_bit=(_supportOffsetJmp[index]-_variablesOffsets[index]+_vars[index]->min())%32;
+        int ending_bit=(_variablesOffsets[index]+_vars[index]->max()-_variablesOffsets[index])%32;
+        
+
+
+        int maskRight=0;
+        int maskLeft=0;
+        if(starting_word==((_supportOffsetJmp[index]-_variablesOffsets[index]+_vars[index]->initialMin())/32))
+            maskLeft=bitsFromLeft((_supportOffsetJmp[index]-_variablesOffsets[index]+_vars[index]->initialMin())%32);
+
+        if(ending_word==((_supportOffsetJmp[index]-_variablesOffsets[index]+_vars[index]->initialMax())/32))
+            maskRight=bitsFromRight(31-(_supportOffsetJmp[index]-_variablesOffsets[index]+_vars[index]->initialMax())%32);
+        
+        for(int i=0;i<words_to_reset;i++){
+            buffer[i]=0;
+        }
+
+
+        _vars[index]->dumpWithOffset(_vars[index]->min(),_vars[index]->max(),buffer,starting_bit);
+        
+        
+        if(words_to_reset>=1){
+            _vars_host[starting_word]=buffer[0] | (_vars_host[starting_word] & maskLeft);
+            int index2=1;
+            for(int j=starting_word+1; j<ending_word; j++){
+                _vars_host[j]=buffer[index2];
+                index2++;
             }
+            _vars_host[ending_word]=buffer[index2] | (_vars_host[ending_word] & maskRight);
 
-        }   
-        
+        }else{   
+            _vars_host[starting_word]=buffer[0] | (_vars_host[starting_word] & (maskLeft | maskRight));
+        }
         dumped[index]=true;
-
     }
 
+    //auto end = std::chrono::high_resolution_clock::now();
+    //auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    //printf("%%%%%% Time of which by dump 2: %ld microseconds\n", duration.count());
+    //fflush(stdout);
+    
 }

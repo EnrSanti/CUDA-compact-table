@@ -53,7 +53,6 @@ class TableGPU : public Table{
         void offload();
         void retrieve();
     private:
-        void dumpDomainsGPU();
         void dumpDomainsGPU2();
 };
 

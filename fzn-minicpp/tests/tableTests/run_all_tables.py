@@ -178,12 +178,12 @@ def run_unsat_models(prefix):
         print("-------------------------------------------------------------------------------------------\n")
     return resultsUNSAT
 
-resultsSAT=run_sat_models("./SimpleTables/")
-resultsUNSAT=run_unsat_models("./SimpleTables/")
+#resultsSAT=run_sat_models("./SimpleTables/")
+#resultsUNSAT=run_unsat_models("./SimpleTables/")
 
 
-#resultsSAT_smart=run_sat_models("./SmartTables/")
-#resultsUNSAT_smart=run_unsat_models("./SmartTables/")
+resultsSAT_smart=run_sat_models("./SmartTables/")
+resultsUNSAT_smart=run_unsat_models("./SmartTables/")
 
 
 if(totalErrors==0):

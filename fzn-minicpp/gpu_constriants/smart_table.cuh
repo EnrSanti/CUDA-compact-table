@@ -42,12 +42,15 @@ class SmartTableGPU : public SmartTable {
 
         bool *dumped;
 
+
+        unsigned int* buffer; //just for the new dump
+        
     public:
         SmartTableGPU(vector<var<int>::Ptr> & vars,  vector<std::vector<int>> & tuples, vector<std::vector<int>> & signs);
         void post() override;
         void propagate() override;
         void enfoceGAC();
     private:
-        void dumpDomainsGPU();
+        void dumpDomainsGPU2();
         void enfGACDev();
 };

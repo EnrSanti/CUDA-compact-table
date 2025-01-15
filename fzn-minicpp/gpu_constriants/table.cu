@@ -45,8 +45,6 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
 
     cudaMallocHost((void**)&dumped, sizeof(bool)*noVars); 
     
-    //calloc of buffer
-    buffer=(unsigned int*)calloc(_supportSize/32+1,sizeof(unsigned int));
     //initialize it to false
 
     cudaMallocHost((void**)&workerOffestAndLimit_host,sizeof(int)*64*noVars);
@@ -235,77 +233,6 @@ void TableGPU::retrieve(){
         }
     }
 }
-
-void TableGPU::dumpDomainsGPU(){
-
-    auto start = std::chrono::high_resolution_clock::now();
-
-
-    for(int index=0; index < noVars; index++){
-        //quali variaibli skippo
-
-        if(!(_vars[index]->changed()) && _vars[index]->size()==1)
-            continue;
-
-        if(dumped[index] && !(_vars[index]->changed()))
-            continue;
-        
-
-        int starting_word=(_supportOffsetJmp[index])/32;
-        int words_to_reset=-1;
-        int to=-1;
-        if(index<noVars-1){
-            to=_supportOffsetJmp[index+1]/32;
-            words_to_reset=to-starting_word;
-        }else{
-            to=(_supportSize/32)+1;
-            words_to_reset=to-starting_word;
-            
-        }
-
-        for(int j=1;j<words_to_reset;j++){
-            _vars_host[starting_word+j]=0;
-        }
-        
-        if(words_to_reset>=1){
-            _vars_host[starting_word]=_vars_host[starting_word] & bitsFromLeft((_supportOffsetJmp[index])%32);
-            
-            if(index<noVars-1){
-                _vars_host[starting_word+words_to_reset]=_vars_host[starting_word+words_to_reset] & bitsFromRight((32-_supportOffsetJmp[index+1] % 32 + 32)%32);
-            }else{
-                _vars_host[starting_word+words_to_reset]=0;
-            }
-        }else{
-            //both masks on one word
-            
-            if(index<noVars-1){
-                _vars_host[starting_word]=_vars_host[starting_word] & ( bitsFromLeft(_supportOffsetJmp[index]%32) | bitsFromRight((32-_supportOffsetJmp[index+1] % 32 + 32)%32));
-
-            }else{
-                _vars_host[starting_word]=_vars_host[starting_word] & bitsFromLeft((_supportOffsetJmp[index]%32));
-            }
-
-        }
-        
-        for (int j = _vars[index]->min(); j <= _vars[index]->max();  j++){ 
-
-            if(_vars[index]->contains(j)){
-                int wordIndex=(j-_variablesOffsets[index]+_supportOffsetJmp[index])/32;
-                _vars_host[wordIndex]=_vars_host[wordIndex]|(0x80000000>>(((_supportOffsetJmp[index]+j-_variablesOffsets[index])% 32 + 32)%32));
-            }
-
-        }   
-        dumped[index]=true;
-
-    }
-
-    auto end = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-    printf("%%%%%% Time of which by dump: %ld microseconds\n", duration.count());
-    
-  
-}
-
 void TableGPU::dumpDomainsGPU2(){
 
     //auto start = std::chrono::high_resolution_clock::now();

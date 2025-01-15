@@ -21,7 +21,7 @@ SmartTable::SmartTable(vector<var<int>::Ptr> & vars,  vector<vector<int>> & tupl
         //calculating the number of rows in the support bitset
         _supportSize+=vars[i]->intialSize();
         //we store the offset
-        _variablesOffsets[i]=vars[i]->min();      
+        _variablesOffsets[i]=vars[i]->initialMin();      
         //vars[i]->dumpInSparseBitSet(i,_variablesOffsets[i],vars[i]->min(),vars[i]->initialMin(),vars[i]->max(),_lastVarsValues[i]);
 
     }
@@ -30,7 +30,7 @@ SmartTable::SmartTable(vector<var<int>::Ptr> & vars,  vector<vector<int>> & tupl
     //calculating the offset of the variables, used in accessing the support rows    
     _supportOffsetJmp[0]=0;
     for (int i = 1; i < noVars; i++){
-        _supportOffsetJmp[i]=_supportOffsetJmp[i-1]+vars[i-1]->size();
+        _supportOffsetJmp[i]=_supportOffsetJmp[i-1]+vars[i-1]->intialSize();
     }
 
     //we allocate and initialize the support bitsets
@@ -84,7 +84,7 @@ void SmartTable::intializeTable(int noVars,int noTuples){
                 case SmartTableOp::LtInt:{
                     
                     //populate the supports
-                    if(_tuples[t][v]>_vars[v]->min()){
+                    if(_tuples[t][v]>_vars[v]->initialMin()){
                         
                         int entryValue=_tuples[t][v]-_variablesOffsets[v];   //value of the entry-initial min  
                         if(entryValue>_vars[v]->initialMax())
@@ -111,7 +111,7 @@ void SmartTable::intializeTable(int noVars,int noTuples){
                 }
                 //SmartTableOp::GtInt
                 case SmartTableOp::GtInt:{
-                    if(_tuples[t][v]<_vars[v]->max()){
+                    if(_tuples[t][v]<_vars[v]->initialMax()){
                         //populate the supports
                         int entryValue=_tuples[t][v]-_variablesOffsets[v];   
                         //if i have x [28,50] but i have a constraint x>30, i need to set the supports from 31 to 50
@@ -162,7 +162,7 @@ void SmartTable::intializeTable(int noVars,int noTuples){
     }
 }
 void SmartTable::post(){
-    
+    propagate();
     for (auto const & v : _vars){
        v->propagateOnBoundChange(this);
     }
@@ -177,7 +177,6 @@ void SmartTable::propagate(){
 //---------------------------------------------
 //------- The three functions of alg. 2 -------
 //---------------------------------------------
-
 void SmartTable::updateTable(){
     //forall var x in s_val
     int index=0;
@@ -185,8 +184,8 @@ void SmartTable::updateTable(){
     for(int i=0; i < _s_val.size(); ++i){
         _currTable.clearMask();
         index=_s_val[i];
-        //reset based update
 
+        //reset based update
         for (int j = _vars[index]->min(); j <= _vars[index]->max();  j++){ 
 
             if(_vars[index]->contains(j)){
@@ -210,19 +209,17 @@ void SmartTable::updateTable(){
 void SmartTable::filterDomains(){
 
 
-    for(int i=0; i < _s_sup.size(); i++){
+    for(int i=0; i < _s_sup.size(); ++i){
         int index=_s_sup[i];
         for (int j = _vars[index]->min(); j <= _vars[index]->max(); j++){
             if(_vars[index]->contains(j)){ //i.e. a \in dom(x)
 
                 int index_x_a=_supportOffsetJmp[index]+j-_vars[index]->initialMin();
-
                 int indexResidue=intersectIndexSparse(&_supports[index_x_a*currTableSize],_currTable);
-                
+                    
                 if(indexResidue==-1){
                     _vars[index]->remove(j);        
-                }               
-                
+                }     
             }
         }
     }
@@ -249,7 +246,6 @@ void SmartTable::enfoceGAC(){
 	filterDomains();
     
 }
-
 void SmartTable::addToMaskInt(unsigned int* mask,int value){  
 	int offset;
     int bitsPerWord=32;
