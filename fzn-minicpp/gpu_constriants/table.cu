@@ -4,7 +4,6 @@
 
 
 TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) : Table(vars,tuples){
-    setPriority(CLOW);
 
     //auto start = std::chrono::high_resolution_clock::now();
     int noTuples=tuples.size();
@@ -15,7 +14,6 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     
 
     // Memory allocation
-
 
     //auto start2 = std::chrono::high_resolution_clock::now();
     
@@ -109,6 +107,7 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     noBlocks=(currTableSize/4)+1;
     noBlocksFilter=((_supportSize/32)+1);
 
+    setAsynchronous(true);
     cudaStreamSynchronize(streams[0]);
 
     
@@ -128,7 +127,8 @@ void TableGPU::propagate(){
 
     //printf("%%%%%% ::::::::::::::::::::::::::::::::::::: \n");
     //auto start = std::chrono::high_resolution_clock::now();
-    enfoceGAC();
+    offload();
+    retrieve();
 
     //auto end = std::chrono::high_resolution_clock::now();
     
@@ -138,10 +138,39 @@ void TableGPU::propagate(){
     //fflush(stdout);
     
 }
-void TableGPU::enfGACDev(){
+void TableGPU::offload(){
+    _s_val.clear();
+    _s_val.shrink_to_fit();
 
-    int output=0;
+    _s_sup.clear();
+    _s_sup.shrink_to_fit();
+
+    int internalIndex=currTableSize*2+2;
     
+    //int overallSize=0;
+    for (int i = 0; i < _vars.size(); i++){
+        //update s_val and the deltas
+        if(_vars[i]->changed()){
+            _s_val.push_back(i);
+            _CT_MASKCT_svSize_sval_sSize_sSup_host[internalIndex]=i;
+            internalIndex++;
+        }
+    }
+
+    for (int i = 0; i < _vars.size(); i++){
+        //update s_sup
+        if(_vars[i]->size()>1){
+            _s_sup.push_back(i);
+            _CT_MASKCT_svSize_sval_sSize_sSup_host[internalIndex]=i;
+            internalIndex++;
+        }
+    }
+
+    //for each var in the table add it to ssup vector
+  
+    _CT_MASKCT_svSize_sval_sSize_sSup_host[currTableSize*2]=_s_val.size();
+    _CT_MASKCT_svSize_sval_sSize_sSup_host[currTableSize*2+1]=_s_sup.size();
+
     for(int i=0;i<currTableSize;i++){
         _CT_MASKCT_svSize_sval_sSize_sSup_host[i]=_currTable._words[i].value();
     }
@@ -154,46 +183,19 @@ void TableGPU::enfGACDev(){
 
     cudaMemcpyAsync(_vars_dev, _vars_host, sizeof(int)*((_supportSize/32)+1), cudaMemcpyHostToDevice,streams[0]);
 
-    
-    /*    
-    int offset=0;
-    int domainSize=0;
-
-    //for each changed var copy just their domain
-    for(int i=0;i<_s_val.size();i++){
-        int index=_s_val[i];
-        offset=(_supportOffsetJmp[index])/32;
-        int words_to_reset=-1;
-        int to=-1;
-        if(index<noVars-1){
-            to=_supportOffsetJmp[index+1]/32;
-            domainSize=to-offset+1;
-        }else{
-            to=(_supportSize/32)+1;
-            domainSize=to-offset;
-        }
-
-        //cudaMemcpyAsync(_vars_dev, _vars_host, sizeof(unsigned int)*((_supportSize/32)+1), cudaMemcpyHostToDevice,streams[0]);
-        cudaMemcpyAsync(_vars_dev+offset, _vars_host+offset, sizeof(unsigned int)*domainSize, cudaMemcpyHostToDevice,streams[0]);
-    }
-    */
-    
 
     //pass: the supports, the changed variables + how many, the indexes for the support, the table and the size, the domains,  and 32*vars ints which tells what range of the varialbe to check according to the index of the th (modifies CT with CT & mask)
     updateTableGPU<<<noBlocks,128,128*sizeof(unsigned int),streams[0]>>>(_supports_dev,_CT_MASKCT_svSize_sval_sSize_sSup_dev+(2*currTableSize),_supportOffsetJmp_dev,_CT_MASKCT_svSize_sval_sSize_sSup_dev,_currTable_size_dev,_vars_dev,workerOffestAndLimit_dev);          
     
 
-    
     //si copio mask in ct per semplcità
     cudaMemcpyAsync(_CT_MASKCT_svSize_sval_sSize_sSup_host, _CT_MASKCT_svSize_sval_sSize_sSup_dev, currTableSize*sizeof(unsigned int), cudaMemcpyDeviceToHost,streams[0]);
 
     filterDomainsGPU<<<noBlocksFilter,32,32*sizeof(unsigned int),streams[0]>>>(_CT_MASKCT_svSize_sval_sSize_sSup_dev,_currTable_size_dev,_vars_dev,_supportOffsetJmp_dev,_supports_dev, _supportSize_dev);
     //launch filtering 
 
-    //each block does 2 words of the domains
-
-   
-    //we need to update the current table
+}
+void TableGPU::retrieve(){
 
     cudaStreamSynchronize(streams[0]);
     cudaMemcpyAsync(_vars_to_remove_host, _vars_dev, sizeof(int)*((_supportSize/32)+1), cudaMemcpyDeviceToHost,streams[0]);
@@ -232,48 +234,6 @@ void TableGPU::enfGACDev(){
             }
         }
     }
-
-}
-void TableGPU::enfoceGAC(){
-    
-    _s_val.clear();
-    _s_val.shrink_to_fit();
-
-    _s_sup.clear();
-    _s_sup.shrink_to_fit();
-
-    int internalIndex=currTableSize*2+2;
-    
-    //int overallSize=0;
-    for (int i = 0; i < _vars.size(); i++){
-        //update s_val and the deltas
-        if(_vars[i]->changed()){
-            _s_val.push_back(i);
-            _CT_MASKCT_svSize_sval_sSize_sSup_host[internalIndex]=i;
-            internalIndex++;
-        }
-    }
-
-    for (int i = 0; i < _vars.size(); i++){
-        //update s_sup
-        if(_vars[i]->size()>1){
-            _s_sup.push_back(i);
-            _CT_MASKCT_svSize_sval_sSize_sSup_host[internalIndex]=i;
-            internalIndex++;
-        }
-    }
-
-    //for each var in the table add it to ssup vector
-  
-    _CT_MASKCT_svSize_sval_sSize_sSup_host[currTableSize*2]=_s_val.size();
-    _CT_MASKCT_svSize_sval_sSize_sSup_host[currTableSize*2+1]=_s_sup.size();
-
-    
-    enfGACDev();
-
-  
-    
-    
 }
 
 void TableGPU::dumpDomainsGPU(){

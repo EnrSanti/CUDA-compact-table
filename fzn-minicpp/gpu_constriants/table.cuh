@@ -49,11 +49,11 @@ class TableGPU : public Table{
         TableGPU(vector<var<int>::Ptr> & vars,  vector<vector<int>> & tuples);
         void post() override;
         void propagate() override;
-        void enfoceGAC();
         void print();
+        void offload();
+        void retrieve();
     private:
         void dumpDomainsGPU();
-        void enfGACDev();
         void dumpDomainsGPU2();
 };
 
