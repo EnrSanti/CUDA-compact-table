@@ -109,6 +109,7 @@ void Table::propagate()
     //auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
     //printf("%%%%%% Time taken enfGAC: %ld microseconds\n", duration.count());
     //fflush(stdout);
+    
 }
 
 

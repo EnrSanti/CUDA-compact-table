@@ -91,7 +91,7 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     noBlocks=(currTableSize/4)+1;
     noBlocksFilter=((_supportSize/32)+1);
 
-    setAsynchronous(true);
+    //setAsynchronous(true);
     cudaStreamSynchronize(streams[0]);
 
     
@@ -109,12 +109,11 @@ void TableGPU::post(){
 }
 void TableGPU::propagate(){
 
-    //printf("%%%%%% ::::::::::::::::::::::::::::::::::::: \n");
     //auto start = std::chrono::high_resolution_clock::now();
     offload();
     retrieve();
 
-    //auto end = std::chrono::high_resolution_clock::now();
+    auto end = std::chrono::high_resolution_clock::now();
     
     
     //auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);

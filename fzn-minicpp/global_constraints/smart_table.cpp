@@ -1,5 +1,5 @@
 #include "smart_table.hpp"
-
+#include "chrono"
 enum SmartTableOp {Eq=1, All=2 ,LtInt=3, GtInt=5 /*, LtVar=4 /*, GtVar=6*/};
 
 SmartTable::SmartTable(vector<var<int>::Ptr> & vars,  vector<vector<int>> & tuples, vector<vector<int>> & signs) :
@@ -169,7 +169,12 @@ void SmartTable::post(){
 }
 
 void SmartTable::propagate(){
+    //auto t0 = std::chrono::high_resolution_clock::now();
     enfoceGAC();
+    //auto t1 = std::chrono::high_resolution_clock::now();
+    //auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0);
+    //printf("%%%%%% Time taken enfGAC serial: %ld microseconds\n", duration.count());
+    //fflush(stdout);
 }
 
 

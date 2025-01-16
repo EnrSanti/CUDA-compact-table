@@ -107,6 +107,7 @@ def remove_up_to_first_newline(input_string):
 
 
 def generateFile():
+	global include
 	fileStr=""
 	fileStrCUDA=""
 	fileTmp=""
@@ -127,6 +128,9 @@ def generateFile():
 		toWrite="var "+str(domainsMin[i])+".."+str(domainsMax[i])+" : "+"x"+str(i)+";\n"
 		fileStr+=toWrite
 
+	fileStrCUDA=fileStr
+	fileTmp=fileStr
+	
 	#generate between 2 and 6 tables
 	noTables=random.randint(2, 4)
 	for tblNo in range(0,noTables):
@@ -138,8 +142,6 @@ def generateFile():
 		print(varsInTable)
 		table,otherConstraint=generateConstraints(varsInTable,domainsMin,domainsMax,noTuples,tblNo)
 
-		fileStr+=table
-
 		constraintLine="constraint table(["
 		for xNo in varsInTable:
 			constraintLine+="x"+str(xNo)+","
@@ -148,13 +150,14 @@ def generateFile():
 		constraintLine+=")"
 
 		#yes we duplicate, it's not optimal
-		fileStrCUDA=fileStr+constraintLine+"::gpu;\n"
-		fileTmp=fileStr+constraintLine+";\n"
-		fileStr+=constraintLine+";\n"
+		fileStrCUDA+=table+constraintLine+"::gpu;\n"
+		fileTmp+=table+constraintLine+";\n"
+		fileStr+=table+constraintLine+";\n"
 		#add the other constraints
 		fileStrCUDA+=otherConstraint
-		fileStr+=otherConstraint
 		fileTmp+=otherConstraint
+		fileStr+=otherConstraint
+
 	fileStrCUDA+="solve minimize x1;"
 	fileStr+="solve minimize x1;"
 	fileTmp+=otherConstraint+"solve minimize x1;"
@@ -166,16 +169,16 @@ def generateFile():
 filesToCreate=40
 
 #how many clauses we want in an instance (max and min)
-minNoVars=800
-maxNoVars=2500
+minNoVars=10
+maxNoVars=30
 
-minDomain=1000
-maxDomain=5000
-maxOffset=300
+minDomain=20
+maxDomain=80
+maxOffset=3
 
 
-minTuples=6000
-maxTuples=20000
+minTuples=60
+maxTuples=200
 
 osType="linux"; # "windows" or "linux" #used just to specify the directory format
 
@@ -208,10 +211,10 @@ if(osType=="windows"):
 	directoryPathUNSAT_CUDA="testsUNSAT_CUDA\\"
 	directoryPathSAT_CUDA="testsSAT_CUDA\\"
 else:
-	directoryPathUNSAT="testsUNSAT_shallow2/"
-	directoryPathSAT="testsSAT_shallow2/"
-	directoryPathUNSAT_CUDA="testsUNSAT_CUDA_shallow2/"
-	directoryPathSAT_CUDA="testsSAT_CUDA_shallow2/"
+	directoryPathUNSAT="testsUNSAT_shallow3/"
+	directoryPathSAT="testsSAT_shallow3/"
+	directoryPathUNSAT_CUDA="testsUNSAT_CUDA_shallow3/"
+	directoryPathSAT_CUDA="testsSAT_CUDA_shallow3/"
 
 #check if folders exist else create them
 if not os.path.isdir(directoryPathSAT):

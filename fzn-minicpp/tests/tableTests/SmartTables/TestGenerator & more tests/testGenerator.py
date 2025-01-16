@@ -151,6 +151,7 @@ def remove_up_to_first_newline(input_string):
 
 def generateFile():
 	global model
+	global include
 	fileStr=""
 	fileStrCUDA=""
 	
@@ -171,6 +172,7 @@ def generateFile():
 		toWrite="var "+str(domainsMin[i])+".."+str(domainsMax[i])+" : "+"x"+str(i)+";\n"
 		fileStr+=toWrite
 
+	fileStrCUDA=fileStr
 	#generate between 2 and 6 tables
 	noTables=random.randint(2, 3)
 	init_model()
@@ -183,8 +185,6 @@ def generateFile():
 		print(varsInTable)
 		table,otherConstraint=generateConstraints(varsInTable,domainsMin,domainsMax,noTuples,tblNo)
 
-		fileStr+=table
-
 		constraintLine="constraint smart_table(["
 		for xNo in varsInTable:
 			constraintLine+="x"+str(xNo)+","
@@ -193,8 +193,8 @@ def generateFile():
 		constraintLine+=")"
 
 		#yes we duplicate, it's not optimal
-		fileStrCUDA=fileStr+constraintLine+"::gpu;\n"
-		fileStr+=constraintLine+";\n"
+		fileStrCUDA+=table+constraintLine+"::gpu;\n"
+		fileStr+=table+constraintLine+";\n"
 		#add the other constraints
 		fileStrCUDA+=otherConstraint
 		fileStr+=otherConstraint
@@ -234,16 +234,16 @@ def generateFile():
 filesToCreate=40
 
 #how many clauses we want in an instance (max and min)
-minNoVars=500
-maxNoVars=1500
+minNoVars=20
+maxNoVars=50
 
-minDomain=800
-maxDomain=4500
-maxOffset=300
+minDomain=8
+maxDomain=45
+maxOffset=3
 
 
-minTuples=8000
-maxTuples=20000
+minTuples=10
+maxTuples=80
 
 osType="linux"; # "windows" or "linux" #used just to specify the directory format
 
@@ -276,10 +276,10 @@ if(osType=="windows"):
 	directoryPathUNSAT_CUDA="testsUNSAT_CUDA\\"
 	directoryPathSAT_CUDA="testsSAT_CUDA\\"
 else:
-	directoryPathUNSAT="testsUNSAT_big/"
-	directoryPathSAT="testsSAT_big/"
-	directoryPathUNSAT_CUDA="testsUNSAT_CUDA_big/"
-	directoryPathSAT_CUDA="testsSAT_CUDA_big/"
+	directoryPathUNSAT="testsUNSAT_big2/"
+	directoryPathSAT="testsSAT_big2/"
+	directoryPathUNSAT_CUDA="testsUNSAT_CUDA_big2/"
+	directoryPathSAT_CUDA="testsSAT_CUDA_big2/"
 
 #check if folders exist else create them
 if not os.path.isdir(directoryPathSAT):

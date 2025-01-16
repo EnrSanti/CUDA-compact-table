@@ -1,5 +1,6 @@
 #include "gpu_constriants/smart_table.cuh"
 #include "gpu_constriants/table.cuh"
+#include "chrono"
 SmartTableGPU::SmartTableGPU(vector<var<int>::Ptr> & vars,  vector<std::vector<int>> & tuples, vector<std::vector<int>> & signs) : SmartTable(vars,tuples,signs){
    setPriority(CLOW);
 
@@ -78,7 +79,12 @@ void SmartTableGPU::post(){
     }
 }
 void SmartTableGPU::propagate(){
+    //auto t0 = std::chrono::high_resolution_clock::now();
     enfoceGAC();
+    //auto t1 = std::chrono::high_resolution_clock::now();
+    //auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0);
+    //printf("%%%%%% Time taken enfGAC gpu: %ld microseconds\n", duration.count());
+    //fflush(stdout);
 }
 
 void SmartTableGPU::enfGACDev(){
