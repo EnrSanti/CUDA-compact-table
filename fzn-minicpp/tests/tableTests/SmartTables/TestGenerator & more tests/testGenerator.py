@@ -10,28 +10,32 @@ from datetime import datetime
 import numpy as np
 import gc
 
-
-#WARNING: THIS PROGRAM ISN't OPTIMIZED 
-
-
+model=None
 
 #generate a value in [from_,to_] if not in already in notThese
-#the following function is taken from: https://www.w3resource.com/python-exercises/list/python-data-type-list-exercise-145.php
 def generate_random(from_,to_, notThese):
     result = choice([i for i in range(from_,to_) if (i not in notThese)])
     return result
 
+def init_model():
+	global model
+	model = cp_model.CpModel()
+
+def del_model():
+	global model
+	del model
+	gc.collect()
+
 def generateConstraints(varsInTable,domainsMin,domainsMax,noTuples,tableNo):
 
 	table="array [int,int] of "
-	signTable="array [int,int] of SmartTableOp: signs"+str(0) + "=[|"
+	signTable="array [int,int] of SmartTableOp: signs"+str(tableNo) + "=[|"
 	minV=min(domainsMin)
 	maxV=max(domainsMax)
 	table=table+str(minV)+".."+str(maxV)+" : "+"t"+str(tableNo)+"=[|"
 	tuples=[]
 	
 	#ŧesting the satifsfiability
-	model = cp_model.CpModel()
 	varsInSolver=[]
 
 	for v in varsInTable:
@@ -94,8 +98,6 @@ def generateConstraints(varsInTable,domainsMin,domainsMax,noTuples,tableNo):
 		table+="|\n"
 		signTable+="|"
 	
-	print("size of disjuncts:"+str(len(disjuncts)))
-	print("disjuncts:"+str(disjuncts))
 	model.AddBoolOr(disjuncts)
 
 	table = table[:-1]
@@ -104,41 +106,110 @@ def generateConstraints(varsInTable,domainsMin,domainsMax,noTuples,tableNo):
 
 
 	#we generate also some additional constraints
-	noConstraints=(int)(random.randint(0,8)/10*len(varsInTable))
+	noConstraints=(int)(random.randint(1,12)*len(varsInTable)/100)
 	constraints=""
 	for i in range(noConstraints):
-		#choosing the constraint > < != or =
-		constraintType=(int)(random.randint(1,10))
+		constraintType=(int)(random.randint(1,12))
 		valueC=random.randint(domainsMin[varsInTable[i]],domainsMax[varsInTable[i]])
 		if(constraintType<2): #0,1 -> <
-			model.add(varsInSolver[i]<valueC)
 			constraints+="constraint x"+ str(varsInTable[i])+"<"+str(valueC)+";\n"
-		elif(constraintType<4): #2,3 -> >
-			model.add(varsInSolver[i]>valueC)
+			model.add(varsInSolver[i]<valueC)
+		elif(constraintType<3): #2 -> >
 			constraints+="constraint x"+ str(varsInTable[i])+">"+str(valueC)+";\n" 
-		
-		elif(constraintType<10): #4,5,6,7,8,9 -> !=
-			model.add(varsInSolver[i]!=valueC)
+			model.add(varsInSolver[i]>valueC)
+		elif(constraintType<8): #3,4,5,6,7 -> !=
 			constraints+="constraint not(x"+ str(varsInTable[i])+"="+str(valueC)+");\n" 
-		
-		else: #10 -> =
-			model.add(varsInSolver[i]==valueC)
-			constraints+="constraint x"+ str(varsInTable[i])+"="+str(valueC)+";\n"
-		
-	
-	solver = cp_model.CpSolver()
-	#set time limit 5 min (doesn't work)
-	
-	t0=time.time()
+			model.add(varsInSolver[i]!=valueC)
+		elif(constraintType<10): #add all different constraint
+			varsDifferentStr=""	
+			varsDiffModel=[]
+			for v in varsInTable:
+				#get 1 with 0.2 probability and 0 with 0.8
+				if(random.randint(0,4)==1):
+					varsDifferentStr+="x"+str(v)+","
+					varsDiffModel.append(varsInSolver[varsInTable.index(v)])	
+			varsDifferentStr=varsDifferentStr[:-1]
+			constraints+="constraint all_different(["+varsDifferentStr+"]);\n"
+			model.AddAllDifferent(varsDiffModel)
+		else: #countleq
+			varToCount=""
+			noVarsToLookFor=random.randint(int(len(varsInTable)/4),int(len(varsInTable)/3))
+			for i in range(noVarsToLookFor):
+				varToCount+="x"+str(varsInTable[random.randint(0,len(varsInTable)-1)])+","
+			varToCount=varToCount[:-1]
+			varToCountLast="x"+str(varsInTable[-1])
+			constraints="constraint count_leq(["+varToCount+"],1000,"+varToCountLast+");\n"
+			model.add(cp_model.LinearExpr.Sum([varsInSolver[varsInTable.index(v)] for v in varsInTable])<=1000)
+	return signTable+table, constraints
 
+
+
+def remove_up_to_first_newline(input_string):
+    # Find the position of the first newline and slice the string
+    return input_string.split('\n', 1)[1] if '\n' in input_string else input_string
+
+
+def generateFile():
+	global model
+	fileStr=""
+	fileStrCUDA=""
+	
+	noTuples=random.randint(minTuples, maxTuples)
+	noVars=random.randint(minNoVars, maxNoVars)
+	print("noTuples:"+str(noTuples))
+	print("noVars:"+str(noVars))
+	fileStr=include
+	
+	domainsMin=[]
+	domainsMax=[]
+
+	for i in range(noVars):
+		size=random.randint(minDomain, maxDomain)
+		offset=random.randint(1,maxOffset)
+		domainsMin.append(offset)
+		domainsMax.append(offset+size)
+		toWrite="var "+str(domainsMin[i])+".."+str(domainsMax[i])+" : "+"x"+str(i)+";\n"
+		fileStr+=toWrite
+
+	#generate between 2 and 6 tables
+	noTables=random.randint(2, 3)
+	init_model()
+	for tblNo in range(0,noTables):
+		noVarsInTable=random.randint((int)(noVars*0.2),(int)(noVars*0.4))
+		varsInTable=[]
+		for i in range(noVarsInTable):
+			varsInTable.append(generate_random(0,noVars,varsInTable))
+
+		print(varsInTable)
+		table,otherConstraint=generateConstraints(varsInTable,domainsMin,domainsMax,noTuples,tblNo)
+
+		fileStr+=table
+
+		constraintLine="constraint smart_table(["
+		for xNo in varsInTable:
+			constraintLine+="x"+str(xNo)+","
+		constraintLine=constraintLine[:-1]+"],t"+str(tblNo)+",signs"+str(tblNo)
+
+		constraintLine+=")"
+
+		#yes we duplicate, it's not optimal
+		fileStrCUDA=fileStr+constraintLine+"::gpu;\n"
+		fileStr+=constraintLine+";\n"
+		#add the other constraints
+		fileStrCUDA+=otherConstraint
+		fileStr+=otherConstraint
+	
+
+	solver = cp_model.CpSolver()
+	t0=time.time()
 	print("Solving model (t0="+str(datetime.fromtimestamp(t0))+")...")
+	
 	status = solver.solve(model)
 	
 	t1=time.time()
 
-	print("Over (time elapsed: "+str(t1-t0)+").")
-	retStat=""
-
+	print("model solved in "+str(time.time()-t0)+" seconds")	
+	
 	if(status==cp_model.OPTIMAL or status==cp_model.FEASIBLE):
 		print("SAT")
 		retStat="SAT"
@@ -148,35 +219,41 @@ def generateConstraints(varsInTable,domainsMin,domainsMax,noTuples,tableNo):
 	else:
 		retStat="TIMEOUT"
 		print("...TIMEOUT\n")
+
 	
-	return retStat,table,signTable,constraints
+	del_model()
+	fileStrCUDA+="solve satisfy;"
+	fileStr+="solve satisfy;"
+	return retStat,fileStr, fileStrCUDA
+
 
 ############################  MODIFIABLE VARIABLES  ################################
 ####################################################################################
 
 #note, it doesn't create n sat instances and n unsat instances, but it create n instances, then they are solved via cp_model and put in the right (SAT or NOT folder)
-filesToCreate=20
+filesToCreate=40
 
 #how many clauses we want in an instance (max and min)
-minNoVars=5
-maxNoVars=80#300
+minNoVars=500
+maxNoVars=1500
 
-minDomain=10
-maxDomain=250
-maxOffset=90
+minDomain=800
+maxDomain=4500
+maxOffset=300
 
-#minNoTables=1 #not yet used only 1 table
-#maxNoTables=1
 
-minTuples=5
-maxTuples=220
+minTuples=8000
+maxTuples=20000
 
 osType="linux"; # "windows" or "linux" #used just to specify the directory format
 
 #cosntant string reported before each file
 include="""%test automatically generated\n
-include \"table.mzn\";
-include \"minicpp.mzn\";\n\n"""
+include \"minicpp.mzn\";
+include \"table.mzn\";\n
+include \"cumulative.mzn\";\n
+include \"all_different.mzn\"; \n
+include \"count_leq.mzn\"; \n\n"""
 
 ####################################################################################
 ####################################################################################
@@ -199,10 +276,10 @@ if(osType=="windows"):
 	directoryPathUNSAT_CUDA="testsUNSAT_CUDA\\"
 	directoryPathSAT_CUDA="testsSAT_CUDA\\"
 else:
-	directoryPathUNSAT="testsUNSAT/"
-	directoryPathSAT="testsSAT/"
-	directoryPathUNSAT_CUDA="testsUNSAT_CUDA/"
-	directoryPathSAT_CUDA="testsSAT_CUDA/"
+	directoryPathUNSAT="testsUNSAT_big/"
+	directoryPathSAT="testsSAT_big/"
+	directoryPathUNSAT_CUDA="testsUNSAT_CUDA_big/"
+	directoryPathSAT_CUDA="testsSAT_CUDA_big/"
 
 #check if folders exist else create them
 if not os.path.isdir(directoryPathSAT):
@@ -219,56 +296,13 @@ unsatFilesNo=0
 #we generate the different .mzn files
 for i in range(1,filesToCreate+1):
 	#the size of n
-	fileStr=""
-	noTuples=random.randint(minTuples, maxTuples)
-	noVars=random.randint(minNoVars, maxNoVars)
-	print("noTuples:"+str(noTuples))
-	print("noVars:"+str(noVars))
-	fileStr=include
-	
-	domainsMin=[]
-	domainsMax=[]
-
-	for i in range(noVars):
-		size=random.randint(minDomain, maxDomain)
-		offset=random.randint(1,maxOffset)
-		domainsMin.append(offset)
-		domainsMax.append(offset+size)
-		toWrite="var "+str(domainsMin[i])+".."+str(domainsMax[i])+" : "+"x"+str(i)+";\n"
-		fileStr+=toWrite
-
-	noVarsInTable=random.randint((int)(noVars*0.3),(int)(noVars*0.7))
-	varsInTable=[]
-	for i in range(noVarsInTable):
-		varsInTable.append(generate_random(0,noVars,varsInTable))
-
-	status,table,singTable,otherConstraint=generateConstraints(varsInTable,domainsMin,domainsMax,noTuples,0)
-	if(status=="TIMEOUT"):
-		print("skipping instnace")
-		continue
-	fileStr+=table+singTable
-
-	constraintLine="constraint smart_table(["
-	for xNo in varsInTable:
-		constraintLine+="x"+str(xNo)+","
-	constraintLine=constraintLine[:-1]+"],t"+str(0)+",signs"+str(0)+")"
-
-
-	#yes we duplicate, it's not optimal
-	fileStrCUDA=fileStr+constraintLine+"::gpu;\n"
-	fileStr+=constraintLine+"::uniud;\n"
-
-	#add the other constraints
-	fileStrCUDA+=otherConstraint
-	fileStr+=otherConstraint
-	fileStrCUDA+="solve satisfy;"
-	fileStr+="solve satisfy;"
+	where,fileStr,fileCUDA = generateFile()
 
 
 	folder=""
 	folder_cuda=""
 	counter=0
-	if(status=="SAT"):
+	if(where=="SAT"):
 		print("put in SAT FOLDER")
 		folder=directoryPathSAT
 		folder_cuda=directoryPathSAT_CUDA
@@ -281,11 +315,13 @@ for i in range(1,filesToCreate+1):
 		unsatFilesNo+=1
 		counter=unsatFilesNo
 
+
+
 	with open(folder+'test_'+str(counter)+'.mzn', 'w') as f:
 		f.write(fileStr)
 	with open(folder_cuda+'test_'+str(counter)+'.mzn', 'w') as f_CUDA:
-		f_CUDA.write(fileStrCUDA)
+		f_CUDA.write(fileCUDA)
 
 	del fileStr
-	del fileStrCUDA
+	del fileCUDA
 	gc.collect()
