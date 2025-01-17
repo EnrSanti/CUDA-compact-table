@@ -25,10 +25,10 @@ modelsUNSAT = [
 "TestGenerator & more tests/testsUNSAT_CUDA/",
 "TestGenerator & more tests/testsUNSAT_bigger/",
 "TestGenerator & more tests/testsUNSAT_CUDA_bigger/",
-"TestGenerator & more tests/testsSAT_even_bigger/",
-"TestGenerator & more tests/testsSAT_CUDA_even_bigger/",
-"TestGenerator & more tests/testsSAT_even_even_bigger/",
-"TestGenerator & more tests/testsSAT_CUDA_even_even_bigger/"
+"TestGenerator & more tests/testsUNSAT_even_bigger/",
+"TestGenerator & more tests/testsUNSAT_CUDA_even_bigger/",
+"TestGenerator & more tests/testsUNSAT_even_even_bigger/",
+"TestGenerator & more tests/testsUNSAT_CUDA_even_even_bigger/"
 ]
 
 solver="MiniCpp"
