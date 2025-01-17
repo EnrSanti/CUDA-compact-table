@@ -48,8 +48,6 @@ class TableGPU : public Table{
         void post() override;
         void propagate() override;
         void print();
-        void offload();
-        void retrieve();
     private:
         void dumpDomainsGPU2();
 };

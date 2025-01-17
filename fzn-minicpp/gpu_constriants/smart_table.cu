@@ -33,9 +33,6 @@ int noTuples=tuples.size();
     cudaMallocHost((void**)&_vars_to_remove_host, sizeof(unsigned int)*((_supportSize/32)+1)); //matrix
     cudaMallocHost((void**)&workerOffestAndLimit_host,sizeof(int)*64*noVars);
 
-    dumped=(bool*)calloc(noVars,sizeof(bool));
-
-
 
     streams=(cudaStream_t*)malloc(sizeof(cudaStream_t)*noStreams);
 
@@ -207,8 +204,6 @@ void SmartTableGPU::dumpDomainsGPU2(){
         if(!(_vars[index]->changed()) && _vars[index]->size()==1)
             continue;
 
-        if(dumped[index] && !(_vars[index]->changed()))
-            continue;
         
         
         
@@ -285,7 +280,6 @@ void SmartTableGPU::dumpDomainsGPU2(){
         }else{   
             _vars_host[starting_word]=buffer[0] | (_vars_host[starting_word] & (maskLeft | maskRight));
         }
-        dumped[index]=true;
     }
 
     //auto end = std::chrono::high_resolution_clock::now();
