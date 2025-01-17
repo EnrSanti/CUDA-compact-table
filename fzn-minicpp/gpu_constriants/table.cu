@@ -45,9 +45,6 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     cudaMallocHost((void**)&workerOffestAndLimit_host,sizeof(int)*64*noVars);
 
 
-    //dumped with calloc
-    dumped=(bool*)calloc(noVars,sizeof(bool));
-
 
     //end2 = std::chrono::high_resolution_clock::now();
     //duration2 = std::chrono::duration_cast<std::chrono::microseconds>(end2 - start2);
@@ -83,22 +80,10 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     }
     buffer=(unsigned int*)calloc(buffSize,sizeof(unsigned int));
 
-    //end2 = std::chrono::high_resolution_clock::now();
-    //duration2 = std::chrono::duration_cast<std::chrono::microseconds>(end2 - start2);
-    //printf("%%%%%% Time taken for CUDA cpy: %ld microseconds\n", duration2.count());
-
-    //compute once and transfer the offsets for the streams:
     noBlocks=(currTableSize/4)+1;
     noBlocksFilter=((_supportSize/32)+1);
 
-    //setAsynchronous(true);
     cudaStreamSynchronize(streams[0]);
-
-    
-    //auto end = std::chrono::high_resolution_clock::now();
-    //auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-    //printf("%%%%%% Time taken INIT CUDA: %ld microseconds\n", duration.count());
-    
 
 }
 void TableGPU::post(){
@@ -109,19 +94,7 @@ void TableGPU::post(){
 }
 void TableGPU::propagate(){
 
-    //auto start = std::chrono::high_resolution_clock::now();
-    offload();
-    retrieve();
 
-    auto end = std::chrono::high_resolution_clock::now();
-    
-    
-    //auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-    //printf("%%%%%% Time taken enfGAC: %ld microseconds\n", duration.count());
-    //fflush(stdout);
-    
-}
-void TableGPU::offload(){
     _s_val.clear();
     _s_val.shrink_to_fit();
 
@@ -177,9 +150,7 @@ void TableGPU::offload(){
     filterDomainsGPU<<<noBlocksFilter,32,32*sizeof(unsigned int),streams[0]>>>(_CT_MASKCT_svSize_sval_sSize_sSup_dev,_currTable_size_dev,_vars_dev,_supportOffsetJmp_dev,_supports_dev, _supportSize_dev);
     //launch filtering 
 
-}
-void TableGPU::retrieve(){
-
+    
     cudaStreamSynchronize(streams[0]);
     cudaMemcpyAsync(_vars_to_remove_host, _vars_dev, sizeof(int)*((_supportSize/32)+1), cudaMemcpyDeviceToHost,streams[0]);
 
@@ -217,6 +188,8 @@ void TableGPU::retrieve(){
             }
         }
     }
+    
+    
 }
 void TableGPU::dumpDomainsGPU2(){
 
@@ -226,10 +199,6 @@ void TableGPU::dumpDomainsGPU2(){
 
         if(!(_vars[index]->changed()) && _vars[index]->size()==1)
             continue;
-
-        if(dumped[index] && !(_vars[index]->changed()))
-            continue;
-        
         
         
         int starting_word=(_supportOffsetJmp[index])/32;
@@ -305,7 +274,6 @@ void TableGPU::dumpDomainsGPU2(){
         }else{   
             _vars_host[starting_word]=buffer[0] | (_vars_host[starting_word] & (maskLeft | maskRight));
         }
-        dumped[index]=true;
     }
 
     //auto end = std::chrono::high_resolution_clock::now();
@@ -501,9 +469,6 @@ __global__ void  filterDomainsGPU(unsigned int * _CT_MASKCT_svSize_sval_sSize_sS
 
 int bitsFromRight(int n) {
     //assert 
-    if(!(n >= 0 && n < 32)){
-        printf("%%%%%% Error: bitsFromRight: n must be between 0 and 31 %d \n",n);
-    }
     return (1 << (n)) - 1;
    
 }
@@ -511,9 +476,6 @@ int bitsFromLeft(int n) {
 
     
     if (n == 0) return 0;    
-    if((n <= 0 || n > 32)){
-        printf("%%%%%% Error: bitsFromLeft: n must be between 0 and 31, %d\n",n);
-    }   
     return ~0 << (32 - n);
 }
 
