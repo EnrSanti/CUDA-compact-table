@@ -40,8 +40,6 @@ class TableGPU : public Table{
         int internalIndex;
         int *workerOffestAndLimit_host;
 
-        bool *dumped;
-
         unsigned int* buffer; //just for the new dump
         int buffSize;
 
