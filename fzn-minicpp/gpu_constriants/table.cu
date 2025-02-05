@@ -302,7 +302,9 @@ __global__ void updateTableGPU(unsigned int* _supports_dev,unsigned int * _svSiz
             int condition=((_vars_dev[wordIndex] & maskContains)!=0);
             //calculate the offset of the support word the thread has to (potentially) add to the mask
             int off=(j+offset32_th)*(*_currTable_dev_size)+(_supportOffsetJmp_dev[varIndex]*(*_currTable_dev_size))+blockIdxx; 
-            mask[threadIdx.x]=mask[threadIdx.x] | (_supports_dev[off]*condition);        
+            
+            int support=__ldlu(_supports_dev+off); //load the support word without caching
+            mask[threadIdx.x]=mask[threadIdx.x] | (support*condition);           
         }
 
         //parallel reduction over the 32 threads, each thread took care of a different part of the domain of the same variable
@@ -347,7 +349,8 @@ __global__ void  filterDomainsGPU(unsigned int * _CT_MASKCT_svSize_sval_sSize_sS
             int skip=0;
             for(int ctW=0; ctW<(*_currTable_dev_size)-32; ctW=ctW+32){
                 //we add to the partial result
-                partialRes[threadIdx.x]=partialRes[threadIdx.x] | (_CT_MASKCT_svSize_sval_sSize_sSup_dev[ctW+threadIdx.x] & _supports_dev[index_x_a*(*_currTable_dev_size)+ctW+threadIdx.x]);
+                int support=__ldlu(_supports_dev+ index_x_a*(*_currTable_dev_size)+ctW+threadIdx.x); //load the support word without caching
+                partialRes[threadIdx.x]=partialRes[threadIdx.x] | (_CT_MASKCT_svSize_sval_sSize_sSup_dev[ctW+threadIdx.x] & support);
                 //increment by 32 for the last (unrolled iterations, look after the for loop)
                 skip+=32;
             }
