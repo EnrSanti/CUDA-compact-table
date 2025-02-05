@@ -1,6 +1,6 @@
 #include "gpu_constriants/table.cuh"
-
 #include <chrono>
+#include <cuda_runtime.h>
 
 
 TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) : Table(vars,tuples){
@@ -69,7 +69,7 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     }
     buffer=(unsigned int*)calloc(buffSize,sizeof(unsigned int));
 
-    noBlocks=(currTableSize/4)+1;
+    noBlocks=(currTableSize);
     noBlocksFilter=((_supportSize/32)+1);
     cudaStreamSynchronize(streams[0]);
 
@@ -127,7 +127,7 @@ void TableGPU::propagate(){
 
 
     //pass: the supports, the changed variables + how many, the indexes for the support, the table and the size, the domains,  and 32*vars ints which tells what range of the varialbe to check according to the index of the th (modifies CT with CT & mask)
-    updateTableGPU<<<noBlocks,128,128*sizeof(unsigned int),streams[0]>>>(_supports_dev,_CT_MASKCT_svSize_sval_sSize_sSup_dev+(2*currTableSize),_supportOffsetJmp_dev,_CT_MASKCT_svSize_sval_sSize_sSup_dev,_currTable_size_dev,_vars_dev,workerOffestAndLimit_dev);          
+    updateTableGPU<<<noBlocks,32,32*sizeof(unsigned int),streams[0]>>>(_supports_dev,_CT_MASKCT_svSize_sval_sSize_sSup_dev+(2*currTableSize),_supportOffsetJmp_dev,_CT_MASKCT_svSize_sval_sSize_sSup_dev,_currTable_size_dev,_vars_dev,workerOffestAndLimit_dev);          
     
 
     //copy back the mask to inteserct with the table calculated by the kernel
@@ -152,7 +152,7 @@ void TableGPU::propagate(){
     }
 
 
-    //wait for  the domains
+    //wait for  the domains to be copied back
     cudaStreamSynchronize(streams[0]);
     
     //for all the vars in ssup, update their domains
@@ -271,90 +271,51 @@ void TableGPU::dumpDomainsGPU2(){
 __global__ void updateTableGPU(unsigned int* _supports_dev,unsigned int * _svSize_off_sval_dev, int *_supportOffsetJmp_dev, unsigned int * _CT_mask_dev,int* _currTable_dev_size, int* _vars_dev, int* offsetsAndLimits){
 
 
-    extern __shared__ unsigned int mask[]; //mask (128 ints)
+    extern __shared__ unsigned int mask[]; //mask (32 ints)
 
     int blockIdxx=blockIdx.x;
-    int colsPerBlock=4;
     int varIndex=0;
-    int th_col=threadIdx.x%4; //from 0..127 to 0..4 (which column do we look at), each block looks at 4 columns, groups of 32 threads (size 4) will share the same column
-    int th_row=threadIdx.x/4; //from 0..127 to 0..31 (which row do i am part of), 32 threads will share the same row
 
-    int th_mappedPos_stream=threadIdx.x%colsPerBlock+(colsPerBlock*blockIdxx); //it is thPos as if I didn't have to consider the other streams
-  
-    //clear mask MANDATORY
+    //each thread clears the mask, MANDATORY
     mask[threadIdx.x]=0;
-    
 
-    if(th_mappedPos_stream>=*_currTable_dev_size){
-        return;
-    }
-
-    //each 32 threads will take care of the same var
+    //each 32 threads will take care of the same var (all vars)
     for(int i=0; i<_svSize_off_sval_dev[0]; i++){
         
-        //variable index
+        //get the variable index
         varIndex=_svSize_off_sval_dev[i+2];
 
         //the starting point (row) of the supports for the var
         int from=_supportOffsetJmp_dev[varIndex];
-        int iterations32_th=varIndex*64+th_row; //32 values, equal for 4 groups of threads
-        int lastVal=varIndex*64+31;
-        int offset32_th=offsetsAndLimits[iterations32_th+32]; //32 values, equal for groups of 4 threads
+        //the index of the array offsetsAndLimits which tells the thread how many iterations it will do over the current variable
+        int iterations32_th=varIndex*64+threadIdx.x; 
+        //the offset of the supports for the current variable for the current thread
+        int offset32_th=offsetsAndLimits[iterations32_th+32]; 
 
-        //1/16 of the domain, from 0 to the upper bound of each group of 16 threads
-        for(int j=0; j<offsetsAndLimits[lastVal]; j++){
-
+        
+        for(int j=0; j<offsetsAndLimits[iterations32_th]; j++){
+            
             int wordIndex=(from+j+offset32_th)/32; //piece of row of supports, not the cell, the row piece of row the block looks at
             int maskContains=1<<(31-j-_supportOffsetJmp_dev[varIndex]-offset32_th+wordIndex*32); //int containing a single bit set
 
-            if((_vars_dev[wordIndex] & maskContains) != 0){ //check if val in domain, if so we add (OR) the mask
-                //off is != for each of the 128 ths
-                //deve tener conto del 
-                int off=(j+offset32_th)*(*_currTable_dev_size)+(_supportOffsetJmp_dev[varIndex]*(*_currTable_dev_size))+blockIdxx*4+th_col; 
+            //check if the value is in the domain, without an if statement
+            int condition=((_vars_dev[wordIndex] & maskContains)!=0);
+            //calculate the offset of the support word the thread has to (potentially) add to the mask
+            int off=(j+offset32_th)*(*_currTable_dev_size)+(_supportOffsetJmp_dev[varIndex]*(*_currTable_dev_size))+blockIdxx; 
+            mask[threadIdx.x]=mask[threadIdx.x] | (_supports_dev[off]*condition);        
+        }
 
-                mask[threadIdx.x]=mask[threadIdx.x] | _supports_dev[off];
-            }  
-            __syncthreads();          
+        //parallel reduction over the 32 threads, each thread took care of a different part of the domain of the same variable
+        unsigned result = __reduce_or_sync(0xFFFFFFFF, mask[threadIdx.x]);
+        
+        //write back the result
+        if(threadIdx.x==0){
+            _CT_mask_dev[blockIdxx]=result & _CT_mask_dev[blockIdxx];   
         }
-        //c'è un unroll sull'ultimo ciclo per poter inserire in syncthreads sopra
-        if(offsetsAndLimits[lastVal]<offsetsAndLimits[iterations32_th]){
-            int j=offsetsAndLimits[iterations32_th]-1;
-            int wordIndex=(from+j+offset32_th)/32; //piece of row of supports, not the cell, the row piece of row the block looks at
-            int maskContains=1<<(31-j-_supportOffsetJmp_dev[varIndex]-offset32_th+wordIndex*32);
 
-            if((_vars_dev[wordIndex] & maskContains) != 0){ //check if val in domain
-                //off is != for each of the 128 ths
-                int off=(j+offset32_th)*(*_currTable_dev_size)+(_supportOffsetJmp_dev[varIndex]*(*_currTable_dev_size))+blockIdxx*4+th_col; 
-
-                mask[threadIdx.x]=mask[threadIdx.x] | _supports_dev[off];
-             }            
-        }
         __syncthreads();
-
-        //parallel reduction
-        if(threadIdx.x<64){
-            mask[threadIdx.x]=mask[threadIdx.x] | mask[threadIdx.x+64];
-        }
-        __syncthreads();
-        if(threadIdx.x<32){
-            mask[threadIdx.x]=mask[threadIdx.x] | mask[threadIdx.x+32];
-        }
-        __syncthreads();
-        if(threadIdx.x<16){
-            mask[threadIdx.x]=mask[threadIdx.x] | mask[threadIdx.x+16];
-       }
-        __syncthreads();
-        if(threadIdx.x<8){
-            mask[threadIdx.x]=mask[threadIdx.x] | mask[threadIdx.x+8];
-
-        }
-        __syncthreads();
-        //4 threads to this last operation
-        if(threadIdx.x<4){
-            mask[threadIdx.x]=mask[threadIdx.x] | mask[threadIdx.x+4];
-            _CT_mask_dev[th_mappedPos_stream]=mask[threadIdx.x] & _CT_mask_dev[th_mappedPos_stream];   
-        }
         mask[threadIdx.x]=0;
+        //at the next iteration the variable changes
     }
 }
 
@@ -366,10 +327,6 @@ __global__ void  filterDomainsGPU(unsigned int * _CT_MASKCT_svSize_sval_sSize_sS
 
     int th_mappedPos_domain_word=blockIdx.x; //which word of the overall donmains do i look at
     
-
-    if(th_mappedPos_domain_word>=(*supportSize_dev)/32+1){
-        return;
-    }
     //if the word is empty, no need to do anything, i can't remove any values
     if(_vars_dev[blockIdx.x]==0){
         return;
@@ -379,9 +336,7 @@ __global__ void  filterDomainsGPU(unsigned int * _CT_MASKCT_svSize_sval_sSize_sS
     for(int i=0; i<32; i++){  
         
         int mask=1<<(31-(i%32));
-
         partialRes[threadIdx.x]=0;
-
 
         //if value in the domain then we intersect (either all thread are here or none is)
         if((_vars_dev[blockIdx.x] & mask)!=0){
@@ -389,7 +344,6 @@ __global__ void  filterDomainsGPU(unsigned int * _CT_MASKCT_svSize_sval_sSize_sS
             //the index of the supports i look at
             int index_x_a=blockIdx.x*32+i;
 
-            
             for(int ctW=0; ctW<(*_currTable_dev_size+32); ctW=ctW+32){
                 if(ctW+threadIdx.x < *_currTable_dev_size){
                     //if the intersection is not empyt i can't have partial res empty
@@ -399,34 +353,12 @@ __global__ void  filterDomainsGPU(unsigned int * _CT_MASKCT_svSize_sval_sSize_sS
                              
             }
 
-            
-            // we do a parallel reduction on the ct
-            __syncthreads();
-            //reduction from 32 to 16
-            if(threadIdx.x<16){
-                partialRes[threadIdx.x]=partialRes[threadIdx.x] | partialRes[threadIdx.x+16];
-            }
-            __syncthreads();
-            //reduction from 16 to 8
-            if(threadIdx.x<8){
-                partialRes[threadIdx.x]=partialRes[threadIdx.x] | partialRes[threadIdx.x+8];
-            }
-            __syncthreads();
-            //reduction from 8 to 4
-            if(threadIdx.x<4){
-                partialRes[threadIdx.x]=partialRes[threadIdx.x] | partialRes[threadIdx.x+4];
-            }
-            __syncthreads();
-            //reduction from 4 to 2
-            if(threadIdx.x<2){
-                partialRes[threadIdx.x]=partialRes[threadIdx.x] | partialRes[threadIdx.x+2];
-            }
-            __syncthreads();
+            unsigned result = __reduce_or_sync(0xFFFFFFFF, partialRes[threadIdx.x]);
+        
             //reduction from 2 to 1
-            if(threadIdx.x<1){
-                partialRes[threadIdx.x]=partialRes[threadIdx.x] | partialRes[threadIdx.x+1];
+            if(threadIdx.x==0){
                 //if a bit is set to 1 then the value specified by the position needs to be removed from the domain, otherwise not
-                _vars_dev[th_mappedPos_domain_word] = (_vars_dev[th_mappedPos_domain_word] & ~(1 << (31-i))) | ((partialRes[threadIdx.x] == 0) << (31-i));
+                _vars_dev[th_mappedPos_domain_word] = (_vars_dev[th_mappedPos_domain_word] & ~(1 << (31-i))) | ((result == 0) << (31-i));
             }
             __syncthreads();
         }

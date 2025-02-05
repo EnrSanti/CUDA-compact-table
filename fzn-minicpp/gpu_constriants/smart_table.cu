@@ -35,10 +35,6 @@ int noTuples=tuples.size();
 
 
     streams=(cudaStream_t*)malloc(sizeof(cudaStream_t)*noStreams);
-
-
-    
-
     cudaError_t err = cudaStreamCreate(&streams[0]);
     
     for(int i=0;i<noVars-1;i++){
@@ -62,7 +58,7 @@ int noTuples=tuples.size();
     buffer=(unsigned int*)calloc(buffSize,sizeof(unsigned int));
 
     //compute once and transfer the offsets for the streams:
-    noBlocks=(currTableSize/4)+1;
+    noBlocks=(currTableSize);
     noBlocksFilter=((_supportSize/32)+1);
 
     cudaStreamSynchronize(streams[0]);
@@ -103,20 +99,15 @@ void SmartTableGPU::enfGACDev(){
 
     
     //pass: the supports, the changed variables + how many, the indexes for the support, the table and the size, the domains,  and 32*vars ints which tells what range of the varialbe to check according to the index of the th (modifies CT with CT & mask)
-    updateTableGPU<<<noBlocks,128,128*sizeof(unsigned int),streams[0]>>>(_supports_dev,_CT_MASKCT_svSize_sval_sSize_sSup_dev+(2*currTableSize),_supportOffsetJmp_dev,_CT_MASKCT_svSize_sval_sSize_sSup_dev,_currTable_size_dev,_vars_dev,workerOffestAndLimit_dev);          
+    updateTableGPU<<<noBlocks,32,32*sizeof(unsigned int),streams[0]>>>(_supports_dev,_CT_MASKCT_svSize_sval_sSize_sSup_dev+(2*currTableSize),_supportOffsetJmp_dev,_CT_MASKCT_svSize_sval_sSize_sSup_dev,_currTable_size_dev,_vars_dev,workerOffestAndLimit_dev);          
 
     
-    //si copio mask in ct per semplcità
     cudaMemcpyAsync(_CT_MASKCT_svSize_sval_sSize_sSup_host, _CT_MASKCT_svSize_sval_sSize_sSup_dev, currTableSize*sizeof(unsigned int), cudaMemcpyDeviceToHost,streams[0]);
 
     filterDomainsGPU<<<noBlocksFilter,32,32*sizeof(unsigned int),streams[0]>>>(_CT_MASKCT_svSize_sval_sSize_sSup_dev,_currTable_size_dev,_vars_dev,_supportOffsetJmp_dev,_supports_dev, _supportSize_dev);
-    //launch filtering 
 
-    //each block does 2 words of the domains
 
-   
     //we need to update the current table
-
     cudaStreamSynchronize(streams[0]);
     cudaMemcpyAsync(_vars_to_remove_host, _vars_dev, sizeof(int)*((_supportSize/32)+1), cudaMemcpyDeviceToHost,streams[0]);
 
