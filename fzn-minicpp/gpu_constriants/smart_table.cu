@@ -2,15 +2,12 @@
 #include "gpu_constriants/table.cuh"
 #include "chrono"
 SmartTableGPU::SmartTableGPU(vector<var<int>::Ptr> & vars,  vector<std::vector<int>> & tuples, vector<std::vector<int>> & signs) : SmartTable(vars,tuples,signs){
-   setPriority(CLOW);
-
     
-int noTuples=tuples.size();
+    int noTuples=tuples.size();
     noVars=vars.size();
     
     currTableSize=(noTuples/32)+1; 
-    
-    
+
 
     // Memory allocation
     cudaMalloc((void**)&_noVars_dev, sizeof(int));
@@ -195,9 +192,6 @@ void SmartTableGPU::dumpDomainsGPU2(){
         if(!(_vars[index]->changed()) && _vars[index]->size()==1)
             continue;
 
-        
-        
-        
         int starting_word=(_supportOffsetJmp[index])/32;
         int words_to_reset=-1;
         int to=-1;

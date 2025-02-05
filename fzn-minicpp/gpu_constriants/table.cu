@@ -337,27 +337,33 @@ __global__ void  filterDomainsGPU(unsigned int * _CT_MASKCT_svSize_sval_sSize_sS
         
         int mask=1<<(31-(i%32));
         partialRes[threadIdx.x]=0;
-
+        
         //if value in the domain then we intersect (either all thread are here or none is)
         if((_vars_dev[blockIdx.x] & mask)!=0){
         
-            //the index of the supports i look at
+            //the index of the support i look at, it doesn't depend on the thread just on the block, each thread will do a different piece of work on the CT
             int index_x_a=blockIdx.x*32+i;
 
-            for(int ctW=0; ctW<(*_currTable_dev_size+32); ctW=ctW+32){
-                if(ctW+threadIdx.x < *_currTable_dev_size){
-                    //if the intersection is not empyt i can't have partial res empty
-                    partialRes[threadIdx.x]=partialRes[threadIdx.x] | (_CT_MASKCT_svSize_sval_sSize_sSup_dev[ctW+threadIdx.x] & _supports_dev[index_x_a*(*_currTable_dev_size)+ctW+threadIdx.x]);
-                }
-                __syncthreads();
-                             
+            int skip=0;
+            for(int ctW=0; ctW<(*_currTable_dev_size)-32; ctW=ctW+32){
+                //we add to the partial result
+                partialRes[threadIdx.x]=partialRes[threadIdx.x] | (_CT_MASKCT_svSize_sval_sSize_sSup_dev[ctW+threadIdx.x] & _supports_dev[index_x_a*(*_currTable_dev_size)+ctW+threadIdx.x]);
+                //increment by 32 for the last (unrolled iterations, look after the for loop)
+                skip+=32;
             }
 
+            //unroll of the last iteration of the loop, if the CT size is not a multiple of 32 then if(threadIdx.x<=(*_currTable_dev_size)%32) the threads considered will do one more iteration
+            int condition=(threadIdx.x<=(*_currTable_dev_size)%32)!=0;
+            partialRes[threadIdx.x]=partialRes[threadIdx.x] | ( (condition) * (_CT_MASKCT_svSize_sval_sSize_sSup_dev[skip+threadIdx.x] & _supports_dev[index_x_a*(*_currTable_dev_size)+skip+threadIdx.x]));
+            //end of unrolled loop
+
+            //reduction among the 32 threads of the block
             unsigned result = __reduce_or_sync(0xFFFFFFFF, partialRes[threadIdx.x]);
         
-            //reduction from 2 to 1
+            //the first thread of each block writes the word
             if(threadIdx.x==0){
                 //if a bit is set to 1 then the value specified by the position needs to be removed from the domain, otherwise not
+                //it's just a "complex" operation to avoid an if statement
                 _vars_dev[th_mappedPos_domain_word] = (_vars_dev[th_mappedPos_domain_word] & ~(1 << (31-i))) | ((result == 0) << (31-i));
             }
             __syncthreads();
