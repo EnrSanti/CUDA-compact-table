@@ -108,14 +108,10 @@ void SmartTableGPU::enfGACDev(){
 
     cudaStreamSynchronize(streams[0]);
     
-    cudaMemcpyAsync(_CT_MASKCT_svSize_sval_sSize_sSup_host, _CT_MASKCT_svSize_sval_sSize_sSup_dev, currTableSize*sizeof(unsigned int), cudaMemcpyDeviceToHost,streams[0]);
-
-    filterDomainsGPU<<<noBlocksFilter,32,32*sizeof(unsigned int),streams[0]>>>(_CT_MASKCT_svSize_sval_sSize_sSup_dev,_currTable_size_dev,_vars_dev,_supportOffsetJmp_dev,_supports_dev, _supportSize_dev);
-
+    cudaMemcpyAsync(_CT_MASKCT_svSize_sval_sSize_sSup_host, _CT_MASKCT_svSize_sval_sSize_sSup_dev, currTableSize*sizeof(unsigned int), cudaMemcpyDeviceToHost,streams[0]);    
 
     //we need to update the current table
     cudaStreamSynchronize(streams[0]);
-    cudaMemcpyAsync(_vars_to_remove_host, _vars_dev, sizeof(int)*((_supportSize/32)+1), cudaMemcpyDeviceToHost,streams[0]);
 
     _currTable.addToMaskArray(_CT_MASKCT_svSize_sval_sSize_sSup_host);
     
@@ -126,31 +122,8 @@ void SmartTableGPU::enfGACDev(){
         //sync stream 0
         failNow();
     }
+    filterDomains();
 
-
-    //copy back the domains
-    
-    cudaStreamSynchronize(streams[0]);
-    
-    //for all the vars in ssup
-    for(int i=0;i<_s_sup.size();i++){
-
-        int index=_s_sup[i];
-        int starting_word=(_supportOffsetJmp[index]+(_vars[index]->min()-_vars[index]->initialMin()))/32;
-        int starting_bit=(_supportOffsetJmp[index]+(_vars[index]->min()-_vars[index]->initialMin()))%32; 
-        
-        //from the min to the max (can be changed);
-        for (int j = _vars[index]->min(); j <= _vars[index]->max();  j++){ 
-            if((_vars_to_remove_host[starting_word] & (0x80000000>>starting_bit))!=0){
-                _vars[index]->remove(j);
-            }
-            starting_bit++;
-            if(starting_bit==32){
-                starting_bit=0;
-                starting_word++;
-            }
-        }
-    }
 
 }
 void SmartTableGPU::enfoceGAC(){

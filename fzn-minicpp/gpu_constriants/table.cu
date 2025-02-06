@@ -160,18 +160,8 @@ void TableGPU::propagate(){
     cudaStreamSynchronize(streams[0]);
     //copy back the mask to inteserct with the table calculated by the kernel
     cudaMemcpyAsync(_CT_MASKCT_svSize_sval_sSize_sSup_host, _CT_MASKCT_svSize_sval_sSize_sSup_dev, currTableSize*sizeof(unsigned int), cudaMemcpyDeviceToHost,streams[0]);
-
-    auto start_overall_filter = std::chrono::high_resolution_clock::now();
-    //launch filtering, each block will take care of a word of the domains
-    filterDomainsGPU<<<noBlocksFilter,32,32*sizeof(unsigned int),streams[0]>>>(_CT_MASKCT_svSize_sval_sSize_sSup_dev,_currTable_size_dev,_vars_dev,_supportOffsetJmp_dev,_supports_dev, _supportSize_dev);
-
     
     cudaStreamSynchronize(streams[0]);
-    auto end_overall_filter = std::chrono::high_resolution_clock::now();
-    //get the time in micro seconds
-  
-    //getting back the for each varaible the values to remove from the domains
-    cudaMemcpyAsync(_vars_to_remove_host, _vars_dev, sizeof(int)*((_supportSize/32)+1), cudaMemcpyDeviceToHost,streams[0]);
 
     //adding the retrieved mask
     _currTable.addToMaskArray(_CT_MASKCT_svSize_sval_sSize_sSup_host);
@@ -183,31 +173,7 @@ void TableGPU::propagate(){
         failNow();
     }
 
-
-    //wait for  the domains to be copied back
-    cudaStreamSynchronize(streams[0]);
-    
-    auto start_removing = std::chrono::high_resolution_clock::now();    
-    //for all the vars in ssup, update their domains
-    for(int i=0;i<_s_sup.size();i++){
-
-        int index=_s_sup[i];
-        int starting_word=(_supportOffsetJmp[index]+(_vars[index]->min()-_vars[index]->initialMin()))/32;
-        int starting_bit=(_supportOffsetJmp[index]+(_vars[index]->min()-_vars[index]->initialMin()))%32; 
-        
-        //from the min to the max (can be changed);
-        for (int j = _vars[index]->min(); j <= _vars[index]->max();  j++){ 
-            if((_vars_to_remove_host[starting_word] & (0x80000000>>starting_bit))!=0){
-                _vars[index]->remove(j);
-            }
-            starting_bit++;
-            if(starting_bit==32){
-                starting_bit=0;
-                starting_word++;
-            }
-        }
-    }
-    
+    filterDomains();    
     auto end_overall = std::chrono::high_resolution_clock::now();
     
     #ifdef RECORD_OUTPUT
@@ -224,7 +190,9 @@ void TableGPU::propagate(){
 void TableGPU::dumpDomainsGPU2(){
 
     //for each of the vars, dump the domain which is kept as a sparseBitset into the array (treat it as a black box)
-    for(int index=0; index < noVars; index++){
+    for(int i=0; i < _s_val.size(); i++){
+        
+        int index=_s_val[i];
         //which vars i don't need to update
         if(!(_vars[index]->changed()) && _vars[index]->size()==1)
             continue;
@@ -393,59 +361,6 @@ __global__ void reduce(unsigned int * _CT_MASKCT_svSize_sval_sSize_sSup_dev,unsi
     
     if(threadIdx.x==0){
         _CT_MASKCT_svSize_sval_sSize_sSup_dev[ctWord]=result&_CT_MASKCT_svSize_sval_sSize_sSup_dev[ctWord];
-    }
-}
-
-
-__global__ void  filterDomainsGPU(unsigned int * _CT_MASKCT_svSize_sval_sSize_sSup_dev, int* _currTable_dev_size, int* _vars_dev, int *_supportOffsetJmp_dev, unsigned int* _supports_dev , int* supportSize_dev){
-    
-
-    extern __shared__ unsigned int partialRes[]; //mask (32 ints)
-
-    int th_mappedPos_domain_word=blockIdx.x; //which word of the overall donmains do i look at
-    
-    //if the word is empty, no need to do anything, i can't remove any values
-    if(_vars_dev[blockIdx.x]==0){
-        return;
-    }
-
-    //for each bit in the word, each thread in the block will do 32 iterations
-    for(int i=0; i<32; i++){  
-        
-        int mask=1<<(31-(i%32));
-        partialRes[threadIdx.x]=0;
-        
-        //if value in the domain then we intersect (either all thread are here or none is)
-        if((_vars_dev[blockIdx.x] & mask)!=0){
-        
-            //the index of the support i look at, it doesn't depend on the thread just on the block, each thread will do a different piece of work on the CT
-            int index_x_a=blockIdx.x*32+i;
-
-            int skip=0;
-            for(int ctW=0; ctW<(*_currTable_dev_size)-32; ctW=ctW+32){
-                //we add to the partial result
-                int support=__ldlu(_supports_dev+ index_x_a*(*_currTable_dev_size)+ctW+threadIdx.x); //load the support word without caching
-                partialRes[threadIdx.x]=partialRes[threadIdx.x] | (_CT_MASKCT_svSize_sval_sSize_sSup_dev[ctW+threadIdx.x] & support);
-                //increment by 32 for the last (unrolled iterations, look after the for loop)
-                skip+=32;
-            }
-
-            //unroll of the last iteration of the loop, if the CT size is not a multiple of 32 then if(threadIdx.x<=(*_currTable_dev_size)%32) the threads considered will do one more iteration
-            int condition=(threadIdx.x<=(*_currTable_dev_size)%32)!=0;
-            partialRes[threadIdx.x]=partialRes[threadIdx.x] | ( (condition) * (_CT_MASKCT_svSize_sval_sSize_sSup_dev[skip+threadIdx.x] & _supports_dev[index_x_a*(*_currTable_dev_size)+skip+threadIdx.x]));
-            //end of unrolled loop
-
-            //reduction among the 32 threads of the block
-            unsigned result = __reduce_or_sync(0xFFFFFFFF, partialRes[threadIdx.x]);
-        
-            //the first thread of each block writes the word
-            if(threadIdx.x==0){
-                //if a bit is set to 1 then the value specified by the position needs to be removed from the domain, otherwise not
-                //it's just a "complex" operation to avoid an if statement
-                _vars_dev[th_mappedPos_domain_word] = (_vars_dev[th_mappedPos_domain_word] & ~(1 << (31-i))) | ((result == 0) << (31-i));
-            }
-            __syncthreads();
-        }
     }
 }
 
