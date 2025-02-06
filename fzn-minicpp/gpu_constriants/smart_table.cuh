@@ -26,7 +26,8 @@ class SmartTableGPU : public SmartTable {
         int *_noVars_dev;
         int *_vars_host;
         unsigned int * _vars_to_remove_host;
-
+        unsigned int * _tmpMasks;
+        
         unsigned int* _CT_MASKCT_svSize_sval_sSize_sSup_host;
         unsigned int* _CT_MASKCT_svSize_sval_sSize_sSup_dev;
 

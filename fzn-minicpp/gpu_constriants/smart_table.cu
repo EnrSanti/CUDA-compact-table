@@ -21,6 +21,7 @@ SmartTableGPU::SmartTableGPU(vector<var<int>::Ptr> & vars,  vector<std::vector<i
     
     cudaMalloc((void**)&workerOffestAndLimit_dev, sizeof(int)*64*noVars);
     
+    cudaMalloc((void**)&_tmpMasks, sizeof(unsigned int)*currTableSize*noVars);
     
 
     //on host side we create simpler structures to then copy the data
@@ -95,9 +96,17 @@ void SmartTableGPU::enfGACDev(){
     cudaMemcpyAsync(_vars_dev, _vars_host, sizeof(int)*((_supportSize/32)+1), cudaMemcpyHostToDevice,streams[0]);
 
     
-    //pass: the supports, the changed variables + how many, the indexes for the support, the table and the size, the domains,  and 32*vars ints which tells what range of the varialbe to check according to the index of the th (modifies CT with CT & mask)
-    updateTableGPU<<<noBlocks,32,32*sizeof(unsigned int),streams[0]>>>(_supports_dev,_CT_MASKCT_svSize_sval_sSize_sSup_dev+(2*currTableSize),_supportOffsetJmp_dev,_CT_MASKCT_svSize_sval_sSize_sSup_dev,_currTable_size_dev,_vars_dev,workerOffestAndLimit_dev);          
+    dim3 gridDim(noBlocks,_s_val.size());
+    updateTableGPU<<<gridDim,32,32*sizeof(unsigned int),streams[0]>>>(_supports_dev,_CT_MASKCT_svSize_sval_sSize_sSup_dev+(2*currTableSize),_supportOffsetJmp_dev,_CT_MASKCT_svSize_sval_sSize_sSup_dev,_currTable_size_dev,_vars_dev,workerOffestAndLimit_dev,_tmpMasks);          
 
+ 
+
+    //we then reduce the matrix of temporary maks into a single mask to add tot he table
+    reduce<<<currTableSize,std::min((int)_s_val.size(),32),32*sizeof(int),streams[0]>>>(_CT_MASKCT_svSize_sval_sSize_sSup_dev,_tmpMasks,_currTable_size_dev);
+    
+
+
+    cudaStreamSynchronize(streams[0]);
     
     cudaMemcpyAsync(_CT_MASKCT_svSize_sval_sSize_sSup_host, _CT_MASKCT_svSize_sval_sSize_sSup_dev, currTableSize*sizeof(unsigned int), cudaMemcpyDeviceToHost,streams[0]);
 
