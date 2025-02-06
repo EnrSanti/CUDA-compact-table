@@ -1,12 +1,17 @@
 #include "table.hpp"
 #include <unistd.h>
 #include <chrono>
+#define RECORD_OUTPUT
+#define RECORD_OUTPUT_FILE "output.txt"
+
 Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     Constraint(vars[0]->getSolver()), 
     _vars(vars), _tuples(tuples), 
     _currTable(SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),tuples.size())){
     
     
+    auto start = std::chrono::high_resolution_clock::now();
+
     //auto start = std::chrono::high_resolution_clock::now();
     int noTuples=tuples.size();
     int noVars=vars.size();
@@ -84,11 +89,11 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
         return;
     }
 
-    
-    //auto end = std::chrono::high_resolution_clock::now();
-    //auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-    //printf("%%%%%% Time taken INIT: %ld microseconds\n", duration.count());
-    
+    #ifdef RECORD_OUTPUT
+        auto end = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+        printf("%%%%%% Time to init table (serial): %ld us\n", duration.count());
+    #endif
 }
 
 void Table::post()
@@ -102,13 +107,8 @@ void Table::post()
 
 void Table::propagate()
 {
-    //auto start = std::chrono::high_resolution_clock::now();
     enfoceGAC();
 
-    //auto end = std::chrono::high_resolution_clock::now();
-    //auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-    //printf("%%%%%% Time taken enfGAC: %ld microseconds\n", duration.count());
-    //fflush(stdout);
     
 }
 
@@ -168,6 +168,8 @@ void Table::filterDomains(){
 }
 
 void Table::enfoceGAC(){
+
+    auto start = std::chrono::high_resolution_clock::now();
     _s_val.clear();
     _s_sup.clear();
     _s_val.shrink_to_fit();
@@ -183,8 +185,22 @@ void Table::enfoceGAC(){
         }
 	}
     
-	updateTable();
-	filterDomains();
+	auto startUpdate = std::chrono::high_resolution_clock::now();
+    updateTable();
+    auto endUpdate = std::chrono::high_resolution_clock::now();
+	
+    auto startFilter = std::chrono::high_resolution_clock::now();
+    filterDomains();
+    auto endFilter = std::chrono::high_resolution_clock::now();
+    
+    #ifdef RECORD_OUTPUT
+        auto end = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+        auto durationUpdate = std::chrono::duration_cast<std::chrono::microseconds>(endUpdate - startUpdate);
+        auto durationFilter = std::chrono::duration_cast<std::chrono::microseconds>(endFilter - startFilter);
+        printf("%%%%%% Time to propagate: %ld us (update %ld) (filter %ld)\n", duration.count(), durationUpdate.count(), durationFilter.count());
+    #endif
+    
 
 }
 

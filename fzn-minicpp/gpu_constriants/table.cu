@@ -1,10 +1,13 @@
 #include "gpu_constriants/table.cuh"
 #include <chrono>
 #include <cuda_runtime.h>
-
+#define RECORD_OUTPUT
+#define RECORD_OUTPUT_FILE "output.txt"
 
 TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) : Table(vars,tuples){
 
+    //get the intial time
+    auto start= std::chrono::high_resolution_clock::now();
     int noTuples=tuples.size();
     noVars=vars.size();
     currTableSize=(noTuples/32)+1; 
@@ -72,7 +75,11 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     noBlocks=(currTableSize);
     noBlocksFilter=((_supportSize/32)+1);
     cudaStreamSynchronize(streams[0]);
-
+    #ifdef RECORD_OUTPUT
+       auto end= std::chrono::high_resolution_clock::now();
+       auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+       printf("%%%%%% Time to init table (CUDA): %ld us\n",duration.count());
+    #endif
 }
 void TableGPU::post(){
     propagate();
@@ -82,6 +89,7 @@ void TableGPU::post(){
 }
 void TableGPU::propagate(){
 
+    auto start_overall = std::chrono::high_resolution_clock::now();
     //resetting the vectors
     _s_val.clear(); 
     _s_val.shrink_to_fit();
@@ -113,6 +121,8 @@ void TableGPU::propagate(){
     _CT_MASKCT_svSize_sval_sSize_sSup_host[currTableSize*2]=_s_val.size();
     _CT_MASKCT_svSize_sval_sSize_sSup_host[currTableSize*2+1]=_s_sup.size();
 
+
+    auto start = std::chrono::high_resolution_clock::now();
     //get the current table, from the sparse Bitset to the array
     for(int i=0;i<currTableSize;i++){
         _CT_MASKCT_svSize_sval_sSize_sSup_host[i]=_currTable._words[i].value();
@@ -124,20 +134,33 @@ void TableGPU::propagate(){
     //getting the updated domains for the varialbes and copying them on the device
     dumpDomainsGPU2();
     cudaMemcpyAsync(_vars_dev, _vars_host, sizeof(int)*((_supportSize/32)+1), cudaMemcpyHostToDevice,streams[0]);
+    cudaStreamSynchronize(streams[0]);
+    auto end = std::chrono::high_resolution_clock::now();
+    //get the time in micro seconds
 
-
+    auto start_update=std::chrono::high_resolution_clock::now();
     //pass: the supports, the changed variables + how many, the indexes for the support, the table and the size, the domains,  and 32*vars ints which tells what range of the varialbe to check according to the index of the th (modifies CT with CT & mask)
     updateTableGPU<<<noBlocks,32,32*sizeof(unsigned int),streams[0]>>>(_supports_dev,_CT_MASKCT_svSize_sval_sSize_sSup_dev+(2*currTableSize),_supportOffsetJmp_dev,_CT_MASKCT_svSize_sval_sSize_sSup_dev,_currTable_size_dev,_vars_dev,workerOffestAndLimit_dev);          
+    #ifdef RECORD_OUTPUT
+        //syncToRemove
+        cudaStreamSynchronize(streams[0]);
+    #endif
+    auto end_update=std::chrono::high_resolution_clock::now();
+    //get the time in micro seconds
     
-
+    
     //copy back the mask to inteserct with the table calculated by the kernel
     cudaMemcpyAsync(_CT_MASKCT_svSize_sval_sSize_sSup_host, _CT_MASKCT_svSize_sval_sSize_sSup_dev, currTableSize*sizeof(unsigned int), cudaMemcpyDeviceToHost,streams[0]);
 
+    auto start_overall_filter = std::chrono::high_resolution_clock::now();
     //launch filtering, each block will take care of a word of the domains
     filterDomainsGPU<<<noBlocksFilter,32,32*sizeof(unsigned int),streams[0]>>>(_CT_MASKCT_svSize_sval_sSize_sSup_dev,_currTable_size_dev,_vars_dev,_supportOffsetJmp_dev,_supports_dev, _supportSize_dev);
 
     
     cudaStreamSynchronize(streams[0]);
+    auto end_overall_filter = std::chrono::high_resolution_clock::now();
+    //get the time in micro seconds
+  
     //getting back the for each varaible the values to remove from the domains
     cudaMemcpyAsync(_vars_to_remove_host, _vars_dev, sizeof(int)*((_supportSize/32)+1), cudaMemcpyDeviceToHost,streams[0]);
 
@@ -155,6 +178,7 @@ void TableGPU::propagate(){
     //wait for  the domains to be copied back
     cudaStreamSynchronize(streams[0]);
     
+    auto start_removing = std::chrono::high_resolution_clock::now();    
     //for all the vars in ssup, update their domains
     for(int i=0;i<_s_sup.size();i++){
 
@@ -175,7 +199,17 @@ void TableGPU::propagate(){
         }
     }
     
+    auto end_overall = std::chrono::high_resolution_clock::now();
     
+    #ifdef RECORD_OUTPUT
+        auto duration_removing = std::chrono::duration_cast<std::chrono::microseconds>(end_overall - start_removing);
+        auto duration_overall_filter = std::chrono::duration_cast<std::chrono::microseconds>(end_overall_filter - start_overall_filter);
+        auto duration_dump_cpu = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+        auto duration_update = std::chrono::duration_cast<std::chrono::microseconds>(end_update - start_update);
+
+        auto duration_overall = std::chrono::duration_cast<std::chrono::microseconds>(end_overall - start_overall);
+        printf("%%%%%% Time to propagate (CUDA): %ld us (to dump & cpy %ld) (update %ld) (filter %ld) (removing %ld)\n",duration_overall.count(),duration_dump_cpu.count(),duration_update.count(),duration_overall_filter.count(),duration_removing.count());
+    #endif    
 }
 
 void TableGPU::dumpDomainsGPU2(){
@@ -378,9 +412,7 @@ __global__ void  filterDomainsGPU(unsigned int * _CT_MASKCT_svSize_sval_sSize_sS
 int bitsFromRight(int n) {
     return (1 << (n)) - 1;
 }
-int bitsFromLeft(int n) {
-
-    
+int bitsFromLeft(int n) {   
     if (n == 0) return 0;    
     return ~0 << (32 - n);
 }
