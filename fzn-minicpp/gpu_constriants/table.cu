@@ -1,7 +1,7 @@
 #include "gpu_constriants/table.cuh"
 #include <chrono>
 #include <cuda_runtime.h>
-#define RECORD_OUTPUT
+//#define RECORD_OUTPUT
 #define RECORD_OUTPUT_FILE "output.txt"
 
 TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) : Table(vars,tuples){
@@ -300,7 +300,6 @@ void TableGPU::dumpDomainsGPU2(){
 
 
 
-//each block deals with 4 words of the CT
 //32 threads will then do a parallel reduction on the word considered (groups of 32 threads will share the same position of the CT)
 __global__ void updateTableGPU(unsigned int* _supports_dev,unsigned int * _svSize_off_sval_dev, int *_supportOffsetJmp_dev, unsigned int * _CT_mask_dev,int* _currTable_dev_size, int* _vars_dev, int* offsetsAndLimits){
 
