@@ -31,7 +31,6 @@ class TableGPU : public Table{
         unsigned int* _CT_MASKCT_svSize_sval_sSize_sSup_dev;
         
 
-        int noBlocks;
         int noBlocksFilter;
         const int noStreams=1; //hardcoded, don't touch IN THIS BRANCH
 
