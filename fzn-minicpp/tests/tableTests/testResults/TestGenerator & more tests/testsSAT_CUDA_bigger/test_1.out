@@ -1,0 +1,16 @@
+%%% Time to init table (serial): 33883 us
+%%% Time to propagate: 21186 us (update 13128) (filter 8049)
+%%% Time to propagate: 17839 us (update 2) (filter 17832)
+%%% Time to propagate: 3306 us (update 1602) (filter 1693)
+%%% Time to propagate: 1938 us (update 1) (filter 1933)
+%%% Time to propagate: 18 us (update 11) (filter 0)
+%%%mzn-stat: solveTime=0.024
+ *************** 
+%%% Time to init table (serial): 31736 us
+%%% Time to init table (CUDA): 88654 us
+%%% Time to propagate (CUDA): 2047 us (to dump & cpy 72) (update 856) (filter 568) (removing 523)
+%%% Time to propagate (CUDA): 2616 us (to dump & cpy 340) (update 12) (filter 417) (removing 1831)
+%%% Time to propagate (CUDA): 1508 us (to dump & cpy 316) (update 709) (filter 32) (removing 434)
+%%% Time to propagate (CUDA): 1057 us (to dump & cpy 298) (update 10) (filter 26) (removing 709)
+%%% Time to propagate (CUDA): 1048 us (to dump & cpy 313) (update 708) (filter 13) (removing 0)
+%%%mzn-stat: solveTime=0.007

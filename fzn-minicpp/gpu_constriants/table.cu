@@ -1,7 +1,7 @@
 #include "gpu_constriants/table.cuh"
 #include <chrono>
 #include <cuda_runtime.h>
-//#define RECORD_OUTPUT
+#define RECORD_OUTPUT
 #define RECORD_OUTPUT_FILE "output.txt"
 
 TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) : Table(vars,tuples){
