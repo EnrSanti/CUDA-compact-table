@@ -2,7 +2,6 @@
 #include <unistd.h>
 #include <chrono>
 //#define RECORD_OUTPUT
-#define RECORD_OUTPUT_FILE "output.txt"
 
 Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     Constraint(vars[0]->getSolver()), 
