@@ -22,9 +22,14 @@ modelsUNSAT = [
 "TestGenerator & more tests/testsUNSAT_even_even_bigger/",
 "TestGenerator & more tests/testsUNSAT_CUDA_even_even_bigger/"]
 
+modelsFromCSP = [
+"./TestGenerator & more tests/VersoLeTable/Botti/",
+"./TestGenerator & more tests/VersoLeTable/Inst0/",
+"./TestGenerator & more tests/VersoLeTable/Inst1/"]
+
 solver="MiniCpp"
 # Run each serial SAT model
-print("Running simple models")
+print("Gathering times")
 
 totalErrors=0
 
@@ -78,10 +83,46 @@ def filter_output(input_string):
     filtered = [line for line in lines if line.startswith("%%% Time") or "%%%mzn-stat: solveTime" in line]
     return "\n".join(filtered)  # Join filtered lines back into a string
 
+
+
+
+# ------------------------------------------------- MAIN -------------------------------------------------
+ 
 #run_models("./SimpleTables/",modelsSAT)
-run_models("./SimpleTables/",modelsUNSAT)
+#run_models("./SimpleTables/",modelsUNSAT)
+#print("\n\n\033[92m ************** Synthetic instances GATHERED **************\033[00m \n\n")
 
+#gather the data from CSP instances
 
+#for all csp folders
+i=0
+for folder in modelsFromCSP:
 
+    folder="./SimpleTables/"+folder
+    if not os.path.exists(folder):
+        print(f"\033[93m FOLDER {folder} not found, SKIPPING\033[00m")
+        continue
+    
+    serial_instances = [file for file in os.listdir(folder) 
+             if os.path.isfile(os.path.join(folder, file)) and not file.startswith("CUDA")]
 
-print("\n\n\033[92m ************** DATA GATHERED **************\033[00m \n\n")
+    for instance in serial_instances:
+
+        result = subprocess.run(["minizinc",  "--solver", solver, "--statistics" ,folder+instance], capture_output=True, text=True)
+
+        setialOutput=filter_output(result.stdout)
+        print(instance)
+    
+        if os.path.exists(os.path.join(folder, "CUDA_"+instance)):
+            resultCUDA = subprocess.run(["minizinc", "--solver",solver,"--statistics" ,folder+"CUDA_"+instance], capture_output=True, text=True)
+            cudaOutput=filter_output(resultCUDA.stdout)
+            print("saving to "+"./testResults/"+folder)
+            os.makedirs("./testResults/"+folder, exist_ok=True)
+            #create a new file under modelsSAT[folderIndex] with the output
+            with open("./testResults/"+folder+instance[:-3]+"out", "w") as text_file:
+                text_file.write(setialOutput+"\n *************** \n"+cudaOutput)
+                print("Output written to "+modelsFromCSP[i]+instance[:-3]+"out")
+        else:
+            print("\033[93 matching file not printfound for "+str(instance)+"looking for "+str(os.path.join(folder, "CUDA_"+instance))+" SKIPPING\033[00m")
+            continue
+    i+=1

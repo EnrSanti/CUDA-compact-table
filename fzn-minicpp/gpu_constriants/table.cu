@@ -1,9 +1,7 @@
 #include "gpu_constriants/table.cuh"
 #include <chrono>
 #include <cuda_runtime.h>
-#define RECORD_OUTPUT
-#define RECORD_OUTPUT_FILE "output.txt"
-
+//#define RECORD_OUTPUT
 TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) : Table(vars,tuples){
 
     //get the intial time
