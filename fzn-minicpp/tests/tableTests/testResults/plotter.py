@@ -10,7 +10,7 @@ folderSAT = [
 "./TestGenerator & more tests/testsSAT_CUDA_even_bigger/",
 "./TestGenerator & more tests/testsSAT_CUDA_even_even_bigger/"]
 
-setNamesSAT = ["SAT_bigger","SAT_even_bigger","SAT_even_even_bigger"]    
+setNamesSAT = ["SAT_B","SAT_EB","SAT_EEB"]    
 
 def plots(models):
 
@@ -25,7 +25,7 @@ def plots(models):
             print(f"\033[93m FOLDER {folder} not found, SKIPPING\033[00m")
             continue
         
-        instances = [file for file in os.listdir(folder) if os.path.isfile(os.path.join(folder, file))]
+        instances = sorted([file for file in os.listdir(folder) if os.path.isfile(os.path.join(folder, file))])
 
         
         #check if folder exists, print in yellow
@@ -37,12 +37,19 @@ def plots(models):
             #read instance file 
             with open(folder+instance, "r") as text_file:
                 time_serial,time_cuda = filter_input(text_file.read())
-                print(str(time_serial)+" "+str(time_cuda))
+                print(f"{time_serial} {time_cuda} percentage speedup {percentage_speedup(time_serial, time_cuda):.2f}%")
                 serialTimes.append(time_serial)
                 cudaTimes.append(time_cuda)
 
+
         plot_sequences(serialTimes, cudaTimes,setNamesSAT[folderIndex])
     
+
+def percentage_speedup(old_time, new_time):
+    speedup = ((old_time - new_time) / old_time) * 100
+    return speedup
+
+
 def filter_input(input_string):
     lines = input_string.splitlines()  # Split string into lines
     filtered = [line for line in lines if "%%%mzn-stat: solveTime" in line]
@@ -54,6 +61,8 @@ def plot_sequences(seq1, seq2, diagram_name):
     plt.plot(seq1, marker='s', linestyle='--', color='blue', label='Serial solve time')
     plt.plot(seq2, marker='s', linestyle='-', color='green', label='CUDA solve time')
     
+    #show only INTEGER NUMBERS on the X axis
+    plt.xticks(range(len(seq1)), range(1, len(seq1)+1))
     plt.xlabel("Instance no.")
     plt.ylabel("Time (s)")
     plt.title(diagram_name)
