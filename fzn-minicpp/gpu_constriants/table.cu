@@ -15,7 +15,7 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     // Memory allocation:
     cudaMalloc((void**)&_noVars_dev, sizeof(int)); //the number of variables in the table
     //an array containing the CT (bitMap), a mask, an int containing the size of _s_val, one for the size of _s_sup and then the arrays s_val and s_sup
-    cudaMalloc((void**)&_CT_MASKCT_svSize_sval_sSize_sSup_dev, sizeof(unsigned int)*(2*currTableSize+2*noVars+2)); 
+    cudaMalloc((void**)&_CT_mask_svs_dev, sizeof(unsigned int)*(2*currTableSize+2*noVars+2)); 
     //the support table (copied just once)
     cudaMalloc((void**)&_supports_dev, sizeof(unsigned int)*_supportSize*currTableSize);
     //the size of the support table
@@ -29,17 +29,17 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     //an array containing the domains of the variables on the device
     cudaMalloc((void**)&_vars_dev, sizeof(int)*((_supportSize/32)+1)); //matrix
     //an array containing, for each varaible (depending on the domain size) the amount of work each thread would do in updating the table
-    cudaMalloc((void**)&workerOffestAndLimit_dev, sizeof(int)*64*noVars);
+    cudaMalloc((void**)&th_limits_dev, sizeof(int)*64*noVars);
     //an list (size no. vars) of arrays of the same size as the CT. it will contain, for each var changed, the mask to add (bitwise AND) to the CT at the end of the update process 
     cudaMalloc((void**)&_tmpMasks, sizeof(unsigned int)*currTableSize*noVars);
 
     
     
     //on host side we create simpler structures to then copy the data
-    cudaMallocHost((void**)&_CT_MASKCT_svSize_sval_sSize_sSup_host, sizeof(unsigned int)*2*(noVars+1+currTableSize));
+    cudaMallocHost((void**)&_CT_mask_svs_host, sizeof(unsigned int)*2*(noVars+1+currTableSize));
     cudaMallocHost((void**)&_vars_host, sizeof(unsigned int)*((_supportSize/32)+1)); //matrix
     cudaMallocHost((void**)&_vars_to_remove_host, sizeof(unsigned int)*((_supportSize/32)+1)); //matrix
-    cudaMallocHost((void**)&workerOffestAndLimit_host,sizeof(int)*64*noVars);
+    cudaMallocHost((void**)&th_limits_host,sizeof(int)*64*noVars);
 
 
     streams=(cudaStream_t*)malloc(sizeof(cudaStream_t)*noStreams);
@@ -48,13 +48,13 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     
     //calculating the amount of rows, for each variable, each thread would have to check
     for(int i=0;i<noVars-1;i++){
-        varOffsetLimit(_supportOffsetJmp[i+1]-_supportOffsetJmp[i],workerOffestAndLimit_host+(i*64));
+        varOffsetLimit(_supportOffsetJmp[i+1]-_supportOffsetJmp[i],th_limits_host+(i*64));
     }
-    varOffsetLimit(_supportSize-_supportOffsetJmp[noVars-1],workerOffestAndLimit_host+((noVars-1)*64));
+    varOffsetLimit(_supportSize-_supportOffsetJmp[noVars-1],th_limits_host+((noVars-1)*64));
 
 
     //copying the data ont he device
-    cudaMemcpyAsync(workerOffestAndLimit_dev, workerOffestAndLimit_host, sizeof(int)*64*noVars, cudaMemcpyHostToDevice,streams[0]);
+    cudaMemcpyAsync(th_limits_dev, th_limits_host, sizeof(int)*64*noVars, cudaMemcpyHostToDevice,streams[0]);
     cudaMemcpyAsync(_noVars_dev, &noVars, sizeof(int), cudaMemcpyHostToDevice,streams[0]);
     cudaMemcpyAsync(_supports_dev, _supports, sizeof(unsigned int)*_supportSize*currTableSize, cudaMemcpyHostToDevice,streams[0]);
     cudaMemcpyAsync(_supportSize_dev, &_supportSize, sizeof(int), cudaMemcpyHostToDevice,streams[0]);
@@ -102,7 +102,7 @@ void TableGPU::propagate(){
     for (int i = 0; i < _vars.size(); i++){
         if(_vars[i]->changed()){
             _s_val.push_back(i);
-            _CT_MASKCT_svSize_sval_sSize_sSup_host[internalIndex]=i;
+            _CT_mask_svs_host[internalIndex]=i;
             internalIndex++;
         }
     }
@@ -112,25 +112,25 @@ void TableGPU::propagate(){
     for (int i = 0; i < _vars.size(); i++){
         if(_vars[i]->size()>1){
             _s_sup.push_back(i);
-            _CT_MASKCT_svSize_sval_sSize_sSup_host[internalIndex]=i;
+            _CT_mask_svs_host[internalIndex]=i;
             internalIndex++;
         }
     }
 
     //add the sizes of the vectors
-    _CT_MASKCT_svSize_sval_sSize_sSup_host[currTableSize*2]=_s_val.size();
-    _CT_MASKCT_svSize_sval_sSize_sSup_host[currTableSize*2+1]=_s_sup.size();
+    _CT_mask_svs_host[currTableSize*2]=_s_val.size();
+    _CT_mask_svs_host[currTableSize*2+1]=_s_sup.size();
 
 
     auto start = std::chrono::high_resolution_clock::now();
 
     //get the current table, from the sparse Bitset to the array
     for(int i=0;i<currTableSize;i++){
-        _CT_MASKCT_svSize_sval_sSize_sSup_host[i]=_currTable._words[i].value();
+        _CT_mask_svs_host[i]=_currTable._words[i].value();
     }
     
     //copy the data on the device
-    cudaMemcpyAsync(_CT_MASKCT_svSize_sval_sSize_sSup_dev, _CT_MASKCT_svSize_sval_sSize_sSup_host, sizeof(unsigned int)*(2*currTableSize+_s_val.size()+_s_sup.size()+2), cudaMemcpyHostToDevice,streams[0]);   
+    cudaMemcpyAsync(_CT_mask_svs_dev, _CT_mask_svs_host, sizeof(unsigned int)*(2*currTableSize+_s_val.size()+_s_sup.size()+2), cudaMemcpyHostToDevice,streams[0]);   
     
     //getting the updated domains for the varialbes and copying them on the device
     dumpDomainsGPU2();
@@ -145,11 +145,11 @@ void TableGPU::propagate(){
     //now each block deals with one specific ct word and also a single changed variable, there can be many blocks, though, even trying to cut them by doing more work per block doesn't improve times
     dim3 gridDim(currTableSize,_s_val.size());
     //pass: the supports, the changed variables + how many, the indexes for the support, the table and the size, the domains,  and 32*vars ints which tells what range of the varialbe to check according to the index of the th (modifies CT with CT & mask)
-    updateTableGPU<<<gridDim,32,32*sizeof(unsigned int),streams[0]>>>(_supports_dev,_CT_MASKCT_svSize_sval_sSize_sSup_dev+(2*currTableSize),_supportOffsetJmp_dev,_CT_MASKCT_svSize_sval_sSize_sSup_dev,_currTable_size_dev,_vars_dev,workerOffestAndLimit_dev,_tmpMasks);          
+    updateTableGPU<<<gridDim,32,32*sizeof(unsigned int),streams[0]>>>(_supports_dev,_CT_mask_svs_dev+(2*currTableSize),_supportOffsetJmp_dev,_CT_mask_svs_dev,_currTable_size_dev,_vars_dev,th_limits_dev,_tmpMasks);          
     //updateTableGPU modifies _tmpMasks in global memory, the mask to add to the CT, then reduce<<<>>> does a bit-wise and among the necessary tmpMasks
 
     //we then reduce the matrix of temporary maks into a single mask to add tot he table
-    reduce<<<currTableSize,std::min((int)_s_val.size(),32),32*sizeof(int),streams[0]>>>(_CT_MASKCT_svSize_sval_sSize_sSup_dev,_tmpMasks,_currTable_size_dev);
+    reduce<<<currTableSize,std::min((int)_s_val.size(),32),32*sizeof(int),streams[0]>>>(_CT_mask_svs_dev,_tmpMasks,_currTable_size_dev);
     
     #ifdef RECORD_OUTPUT
         //syncToRemove
@@ -160,12 +160,12 @@ void TableGPU::propagate(){
     
     cudaStreamSynchronize(streams[0]);
     //copy back the mask to inteserct with the table calculated by the kernel
-    cudaMemcpyAsync(_CT_MASKCT_svSize_sval_sSize_sSup_host, _CT_MASKCT_svSize_sval_sSize_sSup_dev, currTableSize*sizeof(unsigned int), cudaMemcpyDeviceToHost,streams[0]);
+    cudaMemcpyAsync(_CT_mask_svs_host, _CT_mask_svs_dev, currTableSize*sizeof(unsigned int), cudaMemcpyDeviceToHost,streams[0]);
     
     cudaStreamSynchronize(streams[0]);
 
     //adding the retrieved mask
-    _currTable.addToMaskArray(_CT_MASKCT_svSize_sval_sSize_sSup_host);
+    _currTable.addToMaskArray(_CT_mask_svs_host);
     _currTable.intersectWithMask();
     _currTable.clearMask();
 
@@ -325,7 +325,7 @@ __global__ void updateTableGPU(unsigned int* _supports_dev,unsigned int * _svSiz
 
     
 }
-__global__ void reduce(unsigned int * _CT_MASKCT_svSize_sval_sSize_sSup_dev,unsigned int* tmpMasks, int *ctSize){
+__global__ void reduce(unsigned int * _CT_mask_svs_dev,unsigned int* tmpMasks, int *ctSize){
 
     extern __shared__ unsigned int toReduce[]; //mask (32 ints)
     
@@ -333,7 +333,7 @@ __global__ void reduce(unsigned int * _CT_MASKCT_svSize_sval_sSize_sSup_dev,unsi
     int ctWord=blockIdx.x;
 
     //get the overall number of vars changed (i.e. how many rows, of a single word do we need to consider)
-    int noVarsChanged=_CT_MASKCT_svSize_sval_sSize_sSup_dev[2*(*ctSize)];  
+    int noVarsChanged=_CT_mask_svs_dev[2*(*ctSize)];  
 
     //how many iterations each of 32 threads need to do
     int iterations=noVarsChanged/32;
@@ -348,7 +348,7 @@ __global__ void reduce(unsigned int * _CT_MASKCT_svSize_sval_sSize_sSup_dev,unsi
     //each thread will do the same no. of iterations
     for(int i=0;i<iterations;i++){
         //retrieve the variable index to consider (it depends on the thread in the block)
-        int varIndex=_CT_MASKCT_svSize_sval_sSize_sSup_dev[2*(*ctSize)+2+i*32+threadIdx.x];
+        int varIndex=_CT_mask_svs_dev[2*(*ctSize)+2+i*32+threadIdx.x];
         //add (bitwise AND) the proper part of the mask to the final mask 
         toReduce[thId]=toReduce[thId] & tmpMasks[varIndex*(*ctSize)+blockIdx.x];
         skip++;
@@ -356,7 +356,7 @@ __global__ void reduce(unsigned int * _CT_MASKCT_svSize_sval_sSize_sSup_dev,unsi
     
     //checking which first portion of the block may need to do an extra iteration 
     if(threadIdx.x<lastIteration){
-        int varIndex=_CT_MASKCT_svSize_sval_sSize_sSup_dev[2*(*ctSize)+2+skip*32+threadIdx.x];
+        int varIndex=_CT_mask_svs_dev[2*(*ctSize)+2+skip*32+threadIdx.x];
         toReduce[thId]=toReduce[thId] & tmpMasks[varIndex*(*ctSize)+blockIdx.x];
     }
 
@@ -365,7 +365,7 @@ __global__ void reduce(unsigned int * _CT_MASKCT_svSize_sval_sSize_sSup_dev,unsi
     
     //the first thread of the block intersect the final mask witht the CT and writes the result in global memory
     if(threadIdx.x==0){
-        _CT_MASKCT_svSize_sval_sSize_sSup_dev[ctWord]=result&_CT_MASKCT_svSize_sval_sSize_sSup_dev[ctWord];
+        _CT_mask_svs_dev[ctWord]=result&_CT_mask_svs_dev[ctWord];
     }
 }
 

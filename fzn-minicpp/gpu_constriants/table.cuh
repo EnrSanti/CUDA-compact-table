@@ -27,8 +27,8 @@ class TableGPU : public Table{
         unsigned int * _vars_to_remove_host;
         unsigned int * _tmpMasks;
 
-        unsigned int* _CT_MASKCT_svSize_sval_sSize_sSup_host;
-        unsigned int* _CT_MASKCT_svSize_sval_sSize_sSup_dev;
+        unsigned int* _CT_mask_svs_host;
+        unsigned int* _CT_mask_svs_dev;
         
 
         int noBlocksFilter;
@@ -36,9 +36,9 @@ class TableGPU : public Table{
 
         cudaStream_t* streams;
 
-        int *workerOffestAndLimit_dev;
+        int *th_limits_dev;
         int internalIndex;
-        int *workerOffestAndLimit_host;
+        int *th_limits_host;
 
         unsigned int* buffer; //just for the new dump
         int buffSize;
@@ -53,7 +53,7 @@ class TableGPU : public Table{
 };
 
 __global__ void updateTableGPU(unsigned int* _supports_dev,unsigned int * _svSize_off_sval_dev, int *_supportOffsetJmp_dev, unsigned int * _currTable_dev,int* _currTable_dev_size, int* _vars_dev, int* offsetsAndLimits, unsigned int* _tmpMasks);
-__global__ void reduce(unsigned int* _CT_MASKCT_svSize_sval_sSize_sSup_dev,unsigned int* _tmpMasks,int* _currTable_size_dev);
+__global__ void reduce(unsigned int* _CT_mask_svs_dev,unsigned int* _tmpMasks,int* _currTable_size_dev);
     
 void varOffsetLimit(int size,int * where);
 int bitsFromRight(int n);
