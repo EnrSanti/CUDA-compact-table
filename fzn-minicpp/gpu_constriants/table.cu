@@ -167,7 +167,7 @@ void TableGPU::propagate(){
 
     auto start_overall_filter = std::chrono::high_resolution_clock::now();
     //launch filtering, each block will take care of a word of the domains
-    filterDomainsGPU<<<noBlocksFilter,32,32*sizeof(unsigned int),streams[0]>>>(_CT_mask_svs_dev,_currTable_size_dev,_vars_dev,_supportOffsetJmp_dev,_supports_dev, _supportSize_dev);
+    filterDomainsGPU<<<noBlocksFilter,32,64*sizeof(unsigned int),streams[0]>>>(_CT_mask_svs_dev,_currTable_size_dev,_vars_dev,_supportOffsetJmp_dev,_supports_dev, _supportSize_dev);
 
     
     cudaStreamSynchronize(streams[0]);
@@ -409,12 +409,12 @@ __global__ void reduce(unsigned int * _CT_mask_svs_dev,unsigned int* tmpMasks, i
 __global__ void  filterDomainsGPU(unsigned int * _CT_mask_svs_dev, int* _currTable_dev_size, int* _vars_dev, int *_supportOffsetJmp_dev, unsigned int* _supports_dev , int* supportSize_dev){
     
 
-    extern __shared__ unsigned int partialRes[]; //mask (32 ints)
+    extern __shared__ unsigned int partialRes[]; //mask (64 ints, the last 32 int which is used to store _vars_dev[blockIdx.x], so it's accessed just once)
 
-    int th_mappedPos_domain_word=blockIdx.x; //which word of the overall donmains do i look at
-    
+    //do it 32 times, so no ifs
+    partialRes[threadIdx.x+32]=_vars_dev[blockIdx.x]; //store the word of the domain in the last int of the shared memory
     //if the word is empty, no need to do anything, i can't remove any values
-    if(_vars_dev[blockIdx.x]==0){
+    if(partialRes[32]==0){
         return;
     }
 
@@ -425,7 +425,7 @@ __global__ void  filterDomainsGPU(unsigned int * _CT_mask_svs_dev, int* _currTab
         partialRes[threadIdx.x]=0;
         
         //if value in the domain then we intersect (either all thread are here or none is)
-        if((_vars_dev[blockIdx.x] & mask)!=0){
+        if((partialRes[32] & mask)!=0){
         
             //the index of the support i look at, it doesn't depend on the thread just on the block, each thread will do a different piece of work on the CT
             int index_x_a=blockIdx.x*32+i;
@@ -447,15 +447,17 @@ __global__ void  filterDomainsGPU(unsigned int * _CT_mask_svs_dev, int* _currTab
             //reduction among the 32 threads of the block
             unsigned result = __reduce_or_sync(0xFFFFFFFF, partialRes[threadIdx.x]);
         
-            //the first thread of each block writes the word
-            if(threadIdx.x==0){
-                //if a bit is set to 1 then the value specified by the position needs to be removed from the domain, otherwise not
-                //it's just a "complex" operation to avoid an if statement
-                _vars_dev[th_mappedPos_domain_word] = (_vars_dev[th_mappedPos_domain_word] & ~(1 << (31-i))) | ((result == 0) << (31-i));
-            }
-            __syncthreads();
+            
+            //if a bit is set to 1 then the value specified by the position needs to be removed from the domain, otherwise not
+            //it's just a "complex" operation to avoid an if statement
+            partialRes[threadIdx.x+32] = (partialRes[32] & ~(1 << (31-i))) | ((result == 0) << (31-i));
+            //in the previous instruction we are only insterested in partialRes[33] but instead of doing an if and having a sync, we do 31 useless operation on the other threads (1 per thread)           
         }
     }
+    if(threadIdx.x==0){
+        //write back the result, one access in global memory
+        _vars_dev[blockIdx.x]=partialRes[32];
+    }   
 }
 
 int bitsFromRight(int n) {
