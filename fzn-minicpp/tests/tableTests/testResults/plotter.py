@@ -25,7 +25,9 @@ def plots(models):
             print(f"\033[93m FOLDER {folder} not found, SKIPPING\033[00m")
             continue
         
-        instances = sorted([file for file in os.listdir(folder) if os.path.isfile(os.path.join(folder, file))])
+        instances = sorted(   [file for file in os.listdir(folder) if os.path.isfile(os.path.join(folder, file))], key=extract_number)
+
+
 
         
         #check if folder exists, print in yellow
@@ -35,6 +37,7 @@ def plots(models):
 
         for instance in instances:
             #read instance file 
+            print(f"Reading {instance}")
             with open(folder+instance, "r") as text_file:
                 time_serial,time_cuda = filter_input(text_file.read())
                 print(f"{time_serial} {time_cuda} percentage speedup {percentage_speedup(time_serial, time_cuda):.2f}%")
@@ -49,6 +52,10 @@ def percentage_speedup(old_time, new_time):
     speedup = ((old_time - new_time) / old_time) * 100
     return speedup
 
+def extract_number(filename):
+    match = re.search(r'\d+', filename)  # Find the first number in the filename
+    return int(match.group()) if match else float('inf')  # Convert to int
+
 
 def filter_input(input_string):
     lines = input_string.splitlines()  # Split string into lines
@@ -61,11 +68,11 @@ def plot_sequences(seq1, seq2, diagram_name):
     
     plt.figure(figsize=(10, 5))
     
-    plt.bar(x - width/2, seq1, width, color='#1f77b4', label='Serial solve time')
-    plt.bar(x + width/2, seq2, width, color='#17becf', label='CUDA solve time')
+    plt.bar(x - width/2, seq1, width, color='#b7e4c7', label='Serial solve time')
+    plt.bar(x + width/2, seq2, width, color='#40916c', label='CUDA solve time')
     
     # Show only INTEGER NUMBERS on the X axis
-    plt.xticks(x, range(1, len(seq1) + 1))
+    plt.xticks(x, range(0, len(seq1)))
     plt.xlabel("Instance no.")
     plt.ylabel("Time (s)")
     plt.title(diagram_name)
