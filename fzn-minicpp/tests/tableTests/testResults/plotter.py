@@ -1,7 +1,7 @@
 import os
 import re
 import matplotlib.pyplot as plt
-
+import numpy as np  
 
 # List of model files
 
@@ -56,23 +56,24 @@ def filter_input(input_string):
     return float(re.search(r'\d+\.\d{3}', filtered[0]).group()),float(re.search(r'\d+\.\d{3}', filtered[1]).group())  # SERIAL AND CUDA TIMES
 
 def plot_sequences(seq1, seq2, diagram_name):
+    x = np.arange(len(seq1))  # Generate x positions
+    width = 0.4  # Width of bars
+    
     plt.figure(figsize=(10, 5))
     
-    plt.plot(seq1, marker='s', linestyle='--', color='blue', label='Serial solve time')
-    plt.plot(seq2, marker='s', linestyle='-', color='green', label='CUDA solve time')
+    plt.bar(x - width/2, seq1, width, color='#1f77b4', label='Serial solve time')
+    plt.bar(x + width/2, seq2, width, color='#17becf', label='CUDA solve time')
     
-    #show only INTEGER NUMBERS on the X axis
-    plt.xticks(range(len(seq1)), range(1, len(seq1)+1))
+    # Show only INTEGER NUMBERS on the X axis
+    plt.xticks(x, range(1, len(seq1) + 1))
     plt.xlabel("Instance no.")
     plt.ylabel("Time (s)")
     plt.title(diagram_name)
     plt.legend()
-    plt.grid(True)
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
     
     plt.savefig(diagram_name, dpi=300, bbox_inches="tight")  
     print(f"Plot saved as {diagram_name}")
-
-    #plt.show()
 
 
 plots(folderSAT)

@@ -27,8 +27,8 @@ class TableGPU : public Table{
         unsigned int * _vars_to_remove_host;
         unsigned int * _tmpMasks;
 
-        unsigned int* _CT_MASKCT_svSize_sval_sSize_sSup_host;
-        unsigned int* _CT_MASKCT_svSize_sval_sSize_sSup_dev;
+        unsigned int* _CT_mask_svs_host;
+        unsigned int* _CT_mask_svs_dev;
         
 
         int noBlocks;
@@ -37,9 +37,9 @@ class TableGPU : public Table{
 
         cudaStream_t* streams;
 
-        int *workerOffestAndLimit_dev;
+        int *th_limits_dev;
         int internalIndex;
-        int *workerOffestAndLimit_host;
+        int *th_limits_host;
 
         unsigned int* buffer; //just for the new dump
         int buffSize;

@@ -11,7 +11,7 @@ SmartTableGPU::SmartTableGPU(vector<var<int>::Ptr> & vars,  vector<std::vector<i
 
     // Memory allocation
     cudaMalloc((void**)&_noVars_dev, sizeof(int));
-    cudaMalloc((void**)&_CT_MASKCT_svSize_sval_sSize_sSup_dev, sizeof(unsigned int)*(2*currTableSize+2*noVars+2));
+    cudaMalloc((void**)&_CT_mask_svs_dev, sizeof(unsigned int)*(2*currTableSize+2*noVars+2));
     cudaMalloc((void**)&_supports_dev, sizeof(unsigned int)*_supportSize*currTableSize);
     cudaMalloc((void**)&_supportSize_dev, sizeof(int));
     cudaMalloc((void**)&_variablesOffsets_dev, sizeof(int)*noVars);
@@ -19,28 +19,28 @@ SmartTableGPU::SmartTableGPU(vector<var<int>::Ptr> & vars,  vector<std::vector<i
     cudaMalloc((void**)&_currTable_size_dev, sizeof(int));
     cudaMalloc((void**)&_vars_dev, sizeof(int)*((_supportSize/32)+1)); //matrix
     
-    cudaMalloc((void**)&workerOffestAndLimit_dev, sizeof(int)*64*noVars);
+    cudaMalloc((void**)&th_limits_dev, sizeof(int)*64*noVars);
     
     cudaMalloc((void**)&_tmpMasks, sizeof(unsigned int)*currTableSize*noVars);
     
 
     //on host side we create simpler structures to then copy the data
 
-    cudaMallocHost((void**)&_CT_MASKCT_svSize_sval_sSize_sSup_host, sizeof(unsigned int)*2*(noVars+1+currTableSize));
+    cudaMallocHost((void**)&_CT_mask_svs_host, sizeof(unsigned int)*2*(noVars+1+currTableSize));
     cudaMallocHost((void**)&_vars_host, sizeof(unsigned int)*((_supportSize/32)+1)); //matrix
     cudaMallocHost((void**)&_vars_to_remove_host, sizeof(unsigned int)*((_supportSize/32)+1)); //matrix
-    cudaMallocHost((void**)&workerOffestAndLimit_host,sizeof(int)*64*noVars);
+    cudaMallocHost((void**)&th_limits_host,sizeof(int)*64*noVars);
 
 
     streams=(cudaStream_t*)malloc(sizeof(cudaStream_t)*noStreams);
     cudaError_t err = cudaStreamCreate(&streams[0]);
     
     for(int i=0;i<noVars-1;i++){
-        varOffsetLimit(_supportOffsetJmp[i+1]-_supportOffsetJmp[i],workerOffestAndLimit_host+(i*64));
+        varOffsetLimit(_supportOffsetJmp[i+1]-_supportOffsetJmp[i],th_limits_host+(i*64));
     }
-    varOffsetLimit(_supportSize-_supportOffsetJmp[noVars-1],workerOffestAndLimit_host+((noVars-1)*64));
+    varOffsetLimit(_supportSize-_supportOffsetJmp[noVars-1],th_limits_host+((noVars-1)*64));
 
-    cudaMemcpyAsync(workerOffestAndLimit_dev, workerOffestAndLimit_host, sizeof(int)*64*noVars, cudaMemcpyHostToDevice,streams[0]);
+    cudaMemcpyAsync(th_limits_dev, th_limits_host, sizeof(int)*64*noVars, cudaMemcpyHostToDevice,streams[0]);
     cudaMemcpyAsync(_noVars_dev, &noVars, sizeof(int), cudaMemcpyHostToDevice,streams[0]);
     cudaMemcpyAsync(_supports_dev, _supports, sizeof(unsigned int)*_supportSize*currTableSize, cudaMemcpyHostToDevice,streams[0]);
     cudaMemcpyAsync(_supportSize_dev, &_supportSize, sizeof(int), cudaMemcpyHostToDevice,streams[0]);
@@ -83,11 +83,11 @@ void SmartTableGPU::enfGACDev(){
 
 
     for(int i=0;i<currTableSize;i++){
-        _CT_MASKCT_svSize_sval_sSize_sSup_host[i]=_currTable._words[i].value();
+        _CT_mask_svs_host[i]=_currTable._words[i].value();
     }
     
     //aggiungi pure ct ua
-    cudaMemcpyAsync(_CT_MASKCT_svSize_sval_sSize_sSup_dev, _CT_MASKCT_svSize_sval_sSize_sSup_host, sizeof(unsigned int)*(2*currTableSize+_s_val.size()+_s_sup.size()+2), cudaMemcpyHostToDevice,streams[0]);   
+    cudaMemcpyAsync(_CT_mask_svs_dev, _CT_mask_svs_host, sizeof(unsigned int)*(2*currTableSize+_s_val.size()+_s_sup.size()+2), cudaMemcpyHostToDevice,streams[0]);   
     
     //metti dump domini qui
 
@@ -97,27 +97,27 @@ void SmartTableGPU::enfGACDev(){
 
     
     dim3 gridDim(noBlocks,_s_val.size());
-    updateTableGPU<<<gridDim,32,32*sizeof(unsigned int),streams[0]>>>(_supports_dev,_CT_MASKCT_svSize_sval_sSize_sSup_dev+(2*currTableSize),_supportOffsetJmp_dev,_CT_MASKCT_svSize_sval_sSize_sSup_dev,_currTable_size_dev,_vars_dev,workerOffestAndLimit_dev,_tmpMasks);          
+    updateTableGPU<<<gridDim,32,32*sizeof(unsigned int),streams[0]>>>(_supports_dev,_CT_mask_svs_dev+(2*currTableSize),_supportOffsetJmp_dev,_CT_mask_svs_dev,_currTable_size_dev,_vars_dev,th_limits_dev,_tmpMasks);          
 
  
 
     //we then reduce the matrix of temporary maks into a single mask to add tot he table
-    reduce<<<currTableSize,std::min((int)_s_val.size(),32),32*sizeof(int),streams[0]>>>(_CT_MASKCT_svSize_sval_sSize_sSup_dev,_tmpMasks,_currTable_size_dev);
+    reduce<<<currTableSize,std::min((int)_s_val.size(),32),32*sizeof(int),streams[0]>>>(_CT_mask_svs_dev,_tmpMasks,_currTable_size_dev);
     
 
 
     cudaStreamSynchronize(streams[0]);
     
-    cudaMemcpyAsync(_CT_MASKCT_svSize_sval_sSize_sSup_host, _CT_MASKCT_svSize_sval_sSize_sSup_dev, currTableSize*sizeof(unsigned int), cudaMemcpyDeviceToHost,streams[0]);
+    cudaMemcpyAsync(_CT_mask_svs_host, _CT_mask_svs_dev, currTableSize*sizeof(unsigned int), cudaMemcpyDeviceToHost,streams[0]);
 
-    filterDomainsGPU<<<noBlocksFilter,32,32*sizeof(unsigned int),streams[0]>>>(_CT_MASKCT_svSize_sval_sSize_sSup_dev,_currTable_size_dev,_vars_dev,_supportOffsetJmp_dev,_supports_dev, _supportSize_dev);
+    filterDomainsGPU<<<noBlocksFilter,32,32*sizeof(unsigned int),streams[0]>>>(_CT_mask_svs_dev,_currTable_size_dev,_vars_dev,_supportOffsetJmp_dev,_supports_dev, _supportSize_dev);
 
 
     //we need to update the current table
     cudaStreamSynchronize(streams[0]);
     cudaMemcpyAsync(_vars_to_remove_host, _vars_dev, sizeof(int)*((_supportSize/32)+1), cudaMemcpyDeviceToHost,streams[0]);
 
-    _currTable.addToMaskArray(_CT_MASKCT_svSize_sval_sSize_sSup_host);
+    _currTable.addToMaskArray(_CT_mask_svs_host);
     
     _currTable.intersectWithMask();
     _currTable.clearMask();
@@ -168,7 +168,7 @@ void SmartTableGPU::enfoceGAC(){
         //update s_val and the deltas
         if(_vars[i]->changed()){
             _s_val.push_back(i);
-            _CT_MASKCT_svSize_sval_sSize_sSup_host[internalIndex]=i;
+            _CT_mask_svs_host[internalIndex]=i;
             internalIndex++;
             //overallSize=overallSize+_vars[i]->intialSize();
         }
@@ -178,15 +178,15 @@ void SmartTableGPU::enfoceGAC(){
         //update s_sup
         if(_vars[i]->size()>1){
             _s_sup.push_back(i);
-            _CT_MASKCT_svSize_sval_sSize_sSup_host[internalIndex]=i;
+            _CT_mask_svs_host[internalIndex]=i;
             internalIndex++;
         }
     }
 
     //for each var in the table add it to ssup vector
   
-    _CT_MASKCT_svSize_sval_sSize_sSup_host[currTableSize*2]=_s_val.size();
-    _CT_MASKCT_svSize_sval_sSize_sSup_host[currTableSize*2+1]=_s_sup.size();
+    _CT_mask_svs_host[currTableSize*2]=_s_val.size();
+    _CT_mask_svs_host[currTableSize*2+1]=_s_sup.size();
 
     enfGACDev();
         
