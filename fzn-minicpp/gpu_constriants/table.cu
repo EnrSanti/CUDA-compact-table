@@ -9,7 +9,7 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
 
     int noTuples=tuples.size();
     noVars=vars.size();
-    currTableSize=(noTuples/32)+1; 
+    currTableSize=(noTuples/32)+1;  
     
     
 
