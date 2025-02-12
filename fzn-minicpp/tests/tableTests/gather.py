@@ -88,9 +88,9 @@ def filter_output(input_string):
 
 # ------------------------------------------------- MAIN -------------------------------------------------
  
-#run_models("./SimpleTables/",modelsSAT)
-#run_models("./SimpleTables/",modelsUNSAT)
-#print("\n\n\033[92m ************** Synthetic instances GATHERED **************\033[00m \n\n")
+run_models("./SimpleTables/",modelsSAT)
+run_models("./SimpleTables/",modelsUNSAT)
+print("\n\n\033[92m ************** Synthetic instances GATHERED **************\033[00m \n\n")
 
 #gather the data from CSP instances
 

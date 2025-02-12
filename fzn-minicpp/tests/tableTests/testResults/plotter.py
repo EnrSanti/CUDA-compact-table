@@ -49,6 +49,8 @@ def plots(models):
     
 
 def percentage_speedup(old_time, new_time):
+    if(old_time == 0):
+        return -1
     speedup = ((old_time - new_time) / old_time) * 100
     return speedup
 
