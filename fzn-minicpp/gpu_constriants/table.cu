@@ -91,37 +91,34 @@ void TableGPU::post(){
 void TableGPU::propagate(){
 
     auto start_overall = std::chrono::high_resolution_clock::now();
-    //resetting the vectors
-    _s_val.clear(); 
-    _s_val.shrink_to_fit();
-    _s_sup.clear();
-    _s_sup.shrink_to_fit();
+
 
     //calculating where the two vectors (sval, ssup will start)
     int internalIndex=currTableSize*2+2;
-    
+    int sval_size=0;
+    int ssup_size=0;    
     //populate the vector and the respective array counterpart (update s_val)
     for (int i = 0; i < _vars.size(); i++){
         if(_vars[i]->changed()){
-            _s_val.push_back(i);
+            sval_size++;
             _CT_mask_svs_host[internalIndex]=i;
             internalIndex++;
         }
     }
    
-
     //populate the vector and the respective array counterpart (update s_sup)
     for (int i = 0; i < _vars.size(); i++){
         if(_vars[i]->size()>1){
-            _s_sup.push_back(i);
+            ssup_size++;
             _CT_mask_svs_host[internalIndex]=i;
             internalIndex++;
         }
     }
 
+
     //add the sizes of the vectors
-    _CT_mask_svs_host[currTableSize*2]=_s_val.size();
-    _CT_mask_svs_host[currTableSize*2+1]=_s_sup.size();
+    _CT_mask_svs_host[currTableSize*2]=sval_size;
+    _CT_mask_svs_host[currTableSize*2+1]=ssup_size;
 
 
     auto start = std::chrono::high_resolution_clock::now();
@@ -131,7 +128,7 @@ void TableGPU::propagate(){
     }
     
     //copy the data on the device
-    cudaMemcpyAsync(_CT_mask_svs_dev, _CT_mask_svs_host, sizeof(unsigned int)*(2*currTableSize+_s_val.size()+_s_sup.size()+2), cudaMemcpyHostToDevice,streams[0]);   
+    cudaMemcpyAsync(_CT_mask_svs_dev, _CT_mask_svs_host, sizeof(unsigned int)*(2*currTableSize+sval_size+ssup_size+2), cudaMemcpyHostToDevice,streams[0]);   
     
     //getting the updated domains for the varialbes and copying them on the device
     dumpDomainsGPU2();
@@ -143,14 +140,14 @@ void TableGPU::propagate(){
     auto start_update=std::chrono::high_resolution_clock::now();
 
     //now each block deals with one specific ct word and also a single changed variable, there can be many blocks, though, even trying to cut them by doing more work per block doesn't improve times
-    dim3 gridDim(currTableSize,_s_val.size());
+    dim3 gridDim(currTableSize,sval_size);
 
     //pass: the supports, the changed variables + how many, the indexes for the support, the table and the size, the domains,  and 32*vars ints which tells what range of the varialbe to check according to the index of the th (modifies CT with CT & mask)
     updateTableGPU<<<gridDim,32,32*sizeof(unsigned int),streams[0]>>>(_supports_dev,_CT_mask_svs_dev+(2*currTableSize),_supportOffsetJmp_dev,_CT_mask_svs_dev,_currTable_size_dev,_vars_dev,th_limits_dev,_tmpMasks);          
     //updateTableGPU modifies _tmpMasks in global memory, the mask to add to the CT, then reduce<<<>>> does a bit-wise and among the necessary tmpMasks
 
     //we then reduce the matrix of temporary maks into a single mask to add tot he table
-    reduce<<<currTableSize,std::min((int)_s_val.size(),32),32*sizeof(int),streams[0]>>>(_CT_mask_svs_dev,_tmpMasks,_currTable_size_dev);
+    reduce<<<currTableSize,std::min((int)sval_size,32),32*sizeof(int),streams[0]>>>(_CT_mask_svs_dev,_tmpMasks,_currTable_size_dev);
     
     #ifdef RECORD_OUTPUT
         //syncToRemove
@@ -193,11 +190,12 @@ void TableGPU::propagate(){
     auto start_removing = std::chrono::high_resolution_clock::now(); 
 
     //for all the vars in ssup, update their domains with the information from the last kernel by checking _vars_to_remove_host
-    for(int i=0;i<_s_sup.size();i++){
+    for(int i=0;i<ssup_size;i++){
 
-        int index=_s_sup[i];
-        int starting_word=(_supportOffsetJmp[index]+(_vars[index]->min()-_vars[index]->initialMin()))/32;
-        int starting_bit=(_supportOffsetJmp[index]+(_vars[index]->min()-_vars[index]->initialMin()))%32; 
+        int index=_CT_mask_svs_host[i+currTableSize*2+sval_size+2];
+        int starting_value=(_supportOffsetJmp[index]-_variablesOffsets[index]+_vars[index]->min());
+        int starting_word=(starting_value)/32;
+        int starting_bit=(starting_value)%32; 
         
         //from the min to the max (can be changed);
         for (int j = _vars[index]->min(); j <= _vars[index]->max();  j++){ 
