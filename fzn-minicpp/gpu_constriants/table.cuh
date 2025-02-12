@@ -31,10 +31,7 @@ class TableGPU : public Table{
         unsigned int* _CT_mask_svs_dev;
         
 
-        int noBlocks;
         int noBlocksFilter;
-        const int noStreams=1; //hardcoded, don't touch IN THIS BRANCH
-
         cudaStream_t* streams;
 
         int *th_limits_dev;
@@ -48,7 +45,6 @@ class TableGPU : public Table{
         TableGPU(vector<var<int>::Ptr> & vars,  vector<vector<int>> & tuples);
         void post() override;
         void propagate() override;
-        void print();
     private:
         void dumpDomainsGPU2();
 };

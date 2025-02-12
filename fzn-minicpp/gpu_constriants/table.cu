@@ -42,7 +42,7 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     cudaMallocHost((void**)&th_limits_host,sizeof(int)*64*noVars);
 
 
-    streams=(cudaStream_t*)malloc(sizeof(cudaStream_t)*noStreams);
+    streams=(cudaStream_t*)malloc(sizeof(cudaStream_t)*1);
     cudaError_t err = cudaStreamCreate(&streams[0]);
     
     
@@ -136,7 +136,6 @@ void TableGPU::propagate(){
     //getting the updated domains for the varialbes and copying them on the device
     dumpDomainsGPU2();
     cudaMemcpyAsync(_vars_dev, _vars_host, sizeof(int)*((_supportSize/32)+1), cudaMemcpyHostToDevice,streams[0]);
-    cudaStreamSynchronize(streams[0]);
 
     //get the time in micro seconds
     auto end = std::chrono::high_resolution_clock::now();
@@ -160,7 +159,6 @@ void TableGPU::propagate(){
     auto end_update=std::chrono::high_resolution_clock::now();
     //get the time in micro seconds
     
-    cudaStreamSynchronize(streams[0]);
     
     //copy back the mask to inteserct with the table calculated by the kernel
     cudaMemcpyAsync(_CT_mask_svs_host, _CT_mask_svs_dev, currTableSize*sizeof(unsigned int), cudaMemcpyDeviceToHost,streams[0]);
@@ -171,6 +169,7 @@ void TableGPU::propagate(){
 
     
     cudaStreamSynchronize(streams[0]);
+
     auto end_overall_filter = std::chrono::high_resolution_clock::now();
     //get the time in micro seconds
   
