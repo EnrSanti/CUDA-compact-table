@@ -73,7 +73,6 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
 
     //we will launch as many blocks for the filtering process as the overall sum of the domains of the variables 
     noBlocksFilter=((_supportSize/32)+1);
-    cudaStreamSynchronize(streams[0]);
 
 
     #ifdef RECORD_OUTPUT
@@ -165,7 +164,6 @@ void TableGPU::propagate(){
     filterDomainsGPU<<<noBlocksFilter,32,64*sizeof(unsigned int),streams[0]>>>(_CT_mask_svs_dev,_currTable_size_dev,_vars_dev,_supportOffsetJmp_dev,_supports_dev, _supportSize_dev);
 
     
-    cudaStreamSynchronize(streams[0]);
 
     auto end_overall_filter = std::chrono::high_resolution_clock::now();
     //get the time in micro seconds
