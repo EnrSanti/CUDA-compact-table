@@ -106,15 +106,18 @@ void SmartTableGPU::enfGACDev(){
     
 
 
-    cudaStreamSynchronize(streams[0]);
     
-    cudaMemcpyAsync(_CT_mask_svs_host, _CT_mask_svs_dev, currTableSize*sizeof(unsigned int), cudaMemcpyDeviceToHost,streams[0]);    
+    //copy back the mask to inteserct with the table calculated by the kernel
+    cudaMemcpyAsync(_CT_mask_svs_host, _CT_mask_svs_dev, currTableSize*sizeof(unsigned int), cudaMemcpyDeviceToHost,streams[0]);
+    
+    filterDomainsGPU<<<noBlocksFilter,32,64*sizeof(unsigned int),streams[0]>>>(_CT_mask_svs_dev,_currTable_size_dev,_vars_dev,_supportOffsetJmp_dev,_supports_dev, _supportSize_dev);
 
-    //we need to update the current table
     cudaStreamSynchronize(streams[0]);
 
+    cudaMemcpyAsync(_vars_to_remove_host, _vars_dev, sizeof(int)*((_supportSize/32)+1), cudaMemcpyDeviceToHost,streams[0]);
+
+    //adding the retrieved mask
     _currTable.addToMaskArray(_CT_mask_svs_host);
-    
     _currTable.intersectWithMask();
     _currTable.clearMask();
 
@@ -122,8 +125,44 @@ void SmartTableGPU::enfGACDev(){
         //sync stream 0
         failNow();
     }
-    filterDomains();
 
+
+    //wait for  the domains to be copied back
+    cudaStreamSynchronize(streams[0]);
+    
+    auto start_removing = std::chrono::high_resolution_clock::now(); 
+
+    //for all the vars in ssup, update their domains with the information from the last kernel by checking _vars_to_remove_host
+    for(int i=0;i<_s_sup.size();i++){
+
+        int index=_s_sup[i];
+        int starting_word=(_supportOffsetJmp[index]+(_vars[index]->min()-_vars[index]->initialMin()))/32;
+        int starting_bit=(_supportOffsetJmp[index]+(_vars[index]->min()-_vars[index]->initialMin()))%32; 
+        
+        //from the min to the max (can be changed);
+        for (int j = _vars[index]->min(); j <= _vars[index]->max();  j++){ 
+            if((_vars_to_remove_host[starting_word] & (0x80000000>>starting_bit))!=0){
+                _vars[index]->remove(j);
+            }
+            starting_bit++;
+            if(starting_bit==32){
+                starting_bit=0;
+                starting_word++;
+            }
+        }
+    }
+    
+    auto end_overall = std::chrono::high_resolution_clock::now();
+    
+    #ifdef RECORD_OUTPUT
+        auto duration_removing = std::chrono::duration_cast<std::chrono::microseconds>(end_overall - start_removing);
+        auto duration_overall_filter = std::chrono::duration_cast<std::chrono::microseconds>(end_overall_filter - start_overall_filter);
+        auto duration_dump_cpu = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+        auto duration_update = std::chrono::duration_cast<std::chrono::microseconds>(end_update - start_update);
+
+        auto duration_overall = std::chrono::duration_cast<std::chrono::microseconds>(end_overall - start_overall);
+        printf("%%%%%% Time to propagate (CUDA): %ld us (to dump & cpy %ld) (update %ld) (filter %ld) (removing %ld)\n",duration_overall.count(),duration_dump_cpu.count(),duration_update.count(),duration_overall_filter.count(),duration_removing.count());
+    #endif 
 
 }
 void SmartTableGPU::enfoceGAC(){

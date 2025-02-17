@@ -161,7 +161,11 @@ void TableGPU::propagate(){
     //copy back the mask to inteserct with the table calculated by the kernel
     cudaMemcpyAsync(_CT_mask_svs_host, _CT_mask_svs_dev, currTableSize*sizeof(unsigned int), cudaMemcpyDeviceToHost,streams[0]);
     
+    filterDomainsGPU<<<noBlocksFilter,32,64*sizeof(unsigned int),streams[0]>>>(_CT_mask_svs_dev,_currTable_size_dev,_vars_dev,_supportOffsetJmp_dev,_supports_dev, _supportSize_dev);
+
     cudaStreamSynchronize(streams[0]);
+
+    cudaMemcpyAsync(_vars_to_remove_host, _vars_dev, sizeof(int)*((_supportSize/32)+1), cudaMemcpyDeviceToHost,streams[0]);
 
     //adding the retrieved mask
     _currTable.addToMaskArray(_CT_mask_svs_host);
@@ -173,8 +177,32 @@ void TableGPU::propagate(){
         failNow();
     }
 
-    //the filtering of the domains is now done host side
-    filterDomains();    
+
+    //wait for  the domains to be copied back
+    cudaStreamSynchronize(streams[0]);
+    
+    auto start_removing = std::chrono::high_resolution_clock::now(); 
+
+    //for all the vars in ssup, update their domains with the information from the last kernel by checking _vars_to_remove_host
+    for(int i=0;i<_s_sup.size();i++){
+
+        int index=_s_sup[i];
+        int starting_word=(_supportOffsetJmp[index]+(_vars[index]->min()-_vars[index]->initialMin()))/32;
+        int starting_bit=(_supportOffsetJmp[index]+(_vars[index]->min()-_vars[index]->initialMin()))%32; 
+        
+        //from the min to the max (can be changed);
+        for (int j = _vars[index]->min(); j <= _vars[index]->max();  j++){ 
+            if((_vars_to_remove_host[starting_word] & (0x80000000>>starting_bit))!=0){
+                _vars[index]->remove(j);
+            }
+            starting_bit++;
+            if(starting_bit==32){
+                starting_bit=0;
+                starting_word++;
+            }
+        }
+    }
+    
     auto end_overall = std::chrono::high_resolution_clock::now();
     
     #ifdef RECORD_OUTPUT
@@ -185,15 +213,14 @@ void TableGPU::propagate(){
 
         auto duration_overall = std::chrono::duration_cast<std::chrono::microseconds>(end_overall - start_overall);
         printf("%%%%%% Time to propagate (CUDA): %ld us (to dump & cpy %ld) (update %ld) (filter %ld) (removing %ld)\n",duration_overall.count(),duration_dump_cpu.count(),duration_update.count(),duration_overall_filter.count(),duration_removing.count());
-    #endif    
+    #endif 
 }
 
 void TableGPU::dumpDomainsGPU2(){
 
     //for each of the vars, dump the domain which is kept as a sparseBitset into the array (treat it as a black box)
-    for(int i=0; i < _s_val.size(); i++){
+    for(int index=0; index < noVars; index++){
         
-        int index=_s_val[i];
         //which vars i don't need to update
         if(!(_vars[index]->changed()) && _vars[index]->size()==1)
             continue;
@@ -366,6 +393,61 @@ __global__ void reduce(unsigned int * _CT_mask_svs_dev,unsigned int* tmpMasks, i
     if(threadIdx.x==0){
         _CT_mask_svs_dev[ctWord]=result&_CT_mask_svs_dev[ctWord];
     }
+}
+
+
+__global__ void  filterDomainsGPU(unsigned int * _CT_mask_svs_dev, int* _currTable_dev_size, int* _vars_dev, int *_supportOffsetJmp_dev, unsigned int* _supports_dev , int* supportSize_dev){
+    
+
+    extern __shared__ unsigned int partialRes[]; //mask (64 ints, the last 32 int which is used to store _vars_dev[blockIdx.x], so it's accessed just once)
+
+    //do it 32 times, so no ifs
+    partialRes[threadIdx.x+32]=_vars_dev[blockIdx.x]; //store the word of the domain in the last int of the shared memory
+    //if the word is empty, no need to do anything, i can't remove any values
+    if(partialRes[32]==0){
+        return;
+    }
+
+    //for each bit in the word, each thread in the block will do 32 iterations
+    for(int i=0; i<32; i++){  
+        
+        int mask=1<<(31-(i%32));
+        partialRes[threadIdx.x]=0;
+        
+        //if value in the domain then we intersect (either all thread are here or none is)
+        if((partialRes[32] & mask)!=0){
+        
+            //the index of the support i look at, it doesn't depend on the thread just on the block, each thread will do a different piece of work on the CT
+            int index_x_a=blockIdx.x*32+i;
+
+            int skip=0;
+            for(int ctW=0; ctW<(*_currTable_dev_size)-32; ctW=ctW+32){
+                //we add to the partial result
+                int support=__ldlu(_supports_dev+ index_x_a*(*_currTable_dev_size)+ctW+threadIdx.x); //load the support word without caching
+                partialRes[threadIdx.x]=partialRes[threadIdx.x] | (_CT_mask_svs_dev[ctW+threadIdx.x] & support);
+                //increment by 32 for the last (unrolled iterations, look after the for loop)
+                skip+=32;
+            }
+
+            //unroll of the last iteration of the loop, if the CT size is not a multiple of 32 then if(threadIdx.x<=(*_currTable_dev_size)%32) the threads considered will do one more iteration
+            int condition=(threadIdx.x<=(*_currTable_dev_size)%32)!=0;
+            partialRes[threadIdx.x]=partialRes[threadIdx.x] | ( (condition) * (_CT_mask_svs_dev[skip+threadIdx.x] & _supports_dev[index_x_a*(*_currTable_dev_size)+skip+threadIdx.x]));
+            //end of unrolled loop
+
+            //reduction among the 32 threads of the block
+            unsigned result = __reduce_or_sync(0xFFFFFFFF, partialRes[threadIdx.x]);
+        
+            
+            //if a bit is set to 1 then the value specified by the position needs to be removed from the domain, otherwise not
+            //it's just a "complex" operation to avoid an if statement
+            partialRes[threadIdx.x+32] = (partialRes[32] & ~(1 << (31-i))) | ((result == 0) << (31-i));
+            //in the previous instruction we are only insterested in partialRes[33] but instead of doing an if and having a sync, we do 31 useless operation on the other threads (1 per thread)           
+        }
+    }
+    if(threadIdx.x==0){
+        //write back the result, one access in global memory
+        _vars_dev[blockIdx.x]=partialRes[32];
+    }   
 }
 
 
