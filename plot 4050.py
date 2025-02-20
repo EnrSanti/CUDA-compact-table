@@ -18,7 +18,7 @@ def plot_sequences(seq1, seq2, seq3, diagram_name, type,maxVal):
 
     # Show only INTEGER NUMBERS on the X axis
     plt.ylim(0, maxVal)
-    plt.xticks(x, range(len(seq1)))
+    plt.xticks(x, map(lambda i: i + 1, range(len(seq1))))
     plt.xlabel("Instance no.")
     plt.ylabel("Time (ms)")
     plt.title(sys+", "+type+" tests")
