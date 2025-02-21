@@ -42,6 +42,7 @@ class TableGPU : public Table{
 
         unsigned int* buffer; //just for the new dump
         int buffSize;
+        bool after=false;
 
     public:
         TableGPU(vector<var<int>::Ptr> & vars,  vector<vector<int>> & tuples);

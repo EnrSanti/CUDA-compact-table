@@ -60,7 +60,7 @@ class Table : public Constraint{
         vector<int> _supportOffsetJmp; //for each var the index of the row in "supports" in which such variable starts (CONSTANT)
        
         vector<int> _variablesOffsets; //offset of the variables, used in accessing the support rows (not all variables start from 0, eg  90..120, variablesOffsets[i]=90) 
-       
+        bool after=false;
     public:
         Table(vector<var<int>::Ptr> & vars,  vector<vector<int>> & tuples);
         void post() override;

@@ -167,11 +167,64 @@ void TableGPU::propagate(){
 
     cudaMemcpyAsync(_vars_to_remove_host, _vars_dev, sizeof(int)*((_supportSize/32)+1), cudaMemcpyDeviceToHost,streams[0]);
 
+    if(after){
+        printf("%%%%%% ----------------------------------- \n ");
+        printf("%%%%%% CT before \n");
+
+        printf("%%%%%% CT: ");
+        for(int i=0; i<currTableSize; i++){    
+            printf(" %d ", _currTable._words[i].value());
+        }
+        printf("\n");
+        printf("%%%%%% SV: ");
+        for(int i=0; i<_s_val.size(); i++){    
+            printf(" %d ", _s_val[i]);
+        }
+        printf("\n");
+        
+        for(int i=0; i<_s_val.size(); i++){    
+            int index=_s_val[i];
+            for(int j=_vars[index]->min(); j<=_vars[index]->max(); j++){
+                if(_vars[index]->contains(j)){
+                    printf("%%%%%% var %d contains %d \n",index, j);
+                }
+            }
+        }
+        printf("\n");
+
+        printf("%%%%%% Mask returned by device: ");
+        for(int i=0; i<currTableSize; i++){    
+            printf(" %d ", _CT_mask_svs_host[i]);
+        }
+        printf("\n");
+        
+    }
     //adding the retrieved mask
     _currTable.addToMaskArray(_CT_mask_svs_host);
     _currTable.intersectWithMask();
     _currTable.clearMask();
-
+    
+    //print the content of sval
+    int cose[]={0, 1024, 0, 0, 0, 536870912, 134217728, 0, 0, 2, 32, 0, 0, 5120, 16777216, 0, 536870976, 0, 0, 0, 0, 524288, 8192, 0, 16777216, 0};
+    bool passed=true;
+    for(int i=0; i<currTableSize; i++){    
+        if(_currTable._words[i].value()!=cose[i])
+            passed=false;
+    }
+    if(passed || after){
+        
+        printf("\n");
+        printf("%%%%%% CT: ");
+        for(int i=0; i<currTableSize; i++){    
+            printf(" %d ", _currTable._words[i].value());
+        }
+        printf("\n");
+        if(passed){
+            after=true;
+        }else{
+            after=false;
+        }
+    }
     if(_currTable.isEmpty()){
         //sync stream 0
         failNow();
@@ -220,11 +273,6 @@ void TableGPU::dumpDomainsGPU2(){
 
     //for each of the vars, dump the domain which is kept as a sparseBitset into the array (treat it as a black box)
     for(int index=0; index < noVars; index++){
-        
-        //which vars i don't need to update
-        if(!(_vars[index]->changed()) && _vars[index]->size()==1)
-            continue;
-        
         
         int starting_word=(_supportOffsetJmp[index])/32;
         int words_to_reset=-1;
@@ -310,7 +358,6 @@ __global__ void updateTableGPU(unsigned int* _supports_dev,unsigned int * _svSiz
 
 
     extern __shared__ unsigned int mask[]; //mask (32 ints)
-
 
     //each thread clears the mask, MANDATORY
     mask[threadIdx.x]=0;
