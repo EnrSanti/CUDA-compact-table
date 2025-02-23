@@ -352,9 +352,6 @@ void BitDomain::dumpWithOffset(int min, int max, unsigned int * dump,int offset)
     unsigned int max_word_mask = getLeftFilledMask32(max_dom_bit_idx);
     
     //printf("%%%%%% dumping %d words \n",max_dom_word_idx-min_dom_word_idx+1);
-
-    
-
     //shift to the right
     if(offset > min_dom_bit_idx){
         //printf("%%%%%% shifting right by %d \n",offset);
@@ -365,44 +362,30 @@ void BitDomain::dumpWithOffset(int min, int max, unsigned int * dump,int offset)
         unsigned int maskR= getRightFilledMask32(31-offset);   
         if(min_dom_word_idx==max_dom_word_idx){
             //printf("%%%%%% shifting right, one word %d\n",_dom[min_dom_word_idx].value()& min_word_mask & max_word_mask);
-            dump[0] = ((_dom[min_dom_word_idx] & min_word_mask & max_word_mask)>> offset);
-            dump[1] = (_dom[min_dom_word_idx] & min_word_mask & max_word_mask & maskR) << (32-offset);
+            dump[0] = ((_dom[min_dom_word_idx].value() & min_word_mask & max_word_mask)>> offset);
+            dump[1] = (_dom[min_dom_word_idx].value() & min_word_mask & max_word_mask & maskR) << (32-offset);
         }else{
             //printf("%%%%%% maskR %d \n", maskR);
 
             //printf("%%%%%% setting first word, which is %d \n",(_dom[min_dom_word_idx] & min_word_mask));
             
-            printf("%%%%%% shifting right, more words: %d\n",offset);
-
-
-            printf("%%%%%% dom[0]: %d",_dom[min_dom_word_idx].value() & min_word_mask);
-            int j=1;
-            for(int dom_word_idx = min_dom_word_idx + 1; dom_word_idx < max_dom_word_idx; dom_word_idx += 1)
-            {
-                printf("%%%%%% dom[%d]: %d\n",j,_dom[dom_word_idx].value());
-                j++;
-            }
-
-            printf("%%%%%% dom[%d]: %d\n",j,_dom[max_dom_word_idx].value()& max_word_mask);
-
+          
             dump[0]= ((_dom[min_dom_word_idx] & min_word_mask) >> offset);
             int i=1;
-
-            printf("%%%%%% MYDUMP[0] %d \n",dump[0]);
-
-            unsigned int prevWord = (_dom[min_dom_word_idx] & maskR) << (32-offset);
+            unsigned int prevWord = (_dom[min_dom_word_idx].value() & min_word_mask & maskR) << (32-offset);
             
             for(int dom_word_idx = min_dom_word_idx+1; dom_word_idx < max_dom_word_idx; dom_word_idx += 1)
             {
                 //printf("%%%%%% shifting right, word %d IN LOOP \n",_dom[dom_word_idx].value());
-                dump[i]= prevWord | ((_dom[dom_word_idx]) >> offset);
-                prevWord = (_dom[dom_word_idx] & maskR) << (32-offset);
+                dump[i]= prevWord | ((_dom[dom_word_idx].value()) >> offset);
+                prevWord = (_dom[dom_word_idx].value() & maskR) << (32-offset);
                 i++;
             }
             
             //printf("%%%%%% shifting right, word %d \n",_dom[max_dom_word_idx].value()& max_word_mask);
-            dump[i]= prevWord | ((_dom[max_dom_word_idx] & max_word_mask) >> offset);
-            prevWord = (_dom[max_dom_word_idx] & maskR) << (32-offset);
+            dump[i]= prevWord | ((_dom[max_dom_word_idx].value() & max_word_mask) >> offset);
+            prevWord = (_dom[max_dom_word_idx].value() & max_word_mask & maskR) << (32-offset);
+            
             i++;
             
             if(prevWord != 0){
@@ -443,48 +426,35 @@ void BitDomain::dumpWithOffset(int min, int max, unsigned int * dump,int offset)
             
             if(min_dom_word_idx==max_dom_word_idx){
                 //printf("%%%%%% shifting left, one word %d\n",_dom[min_dom_word_idx].value()& min_word_mask & max_word_mask);
-                dump[0] = ((_dom[min_dom_word_idx] & min_word_mask & max_word_mask)<< offset);
-                dump[1] = (_dom[min_dom_word_idx+1] & min_word_mask & max_word_mask &maskL) >> (32-offset);
+                dump[0] = ((_dom[min_dom_word_idx].value() & min_word_mask & max_word_mask)<< offset);
+                dump[1] = (_dom[min_dom_word_idx+1].value() & min_word_mask & max_word_mask &maskL) >> (32-offset);
             }else{
 
                 int i=1;
-                printf("%%%%%% shifting left, more words: %d\n",offset);
+                //printf("%%%%%% shifting left, more W \n");
 
-                printf("%%%%%% dom[0]: %d",_dom[min_dom_word_idx].value() & min_word_mask);
-                int j=i;
-                for(int dom_word_idx = min_dom_word_idx + 1; dom_word_idx < max_dom_word_idx; dom_word_idx += 1)
-                {
-                    printf("%%%%%% dom[%d]: %d\n",j,_dom[dom_word_idx].value());
-                    j++;
-                }
-
-                printf("%%%%%% dom[%d]: %d\n",j,_dom[max_dom_word_idx].value()& max_word_mask);
                 int succW;
                 if(min_dom_word_idx+1==max_dom_word_idx){
-                    succW=(_dom[min_dom_word_idx+1].value() & maskL &max_word_mask) >> (32-offset);
-                    printf("%%%%%% caso 1");
+                    succW=(_dom[min_dom_word_idx+1].value() & maskL & max_word_mask) >> (32-offset);
                 }else{
-                    printf("%%%%%% caso 2");
                     succW=(_dom[min_dom_word_idx+1].value() & maskL) >> (32-offset);
                 }
-                printf("%%%%%% succ W %d = _dom[1]: %d, and maskL: %d, shift right by %d \n",succW,_dom[min_dom_word_idx+1].value(), maskL,(32-offset));
-                printf("%%%%%% succW with max mask %d\n",(_dom[min_dom_word_idx+1].value() & max_word_mask & maskL)>>(32-offset));
-                dump[0]= succW | ((_dom[min_dom_word_idx] & min_word_mask) << offset);
-                printf("%%%%%% the other half[0] %d\n",((_dom[min_dom_word_idx] & min_word_mask) << offset));
 
-                printf("%%%%%% MY DUMP[0] %d\n",dump[0]);
-                for(int dom_word_idx = min_dom_word_idx+1; dom_word_idx < max_dom_word_idx; dom_word_idx += 1)
+                dump[0]= succW | ((_dom[min_dom_word_idx] & min_word_mask) << offset);
+                for(int dom_word_idx = min_dom_word_idx+1; dom_word_idx < max_dom_word_idx-1; dom_word_idx += 1)
                 {
                     //printf("%%%%%% shifting left, word %d IN LOOP \n",_dom[dom_word_idx].value());
-                    succW=(_dom[dom_word_idx+1]&maskL) >> (32-offset);
-                    dump[i]= succW | ((_dom[dom_word_idx]) << offset);
-                    printf("%%%%%% (for) MY DUMP[%d] %d\n",i,dump[i]);
+                    succW=(_dom[dom_word_idx+1].value() &maskL) >> (32-offset);
+                    dump[i]= succW | ((_dom[dom_word_idx].value()) << offset);
                     i++;
                 }
-
+                if(min_dom_word_idx+1!=max_dom_word_idx){
+                    succW=(_dom[max_dom_word_idx].value() &max_word_mask & maskL) >> (32-offset);
+                    dump[i]= succW | ((_dom[max_dom_word_idx-1].value()) << offset);
+                    i++;
+                }
                 //printf("%%%%%% shifting left, last word %d \n",_dom[max_dom_word_idx].value()& max_word_mask);
-                dump[i]=((_dom[max_dom_word_idx]) << offset);
-                printf("%%%%%% MY DUMP[%d] %d\n",i,dump[i]);
+                dump[i]=((_dom[max_dom_word_idx].value() & max_word_mask) << offset);
                 
                 
             }

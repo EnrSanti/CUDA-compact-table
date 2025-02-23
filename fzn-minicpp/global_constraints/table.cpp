@@ -119,36 +119,14 @@ void Table::propagate()
 void Table::updateTable(){
     //forall var x in s_val
     int index=0;
-    printf("%%%%%% ----------------------------------- \n ");
-    printf("%%%%%% CT before \n");
-
-    printf("%%%%%% CT: ");
-    for(int i=0; i<currTableSize; i++){    
-        printf(" %d ", _currTable._words[i].value());
-    }
-    printf("\n");
-
-
-    for(int i=0; i < _s_val.size(); ++i){
-        for (int j = _vars[_s_val[i]]->initialMin(); j <= _vars[_s_val[i]]->initialMax(); j++){
-            if(_vars[_s_val[i]]->contains(j)){
-                printf("%%%%%% var %d: %d \n",_s_val[i],j);
-            }else{
-                printf("%%%%%% var %d: NOT %d \n",_s_val[i],j);
-            }
-        }
-    }
+  
     
 
-    unsigned int mask[32]={0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF};
-    int masktmp[32];
     for(int i=0; i < _s_val.size(); ++i){
         _currTable.clearMask();
         index=_s_val[i];
 
-        for(int k=0; k<32; k++)
-            masktmp[k]=0;
-           
+        
         //reset based update
         for (int j = _vars[index]->min(); j <= _vars[index]->max();  j++){ 
 
@@ -156,21 +134,12 @@ void Table::updateTable(){
 
                 int index_x_a=(_supportOffsetJmp[index]+j-_variablesOffsets[index])*currTableSize;
                 _currTable.addToMaskArray(&(_supports[index_x_a]));
-                for(int k=0; k<currTableSize; k++){
-                    masktmp[k]=masktmp[k]| _supports[index_x_a+k];
-                }
+         
             }
             
 
         } 
-        for(int k=0; k<currTableSize; k++)
-            mask[k]=mask[k] & masktmp[k];
-    
-        
-        printf("%%%%%% overall mask for var %d: ",index); 
-        for(int k=0; k<currTableSize; k++)
-            printf(" %d ", _currTable._mask[k]);
-        printf("\n");
+
         _currTable.intersectWithMask();
 
         //printf("%%%%%% ct after %d: ",index); 
@@ -180,27 +149,6 @@ void Table::updateTable(){
     }
  
     
-    
-    printf("%%%%%% SV: ");
-    for(int i=0; i<_s_val.size(); i++){    
-        printf(" %d ", _s_val[i]);
-    }
-    printf("\n");
-
-
-    printf("%%%%%% MASK: ");
-    for(int i=0; i<currTableSize; i++){    
-        printf(" %d ", mask[i]);
-    }
-    printf("\n");
-    
-        
-
-    printf("%%%%%% CT: ");
-    for(int i=0; i<currTableSize; i++){    
-        printf(" %d ", _currTable._words[i].value());
-    }
-    printf("\n");
     
     if(_currTable.isEmpty()){
         failNow();

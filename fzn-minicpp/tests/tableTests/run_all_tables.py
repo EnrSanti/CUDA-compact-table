@@ -37,6 +37,22 @@ print("Running simple models")
 
 totalErrors=0
 
+def get_lines_range(text):
+    lines = text.splitlines()
+    
+    # Remove lines starting with "%%%mzn-stat: flatTime"
+    filtered_lines = [line for line in lines if not line.startswith("%%%mzn-stat: flatTime")]
+    
+    # Extract the range from 7th line to the 13th from the end
+    return "\n".join(filtered_lines[6:-13]) if len(filtered_lines) > 19 else ""
+
+
+def filter_output(input_string):
+    lines = input_string.splitlines()
+    filtered = [line for line in lines if line.startswith("%%%mzn-stat: propagations")]
+    return "\n".join(filtered)
+
+
 def run_sat_models(prefix):
     global totalErrors
     resultsSAT=""
@@ -66,7 +82,7 @@ def run_sat_models(prefix):
         for instance in instances:
 
             t0_s = time.time()
-            result = subprocess.run(["minizinc", "--solver", solver,folder+instance], capture_output=True, text=True)
+            result = subprocess.run(["minizinc", "--solver", solver,"--statistics",folder+instance], capture_output=True, text=True)
             t1_s=time.time()
 
             if("=====UNSATISFIABLE=====" in result.stdout or "=====ERROR=====" in result.stdout):
@@ -76,20 +92,31 @@ def run_sat_models(prefix):
 
             if os.path.exists(os.path.join(folderCUDA, instance)):
                 t0_CUDA = time.time()
-                resultCUDA = subprocess.run(["minizinc", "--solver", solver,folderCUDA+instance], capture_output=True, text=True)
+                resultCUDA = subprocess.run(["minizinc", "--solver" ,solver,"--statistics",folderCUDA+instance], capture_output=True, text=True)
                 t1_CUDA=time.time()
                 
                 delta_s = t1_s-t0_s
                 delta_CUDA = t1_CUDA-t0_CUDA
+
 
                 if("=====UNSATISFIABLE=====" in resultCUDA.stdout or "=====ERROR=====" in resultCUDA.stdout):
                     #print in red
                     print(f"\033[91m \n{folderCUDA+instance} FAILED\033[00m")
                     errors+=1
                     continue
-                
-                if(result.stdout[:-1]!=resultCUDA.stdout[:-1]):
+
+                cudaLines=get_lines_range(resultCUDA.stdout)
+                serialLines=get_lines_range(result.stdout)
+
+
+                if(cudaLines!=serialLines):
                     print(f"\033[91m {instance} RESULT MISMATCH\033[00m")
+                    print(f"\033[91m {instance} CUDA: \n{cudaLines}\033[00m")
+                    print(f"\033[91m {instance} SERIAL: \n{serialLines}\033[00m")   
+                    errors+=1   
+
+                if(filter_output(result.stdout)!=filter_output(resultCUDA.stdout)):
+                    print(f"\033[91m {instance} PROPAGATION NO MISMATCH \033[00m")
                     errors+=1
 
                 print("\033[92m"+instance+", SERIAL: "+str(delta_s)+", CUDA: "+str(delta_CUDA)+ " \033[00m")  
@@ -136,7 +163,7 @@ def run_unsat_models(prefix):
         for instance in instances:
 
             t0_s = time.time()
-            result = subprocess.run(["minizinc", "--solver", solver,folder+instance], capture_output=True, text=True)
+            result = subprocess.run(["minizinc", "--solver", solver,"--statistics",folder+instance], capture_output=True, text=True)
             t1_s=time.time()
 
             if(not ("=====UNSATISFIABLE====="  in result.stdout) or "=====ERROR=====" in result.stdout):
@@ -146,7 +173,7 @@ def run_unsat_models(prefix):
 
             if os.path.exists(os.path.join(folderCUDA, instance)):
                 t0_CUDA = time.time()
-                resultCUDA = subprocess.run(["minizinc", "--solver", solver,folderCUDA+instance], capture_output=True, text=True)
+                resultCUDA = subprocess.run(["minizinc", "--solver", solver,"--statistics",folderCUDA+instance], capture_output=True, text=True)
                 t1_CUDA=time.time()
 
                 delta_s = t1_s-t0_s
@@ -157,9 +184,11 @@ def run_unsat_models(prefix):
                     errors+=1
                     continue
                 
-                if(result.stdout[:-1]!=resultCUDA.stdout[:-1]):
-                    print(f"\033[91m {instance} RESULT MISMATCH\033[00m")
+                
+                if(filter_output(result.stdout)!=filter_output(resultCUDA.stdout)):
+                    print(f"\033[91m {instance} PROPAGATION NO MISMATCH\033[00m")
                     errors+=1
+
 
                 print("\033[92m"+instance+", SERIAL: "+str(delta_s)+", CUDA: "+str(delta_CUDA)+ " \033[00m")  
                 cudaFolderTime+=(delta_CUDA)
