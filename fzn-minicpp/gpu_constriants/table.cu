@@ -132,21 +132,6 @@ void TableGPU::propagate(){
     cudaMemcpyAsync(_CT_mask_svs_dev, _CT_mask_svs_host, sizeof(unsigned int)*(2*currTableSize+_s_val.size()+_s_sup.size()+2), cudaMemcpyHostToDevice,streams[0]);   
     
 
-    //for all the vars print what's in the domain and what's not
-    /*
-    printf("%%%%%% ---------------------------------------------------------------------- \n");
-    for(int i=0;i<_vars.size();i++){
-        if(!(_vars[i]->changed()) && _vars[i]->size()==1)
-            continue;
-        for(int j=_vars[i]->min();j<=_vars[i]->max();j++){
-            if(_vars[i]->contains(j)){
-                printf("%%%%%% Var %d contains %d\n",i,j);
-            }else{
-                printf("%%%%%% Var %d NOT %d\n",i,j);
-            }
-        }
-    }
-   */
     //getting the updated domains for the varialbes and copying them on the device
     dumpDomainsGPU2();
    

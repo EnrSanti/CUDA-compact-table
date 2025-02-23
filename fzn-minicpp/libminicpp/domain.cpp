@@ -427,7 +427,7 @@ void BitDomain::dumpWithOffset(int min, int max, unsigned int * dump,int offset)
             if(min_dom_word_idx==max_dom_word_idx){
                 //printf("%%%%%% shifting left, one word %d\n",_dom[min_dom_word_idx].value()& min_word_mask & max_word_mask);
                 dump[0] = ((_dom[min_dom_word_idx].value() & min_word_mask & max_word_mask)<< offset);
-                dump[1] = (_dom[min_dom_word_idx+1].value() & min_word_mask & max_word_mask &maskL) >> (32-offset);
+                dump[1] = (_dom[min_dom_word_idx].value() & min_word_mask & max_word_mask & maskL) >> (32-offset);
             }else{
 
                 int i=1;
@@ -449,7 +449,7 @@ void BitDomain::dumpWithOffset(int min, int max, unsigned int * dump,int offset)
                     i++;
                 }
                 if(min_dom_word_idx+1!=max_dom_word_idx){
-                    succW=(_dom[max_dom_word_idx].value() &max_word_mask & maskL) >> (32-offset);
+                    succW=(_dom[max_dom_word_idx].value() & max_word_mask & maskL) >> (32-offset);
                     dump[i]= succW | ((_dom[max_dom_word_idx-1].value()) << offset);
                     i++;
                 }
