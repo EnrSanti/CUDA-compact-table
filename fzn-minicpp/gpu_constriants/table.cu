@@ -1,7 +1,7 @@
 #include "gpu_constriants/table.cuh"
 #include <chrono>
 #include <cuda_runtime.h>
-#define RECORD_OUTPUT
+//#define RECORD_OUTPUT
 TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) : Table(vars,tuples){
 
     //get the intial time
@@ -303,97 +303,6 @@ void TableGPU::dumpDomainsGPU2(){
 }
 
 
-
-//32 threads will do a parallel reduction on the word considered (groups of 32 threads share the same position of the CT)
-__global__ void updateTableGPU(unsigned int* _supports_dev,unsigned int * _svSize_off_sval_dev, int *_supportOffsetJmp_dev, unsigned int * _CT_mask_dev,int* _currTable_dev_size, int* _vars_dev, int* offsetsAndLimits,unsigned int* outputMasks){
-
-
-    extern __shared__ unsigned int mask[]; //mask (32 ints)
-
-
-    //each thread clears the mask, MANDATORY
-    mask[threadIdx.x]=0;
-
-    //get the variable index to consider (we have a grid in which each row considers a different variable )
-    int varIndex=_svSize_off_sval_dev[blockIdx.y+2];
-
-    //the starting point (row) of the supports for the var
-    int from=_supportOffsetJmp_dev[varIndex];
-    //the index of the array offsetsAndLimits which tells the thread how many iterations it will do over the current variable
-    int iterations32_th=varIndex*64+threadIdx.x; 
-    //the offset of the supports for the current variable for the current thread
-    int offset32_th=offsetsAndLimits[iterations32_th+32]; 
-
-    //each thread does the same (+/-1) amount of iterations,
-    for(int j=0; j<offsetsAndLimits[iterations32_th]; j++){
-        
-        int wordIndex=(from+j+offset32_th)/32; //piece of row of supports, not the cell, the row piece of row the block looks at
-        int maskContains=1<<(31-j-_supportOffsetJmp_dev[varIndex]-offset32_th+wordIndex*32); //int containing a single bit set
-
-        //check if the value is in the domain, without an if statement
-        int condition=((_vars_dev[wordIndex] & maskContains)!=0);
-        //calculate the offset of the support word the thread has to (potentially) add to the mask
-        int off=(j+offset32_th)*(*_currTable_dev_size)+(_supportOffsetJmp_dev[varIndex]*(*_currTable_dev_size))+blockIdx.x; 
-        
-        int support=__ldlu(_supports_dev+off); //load the support word without caching
-        mask[threadIdx.x]=mask[threadIdx.x] | (support*condition);           
-    }
-
-    //parallel reduction over the 32 threads, each thread took care of a different part of the domain of the same variable
-    unsigned result = __reduce_or_sync(0xFFFFFFFF, mask[threadIdx.x]);
-    
-
-    //write back the result
-    if(threadIdx.x==0){
-        outputMasks[varIndex*(*_currTable_dev_size)+blockIdx.x]=result;
-    }
-
-    
-}
-
-__global__ void reduce(unsigned int * _CT_mask_svs_dev,unsigned int* tmpMasks, int *ctSize){
-
-    extern __shared__ unsigned int toReduce[]; //mask (32 ints)
-    
-    int thId=threadIdx.x;
-    int ctWord=blockIdx.x;
-
-    //get the overall number of vars changed (i.e. how many rows, of a single word do we need to consider)
-    int noVarsChanged=_CT_mask_svs_dev[2*(*ctSize)];  
-
-    //how many iterations each of 32 threads need to do
-    int iterations=noVarsChanged/32;
-    //the number of iterations may not be multiple of 32, so a first portion of the block may need to do +1 iteration
-    int lastIteration=noVarsChanged%32;
-
-    //set all bits of the "toReduce" mask to 1, they will be removed via bitwise AND
-    toReduce[thId]=0xFFFFFFFF;
-
-    //auxiliary index used for the first part of the block doing an additional iteration 
-    int skip=0;
-    //each thread will do the same no. of iterations
-    for(int i=0;i<iterations;i++){
-        //retrieve the variable index to consider (it depends on the thread in the block)
-        int varIndex=_CT_mask_svs_dev[2*(*ctSize)+2+i*32+threadIdx.x];
-        //add (bitwise AND) the proper part of the mask to the final mask 
-        toReduce[thId]=toReduce[thId] & tmpMasks[varIndex*(*ctSize)+blockIdx.x];
-        skip++;
-    }
-    
-    //checking which first portion of the block may need to do an extra iteration 
-    if(threadIdx.x<lastIteration){
-        int varIndex=_CT_mask_svs_dev[2*(*ctSize)+2+skip*32+threadIdx.x];
-        toReduce[thId]=toReduce[thId] & tmpMasks[varIndex*(*ctSize)+blockIdx.x];
-    }
-
-    //implicity sync via reduce
-    unsigned result = __reduce_and_sync(0xFFFFFFFF, toReduce[threadIdx.x]);
-    
-    //the first thread of the block intersect the final mask witht the CT and writes the result in global memory
-    if(threadIdx.x==0){
-        _CT_mask_svs_dev[ctWord]=result&_CT_mask_svs_dev[ctWord];
-    }
-}
 
 
 __global__ void  filterDomainsGPU(unsigned int * _CT_mask_svs_dev, int* _currTable_dev_size, int* _vars_dev, int *_supportOffsetJmp_dev, unsigned int* _supports_dev , int* supportSize_dev){
