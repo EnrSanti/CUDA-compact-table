@@ -340,13 +340,9 @@ __global__ void updateTableGPU(unsigned int* _supports_dev,unsigned int * _svSiz
     }
 
     //parallel reduction over the 32 threads, each thread took care of a different part of the domain of the same variable
-    int result;
-    if(threadIdx.x==0){
-        for(int i=1;i<blockDim.x;i++){
-            mask[0]=mask[0] | mask[i];
-        }
-        result=mask[0];
-    }
+    unsigned result = __reduce_or_sync(0xFFFFFFFF, mask[threadIdx.x]);
+    
+
 
     //write back the result
     if(threadIdx.x==0){
@@ -391,13 +387,8 @@ __global__ void reduce(unsigned int * _CT_mask_svs_dev,unsigned int* tmpMasks, i
     }
 
 
-    int result;
-    if(threadIdx.x==0){
-        for(int i=1;i<blockDim.x;i++){
-            toReduce[0]=toReduce[0] & toReduce[i];
-        }
-        result=toReduce[0];
-    }
+    unsigned result = __reduce_and_sync(0xFFFFFFFF, toReduce[threadIdx.x]);
+    
     //the first thread of the block intersect the final mask witht the CT and writes the result in global memory
     if(threadIdx.x==0){
         _CT_mask_svs_dev[ctWord]=result&_CT_mask_svs_dev[ctWord];
