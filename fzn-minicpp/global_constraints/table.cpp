@@ -142,10 +142,6 @@ void Table::updateTable(){
 
         _currTable.intersectWithMask();
 
-        //printf("%%%%%% ct after %d: ",index); 
-        //for(int k=0; k<currTableSize; k++)
-        //    printf(" %d ",_currTable._words[k].value());
-        //printf("\n");
     }
  
     

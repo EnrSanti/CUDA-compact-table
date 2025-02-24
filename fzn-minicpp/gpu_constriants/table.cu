@@ -155,19 +155,13 @@ void TableGPU::propagate(){
         cudaStreamSynchronize(streams[0]);
     #endif
     auto end_update=std::chrono::high_resolution_clock::now();
-    //get the time in micro seconds
     
     
     //copy back the mask to inteserct with the table calculated by the kernel
     cudaMemcpyAsync(_CT_mask_svs_host, _CT_mask_svs_dev, currTableSize*sizeof(unsigned int), cudaMemcpyDeviceToHost,streams[0]);
-    
     filterDomainsGPU<<<noBlocksFilter,32,64*sizeof(unsigned int),streams[0]>>>(_CT_mask_svs_dev,_currTable_size_dev,_vars_dev,_supportOffsetJmp_dev,_supports_dev, _supportSize_dev);
-
     cudaStreamSynchronize(streams[0]);
-
     cudaMemcpyAsync(_vars_to_remove_host, _vars_dev, sizeof(int)*((_supportSize/32)+1), cudaMemcpyDeviceToHost,streams[0]);
-
-
         
     //adding the retrieved mask
     _currTable.addToMaskArray(_CT_mask_svs_host);
@@ -223,6 +217,10 @@ void TableGPU::dumpDomainsGPU2(){
     //for each of the vars, dump the domain which is kept as a sparseBitset into the array (treat it as a black box)
     for(int index=0; index < noVars; index++){
       
+
+        if(!(_vars[index]->changed()) && _vars[index]->size()==1)
+            continue;
+
         int starting_word=(_supportOffsetJmp[index])/32;
         int words_to_reset=-1;
         int to=-1;
@@ -322,17 +320,6 @@ __global__ void updateTableGPU(unsigned int* _supports_dev,unsigned int * _svSiz
     //the offset of the supports for the current variable for the current thread
     int offset32_th=offsetsAndLimits[iterations32_th+32]; 
     
-    //useless
-    /*
-    if(threadIdx.x==0){
-        outputMasks[varIndex*(*_currTable_dev_size)+blockIdx.x]=88;
-        printf("%%%%%% INSIDE IF, th. %d block. %d, outputMasks[%d]= %d\n",threadIdx.x,blockIdx.x,varIndex*(*_currTable_dev_size)+blockIdx.x,outputMasks[varIndex*(*_currTable_dev_size)+blockIdx.x]);
-        
-    }
-    __syncthreads();
-    */
-    //over
-    
     //each thread does the same (+/-1) amount of iterations,
     for(int j=0; j<offsetsAndLimits[iterations32_th]; j++){
         
@@ -364,7 +351,6 @@ __global__ void updateTableGPU(unsigned int* _supports_dev,unsigned int * _svSiz
     //write back the result
     if(threadIdx.x==0){
         outputMasks[varIndex*(*_currTable_dev_size)+blockIdx.x]=result;
-        //printf("%%%%%% INSIDE IF, th. %d block. %d, maks[%d]= %d\n",threadIdx.x,blockIdx.x,varIndex*(*_currTable_dev_size)+blockIdx.x,outputMasks[varIndex*(*_currTable_dev_size)+blockIdx.x]);
     }
 
     
@@ -402,7 +388,6 @@ __global__ void reduce(unsigned int * _CT_mask_svs_dev,unsigned int* tmpMasks, i
     
         int varIndex=_CT_mask_svs_dev[2*(*ctSize)+2+skip*32+threadIdx.x];
         toReduce[thId]=toReduce[thId] & tmpMasks[varIndex*(*ctSize)+blockIdx.x];
-        //printf("%%%%%% INSIDE IF, th. %d block. %d, lastIT %d, toReduce[thId]: %d, consider var: %d, wordMask[%d]= %d \n",thId,ctWord,lastIteration,toReduce[thId],varIndex,varIndex*(*ctSize)+blockIdx.x,tmpMasks[varIndex*(*ctSize)+blockIdx.x]);
     }
 
 
@@ -413,18 +398,8 @@ __global__ void reduce(unsigned int * _CT_mask_svs_dev,unsigned int* tmpMasks, i
         }
         result=toReduce[0];
     }
-    /*
-    unsigned int mask=0xFFFFFFFF;
-    if(blockDim.x!=32)
-        mask=(1 << blockDim.x) - 1;  //
-    unsigned result = __reduce_and_sync(mask, toReduce[thId]);
-    doesn't work
-    */
-    //implicity sync via reduce
-    
     //the first thread of the block intersect the final mask witht the CT and writes the result in global memory
     if(threadIdx.x==0){
-        //printf("%%%%%% INSIDE IF, th. %d block. %d, toReduce[thId]: %d\n",thId,ctWord,toReduce[thId]);
         _CT_mask_svs_dev[ctWord]=result&_CT_mask_svs_dev[ctWord];
     }
 }
@@ -541,23 +516,3 @@ void varOffsetLimit(int size,int * where) {
     where[63]=where[30]+where[62];
 }   
 
-
-__global__ void restMasks(unsigned int * _svSize_off_sval_dev,int* _currTable_dev_size, unsigned int* outputMasks){
-
-
-}
-__global__ void printTmpMasks(unsigned int * _CT_mask_svs_dev,unsigned int* tmpMasks, int *ctSize,int* _vars_dev){
-    printf("%%%%%% TmpMasks: \n");
-    for(int row=0; row<3; row++){
-        printf("%%%%%% Row %d: ", row);
-        for(int i=0; i<(*ctSize); i++){
-            printf(" %d ", tmpMasks[row*(*ctSize)+i]);
-        }
-        printf("\n");
-    }
-    printf("%%%%%% domains: ");
-    for(int i=0; i<10; i++){
-        printf(" %d ", _vars_dev[i]);
-    }
-    printf("\n");
-}
