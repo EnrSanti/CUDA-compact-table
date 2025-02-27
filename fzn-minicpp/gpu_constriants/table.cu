@@ -91,7 +91,6 @@ void TableGPU::propagate(){
 
     auto start_overall = std::chrono::high_resolution_clock::now();
 
-
     //calculating where the two vectors (sval, ssup will start)
     int internalIndex=currTableSize*2+2;
     _s_val.clear(); 

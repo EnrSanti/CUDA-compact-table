@@ -82,43 +82,43 @@ void SmartTableGPU::enfGACDev(){
 
 
 
+    updateTable();
+
+    #ifdef RECORD_OUTPUT
+        //syncToRemove
+        cudaStreamSynchronize(streams[0]);
+    #endif
+    auto end_update=std::chrono::high_resolution_clock::now();
+    //get the time in micro seconds
+    
+    
+    //get the current table, from the sparse Bitset to the array
     for(int i=0;i<currTableSize;i++){
         _CT_mask_svs_host[i]=_currTable._words[i].value();
     }
     
-    //aggiungi pure ct ua
+    //copy the data on the device
     cudaMemcpyAsync(_CT_mask_svs_dev, _CT_mask_svs_host, sizeof(unsigned int)*(2*currTableSize+_s_val.size()+_s_sup.size()+2), cudaMemcpyHostToDevice,streams[0]);   
     
-    //metti dump domini qui
-
+    //getting the updated domains for the varialbes and copying them on the device
     dumpDomainsGPU2();
-
     cudaMemcpyAsync(_vars_dev, _vars_host, sizeof(int)*((_supportSize/32)+1), cudaMemcpyHostToDevice,streams[0]);
 
-    
-    dim3 gridDim(noBlocks,_s_val.size());
-    updateTableGPU<<<gridDim,32,32*sizeof(unsigned int),streams[0]>>>(_supports_dev,_CT_mask_svs_dev+(2*currTableSize),_supportOffsetJmp_dev,_CT_mask_svs_dev,_currTable_size_dev,_vars_dev,th_limits_dev,_tmpMasks);          
 
- 
+    auto start_overall_filter = std::chrono::high_resolution_clock::now();
+    //launch filtering, each block will take care of a word of the domains
+    filterDomainsGPU<<<noBlocksFilter,32,64*sizeof(unsigned int),streams[0]>>>(_CT_mask_svs_dev,_currTable_size_dev,_vars_dev,_supportOffsetJmp_dev,_supports_dev, _supportSize_dev);
 
-    //we then reduce the matrix of temporary maks into a single mask to add tot he table
-    reduce<<<currTableSize,std::min((int)_s_val.size(),32),32*sizeof(int),streams[0]>>>(_CT_mask_svs_dev,_tmpMasks,_currTable_size_dev);
     
 
-
-    cudaStreamSynchronize(streams[0]);
-    
-    cudaMemcpyAsync(_CT_mask_svs_host, _CT_mask_svs_dev, currTableSize*sizeof(unsigned int), cudaMemcpyDeviceToHost,streams[0]);
-
-    filterDomainsGPU<<<noBlocksFilter,32,32*sizeof(unsigned int),streams[0]>>>(_CT_mask_svs_dev,_currTable_size_dev,_vars_dev,_supportOffsetJmp_dev,_supports_dev, _supportSize_dev);
-
-
-    //we need to update the current table
-    cudaStreamSynchronize(streams[0]);
+    auto end_overall_filter = std::chrono::high_resolution_clock::now();
+    //get the time in micro seconds
+  
+    //getting back the for each varaible the values to remove from the domains
     cudaMemcpyAsync(_vars_to_remove_host, _vars_dev, sizeof(int)*((_supportSize/32)+1), cudaMemcpyDeviceToHost,streams[0]);
 
+    //adding the retrieved mask
     _currTable.addToMaskArray(_CT_mask_svs_host);
-    
     _currTable.intersectWithMask();
     _currTable.clearMask();
 
@@ -128,16 +128,18 @@ void SmartTableGPU::enfGACDev(){
     }
 
 
-    //copy back the domains
-    
+    //wait for  the domains to be copied back
     cudaStreamSynchronize(streams[0]);
     
-    //for all the vars in ssup
+    auto start_removing = std::chrono::high_resolution_clock::now(); 
+
+    //for all the vars in ssup, update their domains with the information from the last kernel by checking _vars_to_remove_host
     for(int i=0;i<_s_sup.size();i++){
 
-        int index=_s_sup[i];
-        int starting_word=(_supportOffsetJmp[index]+(_vars[index]->min()-_vars[index]->initialMin()))/32;
-        int starting_bit=(_supportOffsetJmp[index]+(_vars[index]->min()-_vars[index]->initialMin()))%32; 
+        int index=_CT_mask_svs_host[i+currTableSize*2+_s_val.size()+2];
+        int starting_value=(_supportOffsetJmp[index]-_variablesOffsets[index]+_vars[index]->min());
+        int starting_word=(starting_value)/32;
+        int starting_bit=(starting_value)%32; 
         
         //from the min to the max (can be changed);
         for (int j = _vars[index]->min(); j <= _vars[index]->max();  j++){ 
@@ -151,6 +153,18 @@ void SmartTableGPU::enfGACDev(){
             }
         }
     }
+    
+    auto end_overall = std::chrono::high_resolution_clock::now();
+    
+    #ifdef RECORD_OUTPUT
+        auto duration_removing = std::chrono::duration_cast<std::chrono::microseconds>(end_overall - start_removing);
+        auto duration_overall_filter = std::chrono::duration_cast<std::chrono::microseconds>(end_overall_filter - start_overall_filter);
+        auto duration_dump_cpu = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+        auto duration_update = std::chrono::duration_cast<std::chrono::microseconds>(end_update - start_update);
+
+        auto duration_overall = std::chrono::duration_cast<std::chrono::microseconds>(end_overall - start_overall);
+        printf("%%%%%% Time to propagate (CUDA): %ld us (to dump & cpy %ld) (update %ld) (filter %ld) (removing %ld)\n",duration_overall.count(),duration_dump_cpu.count(),duration_update.count(),duration_overall_filter.count(),duration_removing.count());
+    #endif    
 
 }
 void SmartTableGPU::enfoceGAC(){
