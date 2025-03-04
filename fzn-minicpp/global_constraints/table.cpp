@@ -78,6 +78,7 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     for (int i = 0; i < noVars; i++){
         if(_vars[i]->size()==1){
             if(tuplesOfSingletons[i]==-1){
+
                 failNow();
                 return;
             }
@@ -168,6 +169,7 @@ void Table::filterDomains(){
 
 void Table::enfoceGAC(){
 
+  
     auto start = std::chrono::high_resolution_clock::now();
     _s_val.clear();
     _s_sup.clear();
