@@ -403,6 +403,7 @@ __global__ void  filterDomainsGPU(unsigned int * _CT_mask_svs_dev, int* _currTab
 
     //do it 32 times, so no ifs
     partialRes[threadIdx.x+32]=_vars_dev[blockIdx.x]; //store the word of the domain in the last int of the shared memory
+   
     //if the word is empty, no need to do anything, i can't remove any values
     if(partialRes[32]==0){
         return;
@@ -411,18 +412,22 @@ __global__ void  filterDomainsGPU(unsigned int * _CT_mask_svs_dev, int* _currTab
     //for each bit in the word, each thread in the block will do 32 iterations
     for(int i=0; i<32; i++){  
         
-        int mask=1<<(31-(i%32));
+        int mask=1<<(31-i);
         partialRes[threadIdx.x]=0;
         
         //if value in the domain then we intersect (either all thread are here or none is)
         if((partialRes[32] & mask)!=0){
-        
+            
+            
             //the index of the support i look at, it doesn't depend on the thread just on the block, each thread will do a different piece of work on the CT
             int index_x_a=blockIdx.x*32+i;
 
             int skip=0;
-            for(int ctW=0; ctW<(*_currTable_dev_size)-32; ctW=ctW+32){
+
+            //the parallel reduction part
+            for(int ctW=0; ctW<=(*_currTable_dev_size)-32; ctW=ctW+32){
                 //we add to the partial result
+                //printf("%%%%%% INSIDE LOOP %d %d %d\n",index_x_a,ctW,threadIdx.x);
                 int support=__ldlu(_supports_dev+ index_x_a*(*_currTable_dev_size)+ctW+threadIdx.x); //load the support word without caching
                 partialRes[threadIdx.x]=partialRes[threadIdx.x] | (_CT_mask_svs_dev[ctW+threadIdx.x] & support);
                 //increment by 32 for the last (unrolled iterations, look after the for loop)
@@ -430,11 +435,13 @@ __global__ void  filterDomainsGPU(unsigned int * _CT_mask_svs_dev, int* _currTab
             }
 
             //unroll of the last iteration of the loop, if the CT size is not a multiple of 32 then if(threadIdx.x<=(*_currTable_dev_size)%32) the threads considered will do one more iteration
-            int condition=(threadIdx.x<=(*_currTable_dev_size)%32)!=0;
+            int condition=(threadIdx.x<(*_currTable_dev_size)%32);
+            //printf("%%%%%% OUTSIDE LOOP, th %d condition %d\n",threadIdx.x,condition);
             partialRes[threadIdx.x]=partialRes[threadIdx.x] | ( (condition) * (_CT_mask_svs_dev[skip+threadIdx.x] & _supports_dev[index_x_a*(*_currTable_dev_size)+skip+threadIdx.x]));
+           
             //end of unrolled loop
 
-            //reduction among the 32 threads of the block
+            //reduction among the 32 threads of the block // e questa è ok
             unsigned result = __reduce_or_sync(0xFFFFFFFF, partialRes[threadIdx.x]);
         
             

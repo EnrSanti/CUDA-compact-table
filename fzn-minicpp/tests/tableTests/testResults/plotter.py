@@ -1,7 +1,7 @@
 import os
 import re
 import matplotlib.pyplot as plt
-
+import numpy as np  
 
 # List of model files
 
@@ -25,7 +25,9 @@ def plots(models):
             print(f"\033[93m FOLDER {folder} not found, SKIPPING\033[00m")
             continue
         
-        instances = sorted([file for file in os.listdir(folder) if os.path.isfile(os.path.join(folder, file))])
+        instances = sorted(   [file for file in os.listdir(folder) if os.path.isfile(os.path.join(folder, file))], key=extract_number)
+
+
 
         
         #check if folder exists, print in yellow
@@ -35,12 +37,10 @@ def plots(models):
 
         for instance in instances:
             #read instance file 
+            print(f"Reading {instance}")
             with open(folder+instance, "r") as text_file:
                 time_serial,time_cuda = filter_input(text_file.read())
-                if(time_serial!=0):
-                    print(f"{time_serial} {time_cuda} percentage speedup {percentage_speedup(time_serial, time_cuda):.2f}%")
-                else:
-                    print(f"{time_serial} {time_cuda}")
+                print(f"{time_serial} {time_cuda} percentage speedup {percentage_speedup(time_serial, time_cuda):.2f}%")
                 serialTimes.append(time_serial)
                 cudaTimes.append(time_cuda)
 
@@ -49,8 +49,14 @@ def plots(models):
     
 
 def percentage_speedup(old_time, new_time):
+    if(old_time == 0):
+        return -1
     speedup = ((old_time - new_time) / old_time) * 100
     return speedup
+
+def extract_number(filename):
+    match = re.search(r'\d+', filename)  # Find the first number in the filename
+    return int(match.group()) if match else float('inf')  # Convert to int
 
 
 def filter_input(input_string):
@@ -59,23 +65,24 @@ def filter_input(input_string):
     return float(re.search(r'\d+\.\d{3}', filtered[0]).group()),float(re.search(r'\d+\.\d{3}', filtered[1]).group())  # SERIAL AND CUDA TIMES
 
 def plot_sequences(seq1, seq2, diagram_name):
+    x = np.arange(len(seq1))  # Generate x positions
+    width = 0.4  # Width of bars
+    
     plt.figure(figsize=(10, 5))
     
-    plt.plot(seq1, marker='s', linestyle='--', color='blue', label='Serial solve time')
-    plt.plot(seq2, marker='s', linestyle='-', color='green', label='CUDA solve time')
+    plt.bar(x - width/2, seq1, width, color='#b7e4c7', label='Serial solve time')
+    plt.bar(x + width/2, seq2, width, color='#40916c', label='CUDA solve time')
     
-    #show only INTEGER NUMBERS on the X axis
-    plt.xticks(range(len(seq1)), range(1, len(seq1)+1))
+    # Show only INTEGER NUMBERS on the X axis
+    plt.xticks(x, range(0, len(seq1)))
     plt.xlabel("Instance no.")
     plt.ylabel("Time (s)")
     plt.title(diagram_name)
     plt.legend()
-    plt.grid(True)
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
     
     plt.savefig(diagram_name, dpi=300, bbox_inches="tight")  
     print(f"Plot saved as {diagram_name}")
-
-    #plt.show()
 
 
 plots(folderSAT)

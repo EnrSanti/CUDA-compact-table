@@ -90,12 +90,11 @@ def filter_output(input_string):
  
 run_models("./SimpleTables/",modelsSAT)
 run_models("./SimpleTables/",modelsUNSAT)
-#print("\n\n\033[92m ************** Synthetic instances GATHERED **************\033[00m \n\n")
+print("\n\n\033[92m ************** Synthetic instances GATHERED **************\033[00m \n\n")
 
 #gather the data from CSP instances
 
-#for all csp folders'
-'''
+#for all csp folders
 i=0
 for folder in modelsFromCSP:
 
@@ -127,4 +126,3 @@ for folder in modelsFromCSP:
             print("\033[93 matching file not printfound for "+str(instance)+"looking for "+str(os.path.join(folder, "CUDA_"+instance))+" SKIPPING\033[00m")
             continue
     i+=1
-'''
