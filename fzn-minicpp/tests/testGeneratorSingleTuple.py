@@ -152,18 +152,18 @@ def generateFile():
 ####################################################################################
 
 #note, it doesn't create n sat instances and n unsat instances, but it create n instances, then they are solved via cp_model and put in the right (SAT or NOT folder)
-filesToCreate=40
+filesToCreate=30
 
 #how many clauses we want in an instance (max and min)
-minNoVars=30
-maxNoVars=30
+minNoVars=25
+maxNoVars=25
 
-minDomain=110
-maxDomain=110
-maxOffset=0
+minDomain=120
+maxDomain=120
+maxOffset=20
 
 
-minTuples=999
+minTuples=1999
 maxTuples=4999
 
 
@@ -179,10 +179,10 @@ include \"table.mzn\";\n\n"""
 random.seed(4050)
 
 
-directoryPathUNSAT="oneSolUNSAT_30_110_5000/"
-directoryPathSAT="oneSolSAT_30_110_5000/"
-directoryPathUNSAT_CUDA="oneSolUNSAT_CUDA_30_110_5000/"
-directoryPathSAT_CUDA="oneSolSAT_CUDA_30_110_5000/"
+directoryPathUNSAT="oneSolUNSAT_25_120_5000/"
+directoryPathSAT="oneSolSAT_25_120_5000/"
+directoryPathUNSAT_CUDA="oneSolUNSAT_CUDA_25_120_5000/"
+directoryPathSAT_CUDA="oneSolSAT_CUDA_25_120_5000/"
 
 #check if folders exist else create them
 if not os.path.isdir(directoryPathSAT):

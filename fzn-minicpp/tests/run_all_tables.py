@@ -6,6 +6,8 @@ import time
 
 # List of model files
 modelsSAT = [
+"oneSolSAT_30_110_5000/",
+"oneSolSAT_CUDA_30_110_5000/",
 "oneSolSAT_10_50_500/",
 "oneSolSAT_CUDA_10_50_500/",
 "oneSolSAT_10_100_1000/",  #domains 100

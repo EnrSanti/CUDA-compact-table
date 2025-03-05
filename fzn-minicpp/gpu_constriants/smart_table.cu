@@ -70,12 +70,18 @@ void SmartTableGPU::post(){
     }
 }
 void SmartTableGPU::propagate(){
-    //auto t0 = std::chrono::high_resolution_clock::now();
+
+    #ifdef RECORD_OUTPUT
+        auto t0 = std::chrono::high_resolution_clock::now();
+    #endif
     enfoceGAC();
-    //auto t1 = std::chrono::high_resolution_clock::now();
-    //auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0);
-    //printf("%%%%%% Time taken enfGAC gpu: %ld microseconds\n", duration.count());
-    //fflush(stdout);
+    
+    #ifdef RECORD_OUTPUT
+        auto t1 = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0);
+        printf("%%%%%% Time taken enfGAC gpu: %ld microseconds\n", duration.count());
+        fflush(stdout);
+    #endif
 }
 
 void SmartTableGPU::enfGACDev(){
@@ -130,7 +136,9 @@ void SmartTableGPU::enfGACDev(){
     //wait for  the domains to be copied back
     cudaStreamSynchronize(streams[0]);
     
-    auto start_removing = std::chrono::high_resolution_clock::now(); 
+    #ifdef RECORD_OUTPUT
+        auto start_removing = std::chrono::high_resolution_clock::now(); 
+    #endif
 
     //for all the vars in ssup, update their domains with the information from the last kernel by checking _vars_to_remove_host
     for(int i=0;i<_s_sup.size();i++){
@@ -152,9 +160,9 @@ void SmartTableGPU::enfGACDev(){
         }
     }
     
-    auto end_overall = std::chrono::high_resolution_clock::now();
-    
     #ifdef RECORD_OUTPUT
+        auto end_overall = std::chrono::high_resolution_clock::now();
+    
         auto duration_removing = std::chrono::duration_cast<std::chrono::microseconds>(end_overall - start_removing);
         auto duration_overall_filter = std::chrono::duration_cast<std::chrono::microseconds>(end_overall_filter - start_overall_filter);
         auto duration_dump_cpu = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
@@ -206,7 +214,10 @@ void SmartTableGPU::enfoceGAC(){
 
 void SmartTableGPU::dumpDomainsGPU2(){
 
-    //auto start = std::chrono::high_resolution_clock::now();
+
+    #ifdef RECORD_OUTPUT
+        auto start = std::chrono::high_resolution_clock::now();
+    #endif
     for(int index=0; index < noVars; index++){
         //quali variaibli skip
 
@@ -288,9 +299,11 @@ void SmartTableGPU::dumpDomainsGPU2(){
         }
     }
 
-    //auto end = std::chrono::high_resolution_clock::now();
-    //auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-    //printf("%%%%%% Time of which by dump 2: %ld microseconds\n", duration.count());
-    //fflush(stdout);
-    
+
+    #ifdef RECORD_OUTPUT
+        auto end = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+        printf("%%%%%% Time of which by dump 2: %ld microseconds\n", duration.count());
+        fflush(stdout);
+    #endif
 }
