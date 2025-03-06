@@ -5,7 +5,9 @@
 TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) : Table(vars,tuples){
     
     //get the intial time
-    auto start= std::chrono::high_resolution_clock::now();
+    #ifdef RECORD_OUTPUT
+        auto start= std::chrono::high_resolution_clock::now();
+    #endif
 
     int noTuples=tuples.size();
     noVars=vars.size();
@@ -87,10 +89,11 @@ void TableGPU::post(){
     }
 }
 void TableGPU::propagate(){
-    //printf("%%%%%% ---------------------------- Propagating ----------------------------\n");
-    //for each var print domains
+    
+    #ifdef RECORD_OUTPUT
+        auto start_overall = std::chrono::high_resolution_clock::now();
+    #endif
 
-    //calculating where the two vectors (sval, ssup will start)
     int internalIndex=currTableSize*2+2;
     _s_val.clear(); 
     _s_val.shrink_to_fit();
@@ -121,21 +124,17 @@ void TableGPU::propagate(){
     _CT_mask_svs_host[currTableSize*2+1]=_s_sup.size();
 
 
-    auto start = std::chrono::high_resolution_clock::now();
+    #ifdef RECORD_OUTPUT
+        auto start_update=std::chrono::high_resolution_clock::now();
+    #endif
     
-    //get the time in micro seconds
-    auto end = std::chrono::high_resolution_clock::now();
-
-    auto start_update=std::chrono::high_resolution_clock::now();
-
     updateTable();
 
-    #ifdef RECORD_OUTPUT
-        //syncToRemove
-        cudaStreamSynchronize(streams[0]);
-    #endif
-    auto end_update=std::chrono::high_resolution_clock::now();
     //get the time in micro seconds
+    #ifdef RECORD_OUTPUT
+        auto end_update=std::chrono::high_resolution_clock::now();
+    #endif
+        
     
     
     //get the current table, from the sparse Bitset to the array
@@ -149,13 +148,19 @@ void TableGPU::propagate(){
     //getting the updated domains for the varialbes and copying them on the device
     dumpDomainsGPU2();
     cudaMemcpyAsync(_vars_dev, _vars_host, sizeof(int)*((_supportSize/32)+1), cudaMemcpyHostToDevice,streams[0]);
+    #ifdef RECORD_OUTPUT
+        auto start_overall_filter = std::chrono::high_resolution_clock::now();
+    #endif
 
     //print the whole domain
     filterDomainsGPU<<<noBlocksFilter,32,64*sizeof(unsigned int),streams[0]>>>(_CT_mask_svs_dev,_currTable_size_dev,_vars_dev,_supportOffsetJmp_dev,_supports_dev, _supportSize_dev);
 
     
-
-    auto end_overall_filter = std::chrono::high_resolution_clock::now();
+    
+    #ifdef RECORD_OUTPUT
+        cudaStreamSynchronize(streams[0]);
+        auto end_overall_filter = std::chrono::high_resolution_clock::now();
+    #endif
     //get the time in micro seconds
   
     //getting back the for each varaible the values to remove from the domains
@@ -176,8 +181,9 @@ void TableGPU::propagate(){
     //wait for  the domains to be copied back
     cudaStreamSynchronize(streams[0]);
     
-    auto start_removing = std::chrono::high_resolution_clock::now(); 
-
+    #ifdef RECORD_OUTPUT
+        auto start_removing = std::chrono::high_resolution_clock::now(); 
+    #endif
     
     //for all the vars in ssup, update their domains with the information from the last kernel by checking _vars_to_remove_host
     for(int i=0;i<_s_sup.size();i++){
@@ -199,9 +205,10 @@ void TableGPU::propagate(){
             }
         }
     }
-    auto end_overall = std::chrono::high_resolution_clock::now();
+
     
     #ifdef RECORD_OUTPUT
+        auto end_overall = std::chrono::high_resolution_clock::now();
         auto duration_removing = std::chrono::duration_cast<std::chrono::microseconds>(end_overall - start_removing);
         auto duration_overall_filter = std::chrono::duration_cast<std::chrono::microseconds>(end_overall_filter - start_overall_filter);
         auto duration_dump_cpu = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
@@ -300,12 +307,6 @@ void TableGPU::dumpDomainsGPU2(){
 }
 
 
-__global__ void printGPUData(unsigned int * _CT_mask_svs_dev){
-    for(int i=0; i<32; i++){
-        printf("%%%%%% CTDEV[%d]: %d\n",i,_CT_mask_svs_dev[i]);
-    }
-}
-
 __global__ void  filterDomainsGPU(unsigned int * _CT_mask_svs_dev, int* _currTable_dev_size, int* _vars_dev, int *_supportOffsetJmp_dev, unsigned int* _supports_dev , int* supportSize_dev){
     
 
@@ -313,11 +314,12 @@ __global__ void  filterDomainsGPU(unsigned int * _CT_mask_svs_dev, int* _currTab
 
     //do it 32 times, so no ifs
     partialRes[threadIdx.x+32]=_vars_dev[blockIdx.x]; //store the word of the domain in the last int of the shared memory
-   
+    
     //if the word is empty, no need to do anything, i can't remove any values
     if(partialRes[32]==0){
         return;
     }
+    int ct_size=*_currTable_dev_size;
 
     //for each bit in the word, each thread in the block will do 32 iterations
     for(int i=0; i<32; i++){  
@@ -331,23 +333,23 @@ __global__ void  filterDomainsGPU(unsigned int * _CT_mask_svs_dev, int* _currTab
             
             //the index of the support i look at, it doesn't depend on the thread just on the block, each thread will do a different piece of work on the CT
             int index_x_a=blockIdx.x*32+i;
-
+            int index_ctSize=index_x_a*(ct_size);
             int skip=0;
 
             //the parallel reduction part
-            for(int ctW=0; ctW<=(*_currTable_dev_size)-32; ctW=ctW+32){
+            for(int ctW=0; ctW<=(ct_size)-32; ctW=ctW+32){
                 //we add to the partial result
                 //printf("%%%%%% INSIDE LOOP %d %d %d\n",index_x_a,ctW,threadIdx.x);
-                int support=__ldlu(_supports_dev+ index_x_a*(*_currTable_dev_size)+ctW+threadIdx.x); //load the support word without caching
+                int support=__ldlu(_supports_dev+ index_ctSize+ctW+threadIdx.x); //load the support word without caching
                 partialRes[threadIdx.x]=partialRes[threadIdx.x] | (_CT_mask_svs_dev[ctW+threadIdx.x] & support);
                 //increment by 32 for the last (unrolled iterations, look after the for loop)
                 skip+=32;
             }
 
             //unroll of the last iteration of the loop, if the CT size is not a multiple of 32 then if(threadIdx.x<=(*_currTable_dev_size)%32) the threads considered will do one more iteration
-            int condition=(threadIdx.x<(*_currTable_dev_size)%32);
+            int condition=(threadIdx.x<(ct_size)%32);
             //printf("%%%%%% OUTSIDE LOOP, th %d condition %d\n",threadIdx.x,condition);
-            partialRes[threadIdx.x]=partialRes[threadIdx.x] | ( (condition) * (_CT_mask_svs_dev[skip+threadIdx.x] & _supports_dev[index_x_a*(*_currTable_dev_size)+skip+threadIdx.x]));
+            partialRes[threadIdx.x]=partialRes[threadIdx.x] | ( (condition) * (_CT_mask_svs_dev[skip+threadIdx.x] & _supports_dev[index_ctSize+skip+threadIdx.x]));
            
             //end of unrolled loop
 

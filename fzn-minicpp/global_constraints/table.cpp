@@ -1,17 +1,17 @@
 #include "table.hpp"
 #include <unistd.h>
 #include <chrono>
-//#define <fine RECORD_OUTPUT
+//#define RECORD_OUTPUT
 
 Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     Constraint(vars[0]->getSolver()), 
     _vars(vars), _tuples(tuples), 
     _currTable(SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),tuples.size())){
     
-    
-    auto start = std::chrono::high_resolution_clock::now();
+    #ifdef RECORD_OUTPUT
+        auto start = std::chrono::high_resolution_clock::now();
+    #endif
 
-    //auto start = std::chrono::high_resolution_clock::now();
     int noTuples=tuples.size();
     int noVars=vars.size();
     
@@ -20,7 +20,7 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     _supportOffsetJmp=vector<int>(noVars);
     _variablesOffsets=vector<int>(noVars);
 
-
+    //creating the CT
     _currTable=SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),tuples.size());
 
     for (int i = 0; i < noVars; i++){        
@@ -44,7 +44,7 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     
     bool found=false;
     int tuplesOfSingletons[noVars];
-
+    //we already perform an intial filtering on the CT, by removing tuples that are not supported by any variable (e.g. x>10, the domain is pruned before startng the computation)
     for (int v = 0; v < noVars; v++){
         tuplesOfSingletons[v]=-1;
         for (int t = 0; t < noTuples; t++){
@@ -62,6 +62,7 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
                 _currTable.addToMaskInt(t+1);
             }
         }
+        //if for all tuples we weren't able to find a tuple supported we already fail
         if (found==false){
             failNow();
             return;
@@ -72,18 +73,16 @@ Table::Table(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     _currTable.intersectWithMask();
     _currTable.clearMask();
 
-    
-   
-    //forall vars
+    //forall vars, if the domain is a singleton, we check if there is a tuple that supports it, else we fail already
     for (int i = 0; i < noVars; i++){
         if(_vars[i]->size()==1){
             if(tuplesOfSingletons[i]==-1){
-
                 failNow();
                 return;
             }
         }
     }
+
     if(_currTable.isEmpty()){
         failNow();
         return;
@@ -107,55 +106,48 @@ void Table::post()
 
 void Table::propagate()
 {
-    enfoceGAC();
-
-    
+    enfoceGAC();   
 }
-
-
-
 
 //---------------------------------------------
 //------- The three functions of alg. 2 -------
 //---------------------------------------------
 
 void Table::updateTable(){
-    //forall var x in s_val
     int index=0;
-
+    
+    //forall var x in s_val
     for(int i=0; i < _s_val.size(); ++i){
+        //Clear the mask and get the index of the var in s_val
         _currTable.clearMask();
         index=_s_val[i];
 
-        //reset based update
+        //reset based update, for each value in the domain of x we check if a tuple is supported
         for (int j = _vars[index]->min(); j <= _vars[index]->max();  j++){ 
 
             if(_vars[index]->contains(j)){
                 int index_x_a=(_supportOffsetJmp[index]+j-_variablesOffsets[index])*currTableSize;
                 _currTable.addToMaskArray(&(_supports[index_x_a]));
             }
-           
         } 
-    
-
         _currTable.intersectWithMask();
-
-        if(_currTable.isEmpty()){
-            failNow();
-            return;
-		}
     }
-
+    
+    if(_currTable.isEmpty()){
+        failNow();
+        return;
+    }
 }
 
 void Table::filterDomains(){
 
-
+    //for all the vars in ssup
     for(int i=0; i < _s_sup.size(); ++i){
+        //get the index of the var
         int index=_s_sup[i];
+        //for all the values in the domain of the var we check if the value is supported by one tuple
         for (int j = _vars[index]->min(); j <= _vars[index]->max(); j++){
             if(_vars[index]->contains(j)){ //i.e. a \in dom(x)
-
                 int index_x_a=_supportOffsetJmp[index]+j-_vars[index]->initialMin();
                 int indexResidue=intersectIndexSparse(&_supports[index_x_a*currTableSize],_currTable);
                     
@@ -168,9 +160,9 @@ void Table::filterDomains(){
 }
 
 void Table::enfoceGAC(){
-
-  
-    auto start = std::chrono::high_resolution_clock::now();
+    #ifdef RECORD_OUTPUT
+       auto start = std::chrono::high_resolution_clock::now();
+    #endif
     _s_val.clear();
     _s_sup.clear();
     _s_val.shrink_to_fit();
@@ -185,16 +177,19 @@ void Table::enfoceGAC(){
             _s_sup.push_back(i);
         }
 	}
-    
-	auto startUpdate = std::chrono::high_resolution_clock::now();
-    updateTable();
-    auto endUpdate = std::chrono::high_resolution_clock::now();
-	
-    auto startFilter = std::chrono::high_resolution_clock::now();
-    filterDomains();
-    auto endFilter = std::chrono::high_resolution_clock::now();
-    
     #ifdef RECORD_OUTPUT
+	    auto startUpdate = std::chrono::high_resolution_clock::now();
+    #endif
+    updateTable();
+    #ifdef RECORD_OUTPUT
+        auto endUpdate = std::chrono::high_resolution_clock::now();
+        auto startFilter = std::chrono::high_resolution_clock::now();
+    #endif
+    
+    filterDomains();
+
+    #ifdef RECORD_OUTPUT
+        auto endFilter = std::chrono::high_resolution_clock::now();
         auto end = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
         auto durationUpdate = std::chrono::duration_cast<std::chrono::microseconds>(endUpdate - startUpdate);
@@ -216,6 +211,7 @@ void Table::addToMaskInt(unsigned int* mask,int value){
 	}
 	mask[wordIndex]=mask[wordIndex] | wordToOr;
 }
+
 int Table::intersectIndexSparse(unsigned int* words,SparseBitSet& m) {
 
    int offset;
