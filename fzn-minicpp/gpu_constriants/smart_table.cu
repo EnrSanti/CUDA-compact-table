@@ -70,12 +70,16 @@ void SmartTableGPU::post(){
     }
 }
 void SmartTableGPU::propagate(){
-    //auto t0 = std::chrono::high_resolution_clock::now();
+    #ifdef RECORD_OUTPUT
+        auto t0 = std::chrono::high_resolution_clock::now();
+    #endif
     enfoceGAC();
-    //auto t1 = std::chrono::high_resolution_clock::now();
-    //auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0);
-    //printf("%%%%%% Time taken enfGAC gpu: %ld microseconds\n", duration.count());
-    //fflush(stdout);
+    #ifdef RECORD_OUTPUT
+        auto t1 = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0);
+        printf("%%%%%% Time taken enfGAC gpu: %ld microseconds\n", duration.count());
+        fflush(stdout);
+    #endif
 }
 
 void SmartTableGPU::enfGACDev(){
@@ -85,11 +89,9 @@ void SmartTableGPU::enfGACDev(){
     for(int i=0;i<currTableSize;i++){
         _CT_mask_svs_host[i]=_currTable._words[i].value();
     }
-    
-    //aggiungi pure ct ua
+
     cudaMemcpyAsync(_CT_mask_svs_dev, _CT_mask_svs_host, sizeof(unsigned int)*(2*currTableSize+_s_val.size()+_s_sup.size()+2), cudaMemcpyHostToDevice,streams[0]);   
     
-    //metti dump domini qui
 
     dumpDomainsGPU2();
 
@@ -249,9 +251,4 @@ void SmartTableGPU::dumpDomainsGPU2(){
         }
     }
 
-    //auto end = std::chrono::high_resolution_clock::now();
-    //auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-    //printf("%%%%%% Time of which by dump 2: %ld microseconds\n", duration.count());
-    //fflush(stdout);
-    
 }

@@ -5,8 +5,9 @@
 
 TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) : Table(vars,tuples){
 
-    //get the intial time
-    auto start= std::chrono::high_resolution_clock::now();
+    #ifdef RECORD_OUTPUT
+        auto start= std::chrono::high_resolution_clock::now();
+    #endif
 
     int noTuples=tuples.size();
     noVars=vars.size();
@@ -87,7 +88,9 @@ void TableGPU::post(){
 }
 void TableGPU::propagate(){
 
-    auto start_overall = std::chrono::high_resolution_clock::now();
+    #ifdef RECORD_OUTPUT
+        auto start_overall = std::chrono::high_resolution_clock::now();
+    #endif
     //resetting the vectors
     _s_val.clear(); 
     _s_val.shrink_to_fit();
@@ -121,7 +124,9 @@ void TableGPU::propagate(){
     _CT_mask_svs_host[currTableSize*2+1]=_s_sup.size();
 
 
-    auto start = std::chrono::high_resolution_clock::now();
+    #ifdef RECORD_OUTPUT
+        auto start = std::chrono::high_resolution_clock::now();
+    #endif
 
     //get the current table, from the sparse Bitset to the array
     for(int i=0;i<currTableSize;i++){
@@ -135,12 +140,15 @@ void TableGPU::propagate(){
     dumpDomainsGPU2();
    
     cudaMemcpyAsync(_vars_dev, _vars_host, sizeof(int)*((_supportSize/32)+1), cudaMemcpyHostToDevice,streams[0]);
-    auto end = std::chrono::high_resolution_clock::now();
-    //get the time in micro seconds
+    
+    #ifdef RECORD_OUTPUT
+        auto end = std::chrono::high_resolution_clock::now();
+        //get the time in micro seconds
+        auto start_update=std::chrono::high_resolution_clock::now();
+    #endif
+    
 
-    auto start_update=std::chrono::high_resolution_clock::now();
     //pass: the supports, the changed variables + how many, the indexes for the support, the table and the size, the domains,  and 32*vars ints which tells what range of the varialbe to check according to the index of the th (modifies CT with CT & mask)
-   
     //now each block deals with one specific ct word and also a single changed variable, there can be many blocks, though, even trying to cut them by doing more work per block doesn't improve times
     dim3 gridDim(currTableSize,_s_val.size());
     //pass: the supports, the changed variables + how many, the indexes for the support, the table and the size, the domains,  and 32*vars ints which tells what range of the varialbe to check according to the index of the th (modifies CT with CT & mask)
@@ -153,10 +161,9 @@ void TableGPU::propagate(){
     #ifdef RECORD_OUTPUT
         //syncToRemove
         cudaStreamSynchronize(streams[0]);
+        auto end_update=std::chrono::high_resolution_clock::now();
     #endif
-    auto end_update=std::chrono::high_resolution_clock::now();
-    //get the time in micro seconds
-    
+
     
     //copy back the mask to inteserct with the table calculated by the kernel
     cudaMemcpyAsync(_CT_mask_svs_host, _CT_mask_svs_dev, currTableSize*sizeof(unsigned int), cudaMemcpyDeviceToHost,streams[0]);
@@ -175,9 +182,9 @@ void TableGPU::propagate(){
 
     //the filtering of the domains is now done host side
     filterDomains();    
-    auto end_overall = std::chrono::high_resolution_clock::now();
     
     #ifdef RECORD_OUTPUT
+        auto end_overall = std::chrono::high_resolution_clock::now();
         auto duration_removing = std::chrono::duration_cast<std::chrono::microseconds>(end_overall - start_removing);
         auto duration_overall_filter = std::chrono::duration_cast<std::chrono::microseconds>(end_overall_filter - start_overall_filter);
         auto duration_dump_cpu = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
@@ -277,13 +284,11 @@ void TableGPU::dumpDomainsGPU2(){
 }
 
 
-
 //32 threads will do a parallel reduction on the word considered (groups of 32 threads share the same position of the CT)
 __global__ void updateTableGPU(unsigned int* _supports_dev,unsigned int * _svSize_off_sval_dev, int *_supportOffsetJmp_dev, unsigned int * _CT_mask_dev,int* _currTable_dev_size, int* _vars_dev, int* offsetsAndLimits,unsigned int* outputMasks){
 
 
     extern __shared__ unsigned int mask[]; //mask (32 ints)
-
 
     //each thread clears the mask, MANDATORY
     mask[threadIdx.x]=0;
@@ -293,21 +298,28 @@ __global__ void updateTableGPU(unsigned int* _supports_dev,unsigned int * _svSiz
 
     //the starting point (row) of the supports for the var
     int from=_supportOffsetJmp_dev[varIndex];
+
     //the index of the array offsetsAndLimits which tells the thread how many iterations it will do over the current variable
     int iterations32_th=varIndex*64+threadIdx.x; 
+
     //the offset of the supports for the current variable for the current thread
     int offset32_th=offsetsAndLimits[iterations32_th+32]; 
-
+    
+    //store the number of iterations and the ct_size in registers
+    int iterations=offsetsAndLimits[iterations32_th];
+    int ct_size=*_currTable_dev_size;
     //each thread does the same (+/-1) amount of iterations,
-    for(int j=0; j<offsetsAndLimits[iterations32_th]; j++){
+    for(int j=0; j<iterations; j++){
         
         int wordIndex=(from+j+offset32_th)/32; //piece of row of supports, not the cell, the row piece of row the block looks at
-        int maskContains=1<<(31-j-_supportOffsetJmp_dev[varIndex]-offset32_th+wordIndex*32); //int containing a single bit set
+
+        unsigned int maskContains=1<<(31-j-from-offset32_th+wordIndex*32); //int containing a single bit set
 
         //check if the value is in the domain, without an if statement
         int condition=((_vars_dev[wordIndex] & maskContains)!=0);
         //calculate the offset of the support word the thread has to (potentially) add to the mask
-        int off=(j+offset32_th)*(*_currTable_dev_size)+(_supportOffsetJmp_dev[varIndex]*(*_currTable_dev_size))+blockIdx.x; 
+        int off=(j+offset32_th)*(ct_size)+(from*ct_size)+blockIdx.x; 
+        //printf("%%%%%% th. %d, block %d, varIndex %d, condition %d, ctW %d, row %d, specific cell %d \n",threadIdx.x,blockIdx.x,varIndex,condition,blockIdx.x,(j+offset32_th)*(*_currTable_dev_size)+(_supportOffsetJmp_dev[varIndex]*(*_currTable_dev_size)), off);
         
         int support=__ldlu(_supports_dev+off); //load the support word without caching
         mask[threadIdx.x]=mask[threadIdx.x] | (support*condition);           
@@ -317,9 +329,10 @@ __global__ void updateTableGPU(unsigned int* _supports_dev,unsigned int * _svSiz
     unsigned result = __reduce_or_sync(0xFFFFFFFF, mask[threadIdx.x]);
     
 
+
     //write back the result
     if(threadIdx.x==0){
-        outputMasks[varIndex*(*_currTable_dev_size)+blockIdx.x]=result;
+        outputMasks[varIndex*ct_size+blockIdx.x]=result;
     }
 
     
@@ -330,15 +343,14 @@ __global__ void reduce(unsigned int * _CT_mask_svs_dev,unsigned int* tmpMasks, i
     
     int thId=threadIdx.x;
     int ctWord=blockIdx.x;
-
+    int ct_size=*ctSize;
     //get the overall number of vars changed (i.e. how many rows, of a single word do we need to consider)
-    int noVarsChanged=_CT_mask_svs_dev[2*(*ctSize)];  
+    int noVarsChanged=_CT_mask_svs_dev[2*ct_size];  
 
     //how many iterations each of 32 threads need to do
     int iterations=noVarsChanged/32;
     //the number of iterations may not be multiple of 32, so a first portion of the block may need to do +1 iteration
     int lastIteration=noVarsChanged%32;
-
     //set all bits of the "toReduce" mask to 1, they will be removed via bitwise AND
     toReduce[thId]=0xFFFFFFFF;
 
@@ -347,19 +359,20 @@ __global__ void reduce(unsigned int * _CT_mask_svs_dev,unsigned int* tmpMasks, i
     //each thread will do the same no. of iterations
     for(int i=0;i<iterations;i++){
         //retrieve the variable index to consider (it depends on the thread in the block)
-        int varIndex=_CT_mask_svs_dev[2*(*ctSize)+2+i*32+threadIdx.x];
+        int varIndex=_CT_mask_svs_dev[2*(ct_size)+2+i*32+threadIdx.x];
         //add (bitwise AND) the proper part of the mask to the final mask 
-        toReduce[thId]=toReduce[thId] & tmpMasks[varIndex*(*ctSize)+blockIdx.x];
+        toReduce[thId]=toReduce[thId] & tmpMasks[varIndex*(ct_size)+blockIdx.x];
         skip++;
     }
     
     //checking which first portion of the block may need to do an extra iteration 
     if(threadIdx.x<lastIteration){
-        int varIndex=_CT_mask_svs_dev[2*(*ctSize)+2+skip*32+threadIdx.x];
-        toReduce[thId]=toReduce[thId] & tmpMasks[varIndex*(*ctSize)+blockIdx.x];
+    
+        int varIndex=_CT_mask_svs_dev[2*(ct_size)+2+skip*32+threadIdx.x];
+        toReduce[thId]=toReduce[thId] & tmpMasks[varIndex*(ct_size)+blockIdx.x];
     }
 
-    //implicity sync via reduce
+
     unsigned result = __reduce_and_sync(0xFFFFFFFF, toReduce[threadIdx.x]);
     
     //the first thread of the block intersect the final mask witht the CT and writes the result in global memory
@@ -367,6 +380,7 @@ __global__ void reduce(unsigned int * _CT_mask_svs_dev,unsigned int* tmpMasks, i
         _CT_mask_svs_dev[ctWord]=result&_CT_mask_svs_dev[ctWord];
     }
 }
+
 
 
 int bitsFromRight(int n) {
