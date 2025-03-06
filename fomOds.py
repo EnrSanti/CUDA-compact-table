@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 
-files=["./4050_results_f_uf_5_eb.ods","./4050_results_f_uf_6_b.ods"]    
+files=["./4090_results_f_uf_5_eb.ods","./4090_results_f_uf_6_b.ods"]    
 varsNames=["eb_serial_5","eb_ctf_5","eb_ctuf_5","b_serial_6","b_ctf_6","b_ctuf_6"]
 def getData(models):
     global varsNames

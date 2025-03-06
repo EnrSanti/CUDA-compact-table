@@ -1,8 +1,5 @@
 # CUDA-compact-table
 
-The main branch integrating the constaint in MiniCPP.
-Test results of this branch:
+This is the branch containing a reference to the tests and the results obtained on the other branches and on two different machines, equipped with an NVIDIA RTX 4050 and an RTX 4090.
 
-![results](./fzn-minicpp/tests/tableTests/results.png)
-
-The repository, has multiple branches, which implement the constraint with or without bitsets and with or without streams.
+The results of the perfomed test can be found in this repository, while the test instances themselves are available at: [Instances & results]()
