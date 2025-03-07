@@ -47,7 +47,7 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     cudaError_t err = cudaStreamCreate(&streams[0]);
     
     
-    if(currTableSize<8 && false){
+    if(currTableSize<8){
         cudaMallocHost((void**)&th_limits_host,sizeof(int)*64*noVars);
         //calculating the amount of rows, for each variable, each thread would have to check
         for(int i=0;i<noVars-1;i++){
@@ -161,7 +161,7 @@ void TableGPU::propagate(){
     #endif
     
     //pass: the supports, the changed variables + how many, the indexes for the support, the table and the size, the domains,  and 32*vars ints which tells what range of the varialbe to check according to the index of the th (modifies CT with CT & mask)
-    if(currTableSize<8 && false){
+    if(currTableSize<8){
         dim3 gridDim(currTableSize,_s_val.size());
         //now each block deals with one specific ct word and also a single changed variable, there can be many blocks, though, even trying to cut them by doing more work per block doesn't improve times
     
