@@ -34,12 +34,14 @@ class TableGPU : public Table{
         int noBlocksFilter;
         cudaStream_t* streams;
 
-        int *th_limits_dev;
         int internalIndex;
-        int *th_limits_host;
 
         unsigned int* buffer; //just for the new dump
         int buffSize;
+
+
+        int maxSharedPerSM;
+
 
     public:
         TableGPU(vector<var<int>::Ptr> & vars,  vector<vector<int>> & tuples);
@@ -50,7 +52,7 @@ class TableGPU : public Table{
 };
 
 __global__ void  filterDomainsGPU(unsigned int * _CT_MASKCT_svSize_sval_sSize_sSup_dev, int* _currTable_dev_size, int* _vars_dev, int *_supportOffsetJmp_dev, unsigned int* _supports_dev , int * supportSize_dev);
-   
+__global__ void  filterDomainsGPU_(unsigned int * _CT_mask_svs_dev, int* _currTable_dev_size, int* _vars_dev, int *_supportOffsetJmp_dev, unsigned int* _supports_dev , int* supportSize_dev);
 void varOffsetLimit(int size,int * where);
 int bitsFromRight(int n);
 int bitsFromLeft(int n);
