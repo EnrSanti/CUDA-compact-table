@@ -3,44 +3,58 @@
 #include "chrono"
 SmartTableGPU::SmartTableGPU(vector<var<int>::Ptr> & vars,  vector<std::vector<int>> & tuples, vector<std::vector<int>> & signs) : SmartTable(vars,tuples,signs){
     
+    //get the intial time
+    #ifdef RECORD_OUTPUT
+        auto start= std::chrono::high_resolution_clock::now();
+    #endif
     int noTuples=tuples.size();
     noVars=vars.size();
     
     currTableSize=(noTuples/32)+1; 
-
-
-    // Memory allocation
-    cudaMalloc((void**)&_noVars_dev, sizeof(int));
-    cudaMalloc((void**)&_CT_mask_svs_dev, sizeof(unsigned int)*(2*currTableSize+2*noVars+2));
+    
+    // Memory allocation:
+    cudaMalloc((void**)&_noVars_dev, sizeof(int)); //the number of variables in the table
+    //an array containing the CT (bitMap), a mask, an int containing the size of _s_val, one for the size of _s_sup and then the arrays s_val and s_sup
+    cudaMalloc((void**)&_CT_mask_svs_dev, sizeof(unsigned int)*(2*currTableSize+2*noVars+2)); 
+    //the support table (copied just once)
     cudaMalloc((void**)&_supports_dev, sizeof(unsigned int)*_supportSize*currTableSize);
+    //the size of the support table
     cudaMalloc((void**)&_supportSize_dev, sizeof(int));
+    //an array containing the offset (intial value) for each variable, i.e. var 30..50 v1; will contain 30
     cudaMalloc((void**)&_variablesOffsets_dev, sizeof(int)*noVars);
+    //an array containing the offset of the supports for each variable
     cudaMalloc((void**)&_supportOffsetJmp_dev, sizeof(int)*(noVars+1));
+    //the size (words number, 32 bits) of the current table
     cudaMalloc((void**)&_currTable_size_dev, sizeof(int));
+    //an array containing the domains of the variables on the device
     cudaMalloc((void**)&_vars_dev, sizeof(int)*((_supportSize/32)+1)); //matrix
-    
+    //an array containing, for each varaible (depending on the domain size) the amount of work each thread would do in updating the table
     cudaMalloc((void**)&th_limits_dev, sizeof(int)*64*noVars);
-    
+    //an list (size no. vars) of arrays of the same size as the CT. it will contain, for each var changed, the mask to add (bitwise AND) to the CT at the end of the update process 
     cudaMalloc((void**)&_tmpMasks, sizeof(unsigned int)*currTableSize*noVars);
+
     
-
+    
     //on host side we create simpler structures to then copy the data
-
     cudaMallocHost((void**)&_CT_mask_svs_host, sizeof(unsigned int)*2*(noVars+1+currTableSize));
     cudaMallocHost((void**)&_vars_host, sizeof(unsigned int)*((_supportSize/32)+1)); //matrix
     cudaMallocHost((void**)&_vars_to_remove_host, sizeof(unsigned int)*((_supportSize/32)+1)); //matrix
-    cudaMallocHost((void**)&th_limits_host,sizeof(int)*64*noVars);
 
 
     streams=(cudaStream_t*)malloc(sizeof(cudaStream_t)*noStreams);
     cudaError_t err = cudaStreamCreate(&streams[0]);
     
+    
+    cudaMallocHost((void**)&th_limits_host,sizeof(int)*32*noVars);
+    //calculating the amount of rows, for each variable, each thread would have to check
     for(int i=0;i<noVars-1;i++){
-        varOffsetLimit(_supportOffsetJmp[i+1]-_supportOffsetJmp[i],th_limits_host+(i*64));
+        varOffsetLimitHalf(_supportOffsetJmp[i+1]-_supportOffsetJmp[i],th_limits_host+(i*32));
     }
-    varOffsetLimit(_supportSize-_supportOffsetJmp[noVars-1],th_limits_host+((noVars-1)*64));
+    varOffsetLimitHalf(_supportSize-_supportOffsetJmp[noVars-1],th_limits_host+((noVars-1)*32));
+    cudaMemcpyAsync(th_limits_dev, th_limits_host, sizeof(int)*32*noVars, cudaMemcpyHostToDevice,streams[0]);
 
-    cudaMemcpyAsync(th_limits_dev, th_limits_host, sizeof(int)*64*noVars, cudaMemcpyHostToDevice,streams[0]);
+
+    //copying the data ont he device
     cudaMemcpyAsync(_noVars_dev, &noVars, sizeof(int), cudaMemcpyHostToDevice,streams[0]);
     cudaMemcpyAsync(_supports_dev, _supports, sizeof(unsigned int)*_supportSize*currTableSize, cudaMemcpyHostToDevice,streams[0]);
     cudaMemcpyAsync(_supportSize_dev, &_supportSize, sizeof(int), cudaMemcpyHostToDevice,streams[0]);
@@ -49,20 +63,22 @@ SmartTableGPU::SmartTableGPU(vector<var<int>::Ptr> & vars,  vector<std::vector<i
     cudaMemcpyAsync(&_supportOffsetJmp_dev[noVars], &_supportSize, sizeof(int), cudaMemcpyHostToDevice,streams[0]);
     cudaMemcpyAsync(_currTable_size_dev, &currTableSize, sizeof(int), cudaMemcpyHostToDevice,streams[0]);
 
+
+    //allocating a buffer of size the maximum number of words the domain of a variable could use 
     int buffSize=0;   
     for(int i=0;i<noVars;i++){
         buffSize=max(buffSize,vars[i]->size()/32+2);
     }
     buffer=(unsigned int*)calloc(buffSize,sizeof(unsigned int));
 
-    //compute once and transfer the offsets for the streams:
-    noBlocks=(currTableSize);
-    noBlocksFilter=((_supportSize/32)+1);
+    
 
-    cudaStreamSynchronize(streams[0]);
- 
+    #ifdef RECORD_OUTPUT
+       auto end= std::chrono::high_resolution_clock::now();
+       auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+       printf("%%%%%% Time to init table (CUDA): %ld us\n",duration.count());
+    #endif
 }
-
 void SmartTableGPU::post(){
     propagate();
     for (auto const & v : _vars){
@@ -70,87 +86,31 @@ void SmartTableGPU::post(){
     }
 }
 void SmartTableGPU::propagate(){
+
     #ifdef RECORD_OUTPUT
-        auto t0 = std::chrono::high_resolution_clock::now();
+        auto start_overall = std::chrono::high_resolution_clock::now();
     #endif
-    enfoceGAC();
-    #ifdef RECORD_OUTPUT
-        auto t1 = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0);
-        printf("%%%%%% Time taken enfGAC gpu: %ld microseconds\n", duration.count());
-        fflush(stdout);
-    #endif
-}
-
-void SmartTableGPU::enfGACDev(){
-
-
-
-    for(int i=0;i<currTableSize;i++){
-        _CT_mask_svs_host[i]=_currTable._words[i].value();
-    }
-
-    cudaMemcpyAsync(_CT_mask_svs_dev, _CT_mask_svs_host, sizeof(unsigned int)*(2*currTableSize+_s_val.size()+_s_sup.size()+2), cudaMemcpyHostToDevice,streams[0]);   
-    
-
-    dumpDomainsGPU2();
-
-    cudaMemcpyAsync(_vars_dev, _vars_host, sizeof(int)*((_supportSize/32)+1), cudaMemcpyHostToDevice,streams[0]);
-
-    
-    dim3 gridDim(noBlocks,_s_val.size());
-    updateTableGPU<<<gridDim,32,32*sizeof(unsigned int),streams[0]>>>(_supports_dev,_CT_mask_svs_dev+(2*currTableSize),_supportOffsetJmp_dev,_CT_mask_svs_dev,_currTable_size_dev,_vars_dev,th_limits_dev,_tmpMasks);          
-
- 
-
-    //we then reduce the matrix of temporary maks into a single mask to add tot he table
-    reduce<<<currTableSize,std::min((int)_s_val.size(),32),32*sizeof(int),streams[0]>>>(_CT_mask_svs_dev,_tmpMasks,_currTable_size_dev);
-    
-
-
-    cudaStreamSynchronize(streams[0]);
-    
-    cudaMemcpyAsync(_CT_mask_svs_host, _CT_mask_svs_dev, currTableSize*sizeof(unsigned int), cudaMemcpyDeviceToHost,streams[0]);    
-
-    //we need to update the current table
-    cudaStreamSynchronize(streams[0]);
-
-    _currTable.addToMaskArray(_CT_mask_svs_host);
-    
-    _currTable.intersectWithMask();
-    _currTable.clearMask();
-
-    if(_currTable.isEmpty()){
-        //sync stream 0
-        failNow();
-    }
-    filterDomains();
-
-
-}
-void SmartTableGPU::enfoceGAC(){
-
-
-    _s_val.clear();
+    //resetting the vectors
+    _s_val.clear(); 
     _s_val.shrink_to_fit();
     _s_sup.clear();
     _s_sup.shrink_to_fit();
 
+    //calculating where the two vectors (sval, ssup will start)
     int internalIndex=currTableSize*2+2;
     
-    //int overallSize=0;
+    //populate the vector and the respective array counterpart (update s_val)
     for (int i = 0; i < _vars.size(); i++){
-        //update s_val and the deltas
         if(_vars[i]->changed()){
             _s_val.push_back(i);
             _CT_mask_svs_host[internalIndex]=i;
             internalIndex++;
-            //overallSize=overallSize+_vars[i]->intialSize();
         }
     }
+   
 
+    //populate the vector and the respective array counterpart (update s_sup)
     for (int i = 0; i < _vars.size(); i++){
-        //update s_sup
         if(_vars[i]->size()>1){
             _s_sup.push_back(i);
             _CT_mask_svs_host[internalIndex]=i;
@@ -158,20 +118,81 @@ void SmartTableGPU::enfoceGAC(){
         }
     }
 
-    //for each var in the table add it to ssup vector
-  
+    //add the sizes of the vectors
     _CT_mask_svs_host[currTableSize*2]=_s_val.size();
     _CT_mask_svs_host[currTableSize*2+1]=_s_sup.size();
 
-    enfGACDev();
-        
+
+    #ifdef RECORD_OUTPUT
+        auto start = std::chrono::high_resolution_clock::now();
+    #endif
+
+    //get the current table, from the sparse Bitset to the array
+    for(int i=0;i<currTableSize;i++){
+        _CT_mask_svs_host[i]=_currTable._words[i].value();
+    }
+    
+    //copy the data on the device
+    cudaMemcpyAsync(_CT_mask_svs_dev, _CT_mask_svs_host, sizeof(unsigned int)*(2*currTableSize+_s_val.size()+_s_sup.size()+2), cudaMemcpyHostToDevice,streams[0]);   
+    
+    //getting the updated domains for the varialbes and copying them on the device
+    dumpDomainsGPU2();
+   
+    cudaMemcpyAsync(_vars_dev, _vars_host, sizeof(int)*((_supportSize/32)+1), cudaMemcpyHostToDevice,streams[0]);
+    
+    #ifdef RECORD_OUTPUT
+        auto end = std::chrono::high_resolution_clock::now();
+        //get the time in micro seconds
+        auto start_update=std::chrono::high_resolution_clock::now();
+    #endif
+    
+
+    //pass: the supports, the changed variables + how many, the indexes for the support, the table and the size, the domains,  and 32*vars ints which tells what range of the varialbe to check according to the index of the th (modifies CT with CT & mask)
+    dim3 gridDim(currTableSize/8+1,_s_val.size());
+    updateTableGPU<<<gridDim,128,128*sizeof(unsigned int),streams[0]>>>(_supports_dev,_CT_mask_svs_dev+(2*currTableSize),_supportOffsetJmp_dev,_CT_mask_svs_dev,_currTable_size_dev,_vars_dev,th_limits_dev,_tmpMasks); 
+    reduce<<<currTableSize,std::min((int)_s_val.size(),32),32*sizeof(int),streams[0]>>>(_CT_mask_svs_dev,_tmpMasks,_currTable_size_dev);
+    #ifdef RECORD_OUTPUT
+        //syncToRemove
+        cudaStreamSynchronize(streams[0]);
+        auto end_update=std::chrono::high_resolution_clock::now();
+    #endif
+
+    
+    //copy back the mask to inteserct with the table calculated by the kernel
+    cudaMemcpyAsync(_CT_mask_svs_host, _CT_mask_svs_dev, currTableSize*sizeof(unsigned int), cudaMemcpyDeviceToHost,streams[0]);
+    
+    cudaStreamSynchronize(streams[0]);
+
+    //adding the retrieved mask
+    _currTable.addToMaskArray(_CT_mask_svs_host);
+    _currTable.intersectWithMask();
+    _currTable.clearMask();
+
+    if(_currTable.isEmpty()){
+        //sync stream 0
+        failNow();
+    }
+
+    //the filtering of the domains is now done host side
+    filterDomains();    
+    
+    #ifdef RECORD_OUTPUT
+        auto end_overall = std::chrono::high_resolution_clock::now();
+        auto duration_removing = std::chrono::duration_cast<std::chrono::microseconds>(end_overall - start_removing);
+        auto duration_overall_filter = std::chrono::duration_cast<std::chrono::microseconds>(end_overall_filter - start_overall_filter);
+        auto duration_dump_cpu = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+        auto duration_update = std::chrono::duration_cast<std::chrono::microseconds>(end_update - start_update);
+
+        auto duration_overall = std::chrono::duration_cast<std::chrono::microseconds>(end_overall - start_overall);
+        printf("%%%%%% Time to propagate (CUDA): %ld us (to dump & cpy %ld) (update %ld) (filter %ld) (removing %ld)\n",duration_overall.count(),duration_dump_cpu.count(),duration_update.count(),duration_overall_filter.count(),duration_removing.count());
+    #endif    
 }
 
 void SmartTableGPU::dumpDomainsGPU2(){
 
-    //auto start = std::chrono::high_resolution_clock::now();
+    //for each of the vars, dump the domain which is kept as a sparseBitset into the array (treat it as a black box)
     for(int index=0; index < noVars; index++){
-        //quali variaibli skip
+      
 
         if(!(_vars[index]->changed()) && _vars[index]->size()==1)
             continue;
@@ -185,7 +206,6 @@ void SmartTableGPU::dumpDomainsGPU2(){
         }else{
             to=(_supportSize/32)+1;
             words_to_reset=to-starting_word;
-            
         }
 
         for(int j=1;j<words_to_reset;j++){
@@ -206,7 +226,6 @@ void SmartTableGPU::dumpDomainsGPU2(){
             
             if(index<noVars-1){
                 _vars_host[starting_word]=_vars_host[starting_word] & ( bitsFromLeft(_supportOffsetJmp[index]%32) | bitsFromRight((32-_supportOffsetJmp[index+1] % 32 + 32)%32));
-
             }else{
                 _vars_host[starting_word]=_vars_host[starting_word] & bitsFromLeft((_supportOffsetJmp[index]%32));
             }
@@ -232,10 +251,10 @@ void SmartTableGPU::dumpDomainsGPU2(){
         for(int i=0;i<words_to_reset;i++){
             buffer[i]=0;
         }
-
-
+      
         _vars[index]->dumpWithOffset(_vars[index]->min(),_vars[index]->max(),buffer,starting_bit);
         
+    
         
         if(words_to_reset>=1){
             _vars_host[starting_word]=buffer[0] | (_vars_host[starting_word] & maskLeft);
@@ -249,6 +268,8 @@ void SmartTableGPU::dumpDomainsGPU2(){
         }else{   
             _vars_host[starting_word]=buffer[0] | (_vars_host[starting_word] & (maskLeft | maskRight));
         }
+        
     }
 
 }
+

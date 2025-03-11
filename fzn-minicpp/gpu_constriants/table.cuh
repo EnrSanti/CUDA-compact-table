@@ -31,7 +31,6 @@ class TableGPU : public Table{
         unsigned int* _CT_mask_svs_dev;
         
 
-        int noBlocksFilter;
         const int noStreams=1; //hardcoded, don't touch IN THIS BRANCH
 
         cudaStream_t* streams;
@@ -47,7 +46,6 @@ class TableGPU : public Table{
         TableGPU(vector<var<int>::Ptr> & vars,  vector<vector<int>> & tuples);
         void post() override;
         void propagate() override;
-        void print();
     private:
         void dumpDomainsGPU2();
 };
@@ -55,6 +53,6 @@ class TableGPU : public Table{
 __global__ void updateTableGPU(unsigned int* _supports_dev,unsigned int * _svSize_off_sval_dev, int *_supportOffsetJmp_dev, unsigned int * _currTable_dev,int* _currTable_dev_size, int* _vars_dev, int* offsetsAndLimits, unsigned int* _tmpMasks);
 __global__ void reduce(unsigned int* _CT_mask_svs_dev,unsigned int* _tmpMasks,int* _currTable_size_dev);
     
-void varOffsetLimit(int size,int * where);
+void varOffsetLimitHalf(int size,int * where);
 int bitsFromRight(int n);
 int bitsFromLeft(int n);

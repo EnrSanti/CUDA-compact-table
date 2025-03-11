@@ -31,8 +31,6 @@ class SmartTableGPU : public SmartTable {
         unsigned int* _CT_mask_svs_host;
         unsigned int* _CT_mask_svs_dev;
 
-        int noBlocks;
-        int noBlocksFilter;
         const int noStreams=1; //hardcoded, don't touch IN THIS BRANCH
 
         cudaStream_t* streams;
@@ -41,16 +39,13 @@ class SmartTableGPU : public SmartTable {
         int internalIndex;
         int *th_limits_host;
 
-
-
         unsigned int* buffer; //just for the new dump
-        
+        int buffSize;
+
     public:
         SmartTableGPU(vector<var<int>::Ptr> & vars,  vector<std::vector<int>> & tuples, vector<std::vector<int>> & signs);
         void post() override;
         void propagate() override;
-        void enfoceGAC();
     private:
         void dumpDomainsGPU2();
-        void enfGACDev();
 };
