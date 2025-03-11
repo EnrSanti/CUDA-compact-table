@@ -41,16 +41,15 @@ class SmartTableGPU : public SmartTable {
         int internalIndex;
         int *th_limits_host;
 
-
-
         unsigned int* buffer; //just for the new dump
-        
+        void (*filteringKernel)(unsigned int *, int*, int*, int *, unsigned int*, int*);
+        int sharedMemSize;
+
     public:
         SmartTableGPU(vector<var<int>::Ptr> & vars,  vector<std::vector<int>> & tuples, vector<std::vector<int>> & signs);
         void post() override;
         void propagate() override;
-        void enfoceGAC();
+        void print();
     private:
         void dumpDomainsGPU2();
-        void enfGACDev();
 };
