@@ -73,7 +73,16 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
 
     cudaDeviceProp prop;
     cudaGetDeviceProperties(&prop, 0);  
-    maxSharedPerSM=prop.sharedMemPerMultiprocessor;
+    int maxSharedPerSM=prop.sharedMemPerMultiprocessor;
+
+    if((currTableSize+64)*sizeof(unsigned int)<maxSharedPerSM/4){
+        filteringKernel=filterDomainsGPU;
+        sharedMemSize=(currTableSize+64);
+    }else{
+        filteringKernel=filterDomainsGPU2048;
+        sharedMemSize=(2048+64);
+    }
+    
 }
 void TableGPU::post(){
     propagate();
@@ -145,11 +154,7 @@ void TableGPU::propagate(){
         auto start_overall_filter = std::chrono::high_resolution_clock::now();
     #endif
 
-    if((currTableSize+64)*sizeof(unsigned int)<maxSharedPerSM/4){
-        filterDomainsGPU<<<noBlocksFilter,32,(currTableSize+64)*sizeof(unsigned int),streams[0]>>>(_CT_mask_svs_dev,_currTable_size_dev,_vars_dev,_supportOffsetJmp_dev,_supports_dev, _supportSize_dev);    
-    }else{
-        filterDomainsGPU_<<<noBlocksFilter,32,(2048+64)*sizeof(unsigned int),streams[0]>>>(_CT_mask_svs_dev,_currTable_size_dev,_vars_dev,_supportOffsetJmp_dev,_supports_dev, _supportSize_dev);
-    }
+    filteringKernel<<<noBlocksFilter,32,sharedMemSize*sizeof(unsigned int)>>>(_CT_mask_svs_dev,_currTable_size_dev,_vars_dev,_supportOffsetJmp_dev,_supports_dev, _supportSize_dev);    
     
     
     #ifdef RECORD_OUTPUT
@@ -302,7 +307,6 @@ void TableGPU::dumpDomainsGPU2(){
 }
 
 
-
 __global__ void  filterDomainsGPU(unsigned int * _CT_mask_svs_dev, int* _currTable_dev_size, int* _vars_dev, int *_supportOffsetJmp_dev, unsigned int* _supports_dev , int* supportSize_dev){
     
 
@@ -379,7 +383,7 @@ __global__ void  filterDomainsGPU(unsigned int * _CT_mask_svs_dev, int* _currTab
 }
 
 
-__global__ void  filterDomainsGPU_(unsigned int * _CT_mask_svs_dev, int* _currTable_dev_size, int* _vars_dev, int *_supportOffsetJmp_dev, unsigned int* _supports_dev , int* supportSize_dev){
+__global__ void  filterDomainsGPU2048(unsigned int * _CT_mask_svs_dev, int* _currTable_dev_size, int* _vars_dev, int *_supportOffsetJmp_dev, unsigned int* _supports_dev , int* supportSize_dev){
     
 
     extern __shared__ unsigned int partialRes[]; //mask (64 ints, the last 32 int which is used to store _vars_dev[blockIdx.x], so it's accessed just once)
