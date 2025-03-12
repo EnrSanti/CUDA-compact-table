@@ -45,13 +45,15 @@ SmartTableGPU::SmartTableGPU(vector<var<int>::Ptr> & vars,  vector<std::vector<i
     cudaError_t err = cudaStreamCreate(&streams[0]);
     
     
-    cudaMallocHost((void**)&th_limits_host,sizeof(int)*32*noVars);
+    cudaMallocHost((void**)&th_limits_host,sizeof(int)*64*noVars);
     //calculating the amount of rows, for each variable, each thread would have to check
     for(int i=0;i<noVars-1;i++){
-        varOffsetLimitHalf(_supportOffsetJmp[i+1]-_supportOffsetJmp[i],th_limits_host+(i*32));
+        varOffsetLimit(_supportOffsetJmp[i+1]-_supportOffsetJmp[i],th_limits_host+(i*64));
     }
-    varOffsetLimitHalf(_supportSize-_supportOffsetJmp[noVars-1],th_limits_host+((noVars-1)*32));
-    cudaMemcpyAsync(th_limits_dev, th_limits_host, sizeof(int)*32*noVars, cudaMemcpyHostToDevice,streams[0]);
+    varOffsetLimit(_supportSize-_supportOffsetJmp[noVars-1],th_limits_host+((noVars-1)*64));
+
+    cudaMemcpyAsync(th_limits_dev, th_limits_host, sizeof(int)*64*noVars, cudaMemcpyHostToDevice,streams[0]);
+
 
 
     //copying the data ont he device
@@ -148,8 +150,8 @@ void SmartTableGPU::propagate(){
     
 
     //pass: the supports, the changed variables + how many, the indexes for the support, the table and the size, the domains,  and 32*vars ints which tells what range of the varialbe to check according to the index of the th (modifies CT with CT & mask)
-    dim3 gridDim(currTableSize/8+1,_s_val.size());
-    updateTableGPU<<<gridDim,128,128*sizeof(unsigned int),streams[0]>>>(_supports_dev,_CT_mask_svs_dev+(2*currTableSize),_supportOffsetJmp_dev,_CT_mask_svs_dev,_currTable_size_dev,_vars_dev,th_limits_dev,_tmpMasks); 
+    dim3 gridDim(currTableSize/4+1,_s_val.size());
+    updateTableGPU<<<gridDim,128,(256)*sizeof(unsigned int),streams[0]>>>(_supports_dev,_CT_mask_svs_dev+(2*currTableSize),_supportOffsetJmp_dev,_CT_mask_svs_dev,_currTable_size_dev,_vars_dev,th_limits_dev,_tmpMasks);
     reduce<<<currTableSize,std::min((int)_s_val.size(),32),32*sizeof(int),streams[0]>>>(_CT_mask_svs_dev,_tmpMasks,_currTable_size_dev);
     #ifdef RECORD_OUTPUT
         //syncToRemove
