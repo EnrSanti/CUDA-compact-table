@@ -25,7 +25,7 @@ class TableGPU : public Table{
         int *_noVars_dev;
         int *_vars_host;
         unsigned int * _vars_to_remove_host;
-        unsigned int * _tmpMasks;
+  
 
         unsigned int* _CT_mask_svs_host;
         unsigned int* _CT_mask_svs_dev;
@@ -39,8 +39,6 @@ class TableGPU : public Table{
         unsigned int* buffer; //just for the new dump
         int buffSize;
 
-        void (*filteringKernel)(unsigned int *, int*, int*, int *, unsigned int*, int*);
-        int sharedMemSize;
 
     public:
         TableGPU(vector<var<int>::Ptr> & vars,  vector<vector<int>> & tuples);
@@ -51,8 +49,6 @@ class TableGPU : public Table{
 };
 
 __global__ void  filterDomainsGPU(unsigned int * _CT_mask_svs_dev, int* _currTable_dev_size, int* _vars_dev, int *_supportOffsetJmp_dev, unsigned int* _supports_dev , int * supportSize_dev);
-__global__ void  filterDomainsGPU2048(unsigned int * _CT_mask_svs_dev, int* _currTable_dev_size, int* _vars_dev, int *_supportOffsetJmp_dev, unsigned int* _supports_dev , int* supportSize_dev);
 
-void varOffsetLimit(int size,int * where);
 int bitsFromRight(int n);
 int bitsFromLeft(int n);

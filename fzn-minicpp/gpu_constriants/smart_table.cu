@@ -29,10 +29,7 @@ SmartTableGPU::SmartTableGPU(vector<var<int>::Ptr> & vars,  vector<std::vector<i
     cudaMalloc((void**)&_currTable_size_dev, sizeof(int));
     //an array containing the domains of the variables on the device
     cudaMalloc((void**)&_vars_dev, sizeof(int)*((_supportSize/32)+1)); //matrix
-    //an list (size no. vars) of arrays of the same size as the CT. it will contain, for each var changed, the mask to add (bitwise AND) to the CT at the end of the update process 
-    cudaMalloc((void**)&_tmpMasks, sizeof(unsigned int)*currTableSize*noVars);
-    
-    
+
     //on host side we create simpler structures to then copy the data
     cudaMallocHost((void**)&_CT_mask_svs_host, sizeof(unsigned int)*2*(noVars+1+currTableSize));
     cudaMallocHost((void**)&_vars_host, sizeof(unsigned int)*((_supportSize/32)+1)); //matrix
@@ -70,17 +67,6 @@ SmartTableGPU::SmartTableGPU(vector<var<int>::Ptr> & vars,  vector<std::vector<i
        printf("%%%%%% Time to init table (CUDA): %ld us\n",duration.count());
     #endif
 
-    cudaDeviceProp prop;
-    cudaGetDeviceProperties(&prop, 0);  
-    int maxSharedPerSM=prop.sharedMemPerMultiprocessor;
-
-    if((currTableSize+64)*sizeof(unsigned int)<maxSharedPerSM/4){
-        filteringKernel=filterDomainsGPU;
-        sharedMemSize=(currTableSize+64);
-    }else{
-        filteringKernel=filterDomainsGPU2048;
-        sharedMemSize=(2048+64);
-    }
     
 }
 void SmartTableGPU::post(){
@@ -152,9 +138,8 @@ void SmartTableGPU::propagate(){
     #ifdef RECORD_OUTPUT
         auto start_overall_filter = std::chrono::high_resolution_clock::now();
     #endif
-
-    filteringKernel<<<noBlocksFilter,32,sharedMemSize*sizeof(unsigned int)>>>(_CT_mask_svs_dev,_currTable_size_dev,_vars_dev,_supportOffsetJmp_dev,_supports_dev, _supportSize_dev);    
-    
+    filterDomainsGPU<<<noBlocksFilter,32,64*sizeof(unsigned int),streams[0]>>>(_CT_mask_svs_dev,_currTable_size_dev,_vars_dev,_supportOffsetJmp_dev,_supports_dev, _supportSize_dev);
+    cudaStreamSynchronize(streams[0]);
     
     #ifdef RECORD_OUTPUT
         cudaStreamSynchronize(streams[0]);

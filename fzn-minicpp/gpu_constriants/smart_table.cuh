@@ -26,7 +26,6 @@ class SmartTableGPU : public SmartTable {
         int *_noVars_dev;
         int *_vars_host;
         unsigned int * _vars_to_remove_host;
-        unsigned int * _tmpMasks;
         
         unsigned int* _CT_mask_svs_host;
         unsigned int* _CT_mask_svs_dev;
@@ -41,8 +40,6 @@ class SmartTableGPU : public SmartTable {
         int internalIndex;
         int *th_limits_host;
 
-        void (*filteringKernel)(unsigned int *, int*, int*, int *, unsigned int*, int*);
-        int sharedMemSize;
         unsigned int* buffer; //just for the new dump
         
     public:
