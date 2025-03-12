@@ -45,12 +45,15 @@ class TableGPU : public Table{
 
         void (*filteringKernel)(unsigned int *, int*, int*, int *, unsigned int*, int*);
         int sharedMemSize;
+        
     public:
         TableGPU(vector<var<int>::Ptr> & vars,  vector<vector<int>> & tuples);
         void post() override;
         void propagate() override;
     private:
         void dumpDomainsGPU2();
+
+        
 };
 
 __global__ void  filterDomainsGPU(unsigned int * _CT_mask_svs_dev, int* _currTable_dev_size, int* _vars_dev, int *_supportOffsetJmp_dev, unsigned int* _supports_dev , int * supportSize_dev);
@@ -59,5 +62,6 @@ __global__ void updateTableGPU(unsigned int* _supports_dev,unsigned int * _svSiz
 __global__ void reduce(unsigned int* _CT_mask_svs_dev,unsigned int* _tmpMasks,int* _currTable_size_dev);
 
 void varOffsetLimitHalf(int size,int * where);
+void varOffsetLimit(int size,int * where);
 int bitsFromRight(int n);
 int bitsFromLeft(int n);
