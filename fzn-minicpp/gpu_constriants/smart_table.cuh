@@ -42,8 +42,7 @@ class SmartTableGPU : public SmartTable {
         int *th_limits_host;
 
         unsigned int* buffer; //just for the new dump
-        void (*filteringKernel)(unsigned int *, int*, int*, int *, unsigned int*, int*);
-        int sharedMemSize;
+        
 
     public:
         SmartTableGPU(vector<var<int>::Ptr> & vars,  vector<std::vector<int>> & tuples, vector<std::vector<int>> & signs);

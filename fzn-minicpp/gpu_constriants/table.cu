@@ -77,18 +77,6 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
 
     noBlocksFilter=((_supportSize/32)+1);
     
-
-    cudaDeviceProp prop;
-    cudaGetDeviceProperties(&prop, 0);  
-    int maxSharedPerSM=prop.sharedMemPerMultiprocessor;
-
-    if((currTableSize+64)*sizeof(unsigned int)<maxSharedPerSM/4){
-        filteringKernel=filterDomainsGPU;
-        sharedMemSize=(currTableSize+64);
-    }else{
-        filteringKernel=filterDomainsGPU2048;
-        sharedMemSize=(2048+64);
-    }
     
 
     #ifdef RECORD_OUTPUT
@@ -168,9 +156,11 @@ void TableGPU::propagate(){
     
     //pass: the supports, the changed variables + how many, the indexes for the support, the table and the size, the domains,  and 32*vars ints which tells what range of the varialbe to check according to the index of the th (modifies CT with CT & mask)
     
-    dim3 gridDim(currTableSize/8+1,_s_val.size());
+    dim3 gridDim(currTableSize/4+1,_s_val.size());
     
-    updateTableGPU<<<gridDim,256,(512)*sizeof(unsigned int),streams[0]>>>(_supports_dev,_CT_mask_svs_dev+(2*currTableSize),_supportOffsetJmp_dev,_CT_mask_svs_dev,_currTable_size_dev,_vars_dev,th_limits_dev,_tmpMasks);
+
+
+    updateTableGPU<<<gridDim,128,(256)*sizeof(unsigned int),streams[0]>>>(_supports_dev,_CT_mask_svs_dev+(2*currTableSize),_supportOffsetJmp_dev,_CT_mask_svs_dev,_currTable_size_dev,_vars_dev,th_limits_dev,_tmpMasks);
     
     reduce<<<currTableSize,std::min((int)_s_val.size(),32),32*sizeof(int),streams[0]>>>(_CT_mask_svs_dev,_tmpMasks,_currTable_size_dev);
     
@@ -183,7 +173,7 @@ void TableGPU::propagate(){
     
     //copy back the mask to inteserct with the table calculated by the kernel
     cudaMemcpyAsync(_CT_mask_svs_host, _CT_mask_svs_dev, currTableSize*sizeof(unsigned int), cudaMemcpyDeviceToHost,streams[0]);
-    filteringKernel<<<noBlocksFilter,32,sharedMemSize*sizeof(unsigned int)>>>(_CT_mask_svs_dev,_currTable_size_dev,_vars_dev,_supportOffsetJmp_dev,_supports_dev, _supportSize_dev);    
+    filterDomainsGPU<<<noBlocksFilter,32,64*sizeof(unsigned int),streams[0]>>>(_CT_mask_svs_dev,_currTable_size_dev,_vars_dev,_supportOffsetJmp_dev,_supports_dev, _supportSize_dev);
     cudaStreamSynchronize(streams[0]);
     cudaMemcpyAsync(_vars_to_remove_host, _vars_dev, sizeof(int)*((_supportSize/32)+1), cudaMemcpyDeviceToHost,streams[0]);
         
@@ -336,7 +326,7 @@ __global__ void updateTableGPU(unsigned int* _supports_dev,unsigned int * _svSiz
     int from=_supportOffsetJmp_dev[varIndex];
 
     //the index of the array offsetsAndLimits which tells the thread how many iterations it will do over the current variable
-    int iterations32_th=varIndex*64+(threadIdx.x/8); //coalescent accesses (always 8 threads per row)
+    int iterations32_th=varIndex*64+(threadIdx.x/4); //coalescent accesses (always 8 threads per row)
     //the offset of the supports for the current variable for the current thread
     int offset32_th=offsetsAndLimits[iterations32_th+32]; //coalescent accesses
     
@@ -345,7 +335,7 @@ __global__ void updateTableGPU(unsigned int* _supports_dev,unsigned int * _svSiz
     int ct_size=*_currTable_dev_size; //1 access
 
 
-    bool active=ct_size>(blockIdx.x*8+threadIdx.x%8);
+    bool active=ct_size>(blockIdx.x*4+threadIdx.x%4);
 
     if(active && iterations!=0){
 
@@ -363,11 +353,11 @@ __global__ void updateTableGPU(unsigned int* _supports_dev,unsigned int * _svSiz
             int condition=((_vars_dev[wordIndex] & maskContains)!=0);
             //calculate the offset of the support word the thread has to (potentially) add to the mask
 
-            int off=(j+offset32_th)*(ct_size)+(from*ct_size)+blockIdx.x*8; 
+            int off=(j+offset32_th)*(ct_size)+(from*ct_size)+blockIdx.x*4; 
             //printf("%%%%%% th. %d, block %d, varIndex %d, condition %d, ctW %d, row %d, specific cell %d \n",threadIdx.x,blockIdx.x,varIndex,condition,blockIdx.x,(j+offset32_th)*(*_currTable_dev_size)+(_supportOffsetJmp_dev[varIndex]*(*_currTable_dev_size)), off);
         
 
-            int support=__ldlu(_supports_dev+off+(threadIdx.x%8)); //load the support word without caching
+            int support=__ldlu(_supports_dev+off+(threadIdx.x%4)); //load the support word without caching
             mask[threadIdx.x]=mask[threadIdx.x] | (support*condition);    
 
             
@@ -375,11 +365,11 @@ __global__ void updateTableGPU(unsigned int* _supports_dev,unsigned int * _svSiz
     }
     
     __syncthreads();
-    mask[256+threadIdx.x] = __reduce_or_sync(0xFFFFFFFF, mask[threadIdx.x/32+8*(threadIdx.x%32)]);
+    mask[128+threadIdx.x] = __reduce_or_sync(0xFFFFFFFF, mask[threadIdx.x/32+4*(threadIdx.x%32)]);
     __syncthreads();
     
-    if(threadIdx.x<8 && active){
-        outputMasks[varIndex*ct_size+blockIdx.x*8+threadIdx.x]=mask[256+threadIdx.x*32];
+    if(threadIdx.x<4 && active){
+        outputMasks[varIndex*ct_size+blockIdx.x*4+threadIdx.x]=mask[128+threadIdx.x*32];
     }
  
 
@@ -434,7 +424,6 @@ __global__ void reduce(unsigned int * _CT_mask_svs_dev,unsigned int* tmpMasks, i
 
 
 
-
 __global__ void  filterDomainsGPU(unsigned int * _CT_mask_svs_dev, int* _currTable_dev_size, int* _vars_dev, int *_supportOffsetJmp_dev, unsigned int* _supports_dev , int* supportSize_dev){
     
 
@@ -447,20 +436,7 @@ __global__ void  filterDomainsGPU(unsigned int * _CT_mask_svs_dev, int* _currTab
     if(partialRes[32]==0){
         return;
     }
-
     int ct_size=*_currTable_dev_size;
-
-    int skip=0;
-    for(int ctW=0; ctW<=(ct_size)-32; ctW=ctW+32){
-        partialRes[ctW+threadIdx.x+64]=__ldlu(_CT_mask_svs_dev+ctW+threadIdx.x);
-        skip+=32;
-    }
- 
-    //unroll of the last iteration of the loop, if the CT size is not a multiple of 32:
-    if(threadIdx.x<(*_currTable_dev_size)%32){
-        partialRes[skip+threadIdx.x+64]=__ldlu(_CT_mask_svs_dev+skip+threadIdx.x);
-    }
-    __syncthreads();
 
     //for each bit in the word, each thread in the block will do 32 iterations
     for(int i=0; i<32; i++){  
@@ -475,14 +451,14 @@ __global__ void  filterDomainsGPU(unsigned int * _CT_mask_svs_dev, int* _currTab
             //the index of the support i look at, it doesn't depend on the thread just on the block, each thread will do a different piece of work on the CT
             int index_x_a=blockIdx.x*32+i;
             int index_ctSize=index_x_a*(ct_size);
-            
+            int skip=0;
+
             //the parallel reduction part
-            skip=0;
             for(int ctW=0; ctW<=(ct_size)-32; ctW=ctW+32){
                 //we add to the partial result
                 //printf("%%%%%% INSIDE LOOP %d %d %d\n",index_x_a,ctW,threadIdx.x);
                 int support=__ldlu(_supports_dev+ index_ctSize+ctW+threadIdx.x); //load the support word without caching
-                partialRes[threadIdx.x]=partialRes[threadIdx.x] | (partialRes[ctW+threadIdx.x+64] & support);
+                partialRes[threadIdx.x]=partialRes[threadIdx.x] | (_CT_mask_svs_dev[ctW+threadIdx.x] & support);
                 //increment by 32 for the last (unrolled iterations, look after the for loop)
                 skip+=32;
             }
@@ -490,8 +466,8 @@ __global__ void  filterDomainsGPU(unsigned int * _CT_mask_svs_dev, int* _currTab
             //unroll of the last iteration of the loop, if the CT size is not a multiple of 32 then if(threadIdx.x<=(*_currTable_dev_size)%32) the threads considered will do one more iteration
             int condition=(threadIdx.x<(ct_size)%32);
             //printf("%%%%%% OUTSIDE LOOP, th %d condition %d\n",threadIdx.x,condition);
-
-            partialRes[threadIdx.x]=partialRes[threadIdx.x] | ( (condition) * (partialRes[skip+threadIdx.x+64] & _supports_dev[index_ctSize+skip+threadIdx.x]));
+            partialRes[threadIdx.x]=partialRes[threadIdx.x] | ( (condition) * (_CT_mask_svs_dev[skip+threadIdx.x] & _supports_dev[index_ctSize+skip+threadIdx.x]));
+           
             //end of unrolled loop
 
             //reduction among the 32 threads of the block // e questa è ok
@@ -504,13 +480,11 @@ __global__ void  filterDomainsGPU(unsigned int * _CT_mask_svs_dev, int* _currTab
             //in the previous instruction we are only insterested in partialRes[33] but instead of doing an if and having a sync, we do 31 useless operation on the other threads (1 per thread)           
         }
     }
-
     if(threadIdx.x==0){
         //write back the result, one access in global memory
         _vars_dev[blockIdx.x]=partialRes[32];
     }   
 }
-
 
 __global__ void  filterDomainsGPU2048(unsigned int * _CT_mask_svs_dev, int* _currTable_dev_size, int* _vars_dev, int *_supportOffsetJmp_dev, unsigned int* _supports_dev , int* supportSize_dev){
     
@@ -641,36 +615,4 @@ void varOffsetLimit(int size,int * where) {
     where[61]=where[28]+where[60];
     where[62]=where[29]+where[61];
     where[63]=where[30]+where[62];
-}   
-
-void varOffsetLimitHalf(int size,int * where) {
-    
-    for (int i = 0; i < 16; ++i) {
-        where[i] = size / 16;              // Divide the size by the no of streams
-    }
-    int remainder = size % 16;           // Calculate the remainder
-
-    // Distribute the remainder across the first few parts
-    for (int i = 0; i < remainder; ++i) {
-        where[i]++;
-    }
-
-
-    where[16]=0;
-    where[17]=where[0];
-    where[18]=where[1]+where[17];
-    where[19]=where[2]+where[18];
-    where[20]=where[3]+where[19];
-    where[21]=where[4]+where[20];
-    where[22]=where[5]+where[21];
-    where[23]=where[6]+where[22];
-    where[24]=where[7]+where[23];
-    where[25]=where[8]+where[24];
-    where[26]=where[9]+where[25];
-    where[27]=where[10]+where[26];
-    where[28]=where[11]+where[27];
-    where[29]=where[12]+where[28];
-    where[30]=where[13]+where[29];
-    where[31]=where[14]+where[30];
-    
 }   

@@ -42,13 +42,16 @@ SmartTableGPU::SmartTableGPU(vector<var<int>::Ptr> & vars,  vector<std::vector<i
     cudaError_t err = cudaStreamCreate(&streams[0]);
     
     
-    cudaMallocHost((void**)&th_limits_host,sizeof(int)*32*noVars);
+    
+    cudaMallocHost((void**)&th_limits_host,sizeof(int)*64*noVars);
     //calculating the amount of rows, for each variable, each thread would have to check
     for(int i=0;i<noVars-1;i++){
-        varOffsetLimitHalf(_supportOffsetJmp[i+1]-_supportOffsetJmp[i],th_limits_host+(i*32));
+        varOffsetLimit(_supportOffsetJmp[i+1]-_supportOffsetJmp[i],th_limits_host+(i*64));
     }
-    varOffsetLimitHalf(_supportSize-_supportOffsetJmp[noVars-1],th_limits_host+((noVars-1)*32));
-    cudaMemcpyAsync(th_limits_dev, th_limits_host, sizeof(int)*32*noVars, cudaMemcpyHostToDevice,streams[0]);
+    varOffsetLimit(_supportSize-_supportOffsetJmp[noVars-1],th_limits_host+((noVars-1)*64));
+
+    cudaMemcpyAsync(th_limits_dev, th_limits_host, sizeof(int)*64*noVars, cudaMemcpyHostToDevice,streams[0]);
+
 
 
     //copying the data ont he device
@@ -70,17 +73,6 @@ SmartTableGPU::SmartTableGPU(vector<var<int>::Ptr> & vars,  vector<std::vector<i
 
     noBlocksFilter=((_supportSize/32)+1);
     
-    cudaDeviceProp prop;
-    cudaGetDeviceProperties(&prop, 0);  
-    int maxSharedPerSM=prop.sharedMemPerMultiprocessor;
-
-    if((currTableSize+64)*sizeof(unsigned int)<maxSharedPerSM/4){
-        filteringKernel=filterDomainsGPU;
-        sharedMemSize=(currTableSize+64);
-    }else{
-        filteringKernel=filterDomainsGPU2048;
-        sharedMemSize=(2048+64);
-    }
 }
 
 void SmartTableGPU::post(){
@@ -155,8 +147,7 @@ void SmartTableGPU::propagate(){
     //pass: the supports, the changed variables + how many, the indexes for the support, the table and the size, the domains,  and 32*vars ints which tells what range of the varialbe to check according to the index of the th (modifies CT with CT & mask)
     
     dim3 gridDim(currTableSize/8+1,_s_val.size());
-    updateTableGPU<<<gridDim,128,128*sizeof(unsigned int),streams[0]>>>(_supports_dev,_CT_mask_svs_dev+(2*currTableSize),_supportOffsetJmp_dev,_CT_mask_svs_dev,_currTable_size_dev,_vars_dev,th_limits_dev,_tmpMasks);
-    
+    updateTableGPU<<<gridDim,128,(256)*sizeof(unsigned int),streams[0]>>>(_supports_dev,_CT_mask_svs_dev+(2*currTableSize),_supportOffsetJmp_dev,_CT_mask_svs_dev,_currTable_size_dev,_vars_dev,th_limits_dev,_tmpMasks);
     reduce<<<currTableSize,std::min((int)_s_val.size(),32),32*sizeof(int),streams[0]>>>(_CT_mask_svs_dev,_tmpMasks,_currTable_size_dev);
     
     #ifdef RECORD_OUTPUT
@@ -168,7 +159,7 @@ void SmartTableGPU::propagate(){
     
     //copy back the mask to inteserct with the table calculated by the kernel
     cudaMemcpyAsync(_CT_mask_svs_host, _CT_mask_svs_dev, currTableSize*sizeof(unsigned int), cudaMemcpyDeviceToHost,streams[0]);
-    filteringKernel<<<noBlocksFilter,32,sharedMemSize*sizeof(unsigned int)>>>(_CT_mask_svs_dev,_currTable_size_dev,_vars_dev,_supportOffsetJmp_dev,_supports_dev, _supportSize_dev);    
+    filterDomainsGPU<<<noBlocksFilter,32,64*sizeof(unsigned int),streams[0]>>>(_CT_mask_svs_dev,_currTable_size_dev,_vars_dev,_supportOffsetJmp_dev,_supports_dev, _supportSize_dev);
     cudaStreamSynchronize(streams[0]);
     cudaMemcpyAsync(_vars_to_remove_host, _vars_dev, sizeof(int)*((_supportSize/32)+1), cudaMemcpyDeviceToHost,streams[0]);
         
