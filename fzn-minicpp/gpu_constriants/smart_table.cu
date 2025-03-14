@@ -45,11 +45,8 @@ SmartTableGPU::SmartTableGPU(vector<var<int>::Ptr> & vars,  vector<std::vector<i
     
     cudaMallocHost((void**)&th_limits_host,sizeof(int)*64*noVars);
     //calculating the amount of rows, for each variable, each thread would have to check
-    for(int i=0;i<noVars-1;i++){
-        varOffsetLimit(_supportOffsetJmp[i+1]-_supportOffsetJmp[i],th_limits_host+(i*64));
-    }
-    varOffsetLimit(_supportSize-_supportOffsetJmp[noVars-1],th_limits_host+((noVars-1)*64));
-
+    
+    
     cudaMemcpyAsync(th_limits_dev, th_limits_host, sizeof(int)*64*noVars, cudaMemcpyHostToDevice,streams[0]);
 
 
