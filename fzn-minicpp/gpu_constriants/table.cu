@@ -13,7 +13,8 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     int noTuples=tuples.size();
     noVars=vars.size();
     currTableSize=(noTuples/32)+1; 
-    
+    printf("%%%%%% currTableSize %d\n",currTableSize);
+    fflush(stdout);
     // Memory allocation:
     cudaMalloc((void**)&_noVars_dev, sizeof(int)); //the number of variables in the table
     //an array containing the CT (bitMap), a mask, an int containing the size of _s_val, one for the size of _s_sup and then the arrays s_val and s_sup
@@ -23,8 +24,10 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     cudaMalloc((void**)&_supportsT_dev, sizeof(unsigned int)*_supportSize*currTableSize);
     //the size of the support table
     cudaMalloc((void**)&_supportSize_dev, sizeof(int));
+    cudaMalloc((void**)&noTuples_dev, sizeof(int));
     //an array containing the offset (intial value) for each variable, i.e. var 30..50 v1; will contain 30
     cudaMalloc((void**)&_variablesOffsets_dev, sizeof(int)*noVars);
+
     //an array containing the offset of the supports for each variable
     cudaMalloc((void**)&_supportOffsetJmp_dev, sizeof(int)*(noVars));
     //the size (words number, 32 bits) of the current table
@@ -69,6 +72,7 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     cudaMemcpyAsync(_variablesOffsets_dev, _variablesOffsets.data(), sizeof(int)*noVars, cudaMemcpyHostToDevice,streams[0]);
     cudaMemcpyAsync(_supportOffsetJmp_dev, _supportOffsetJmp.data(), sizeof(int)*noVars, cudaMemcpyHostToDevice,streams[0]);
     cudaMemcpyAsync(_currTable_size_dev, &currTableSize, sizeof(int), cudaMemcpyHostToDevice,streams[0]);
+    cudaMemcpyAsync(noTuples_dev, &noTuples , sizeof(int), cudaMemcpyHostToDevice,streams[0]);
     transposeSupports(_supports,_supportsT_host,_supportSize,currTableSize,noVars,_supportOffsetJmp.data(),vars);
     cudaMemcpyAsync(_supportsT_dev, _supportsT_host, sizeof(unsigned int)*_supportSize*currTableSize, cudaMemcpyHostToDevice,streams[0]);
 
@@ -83,16 +87,12 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
 
     noBlocksFilter=((_supportSize/32)+1);
 
-    //print supports and reverse supports
-
-
-    printf("%%%%%% Supports \n");
+    printf("%%%%%% Supports T\n");
 
     int varOffset=0;
     for(int v=0;v<noVars;v++){
         printf("%%%%%% var %d \n",v);
-        
-
+    
         int domainSize=vars[v]->intialSize();
         for(int d=0;d<domainSize;d++){
             printf("%%%%%% ");
@@ -107,26 +107,9 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
         printf("\n%%%%%% ------------- \n");
         varOffset+=currTableSize*domainSize;
     }
-    
+    fflush(stdout);
 
-    printf("%%%%%% Supports T\n");
 
-    varOffset=0;
-    for(int v=0;v<noVars;v++){
-        printf("%%%%%% var %d \n",v);
-        printf("%%%%%% ");
-        int domainSize=vars[v]->intialSize();
-        for(int i=0;i<currTableSize;i++){
-            for(int d=0;d<domainSize;d++){
-                printf("[%d]: %d ",varOffset+(i)*domainSize+d,_supportsT_host[varOffset+(i)*domainSize+d]);
-            }
-
-            printf("\n");
-        }
-        printf("\n%%%%%% ------------- \n");
-        varOffset+=currTableSize*domainSize;
-    }
-    
     
     
     
@@ -194,9 +177,11 @@ void TableGPU::propagate(){
     //copy the data on the device
     cudaMemcpyAsync(_CT_mask_svs_dev, _CT_mask_svs_host, sizeof(unsigned int)*(2*currTableSize+_s_val.size()+_s_sup.size()+2), cudaMemcpyHostToDevice,streams[0]);   
     
-
+    printf("%%%%%% s_val\n");
+    fflush(stdout);
     //getting the updated domains for the varialbes and copying them on the device
     dumpDomainsGPU2();
+
    
  
     cudaMemcpyAsync(_vars_dev, _vars_host, sizeof(int)*((_supportSize/32)+1), cudaMemcpyHostToDevice,streams[0]);
@@ -212,8 +197,25 @@ void TableGPU::propagate(){
     dim3 gridDim(currTableSize,_s_val.size());
     
 
-    printf("%%%%%% gridDim %d %d\n",gridDim.x,gridDim.y);
-    updateTableGPU<<<gridDim,32,(64)*sizeof(unsigned int),streams[0]>>>(_supportsT_dev,_CT_mask_svs_dev+(2*currTableSize),_supportOffsetJmp_dev,_CT_mask_svs_dev,_currTable_size_dev,_vars_dev,doms_doms_before_dev,_tmpMasks);
+    printf("%%%%%% gridDim %d %d ---------------------------------------------- \n",gridDim.x,gridDim.y);
+    
+    for(int i=0; i<((_supportSize/32)+1); i++){
+        printf("%%%%%% vars[%d] %d\n",i,_vars_host[i]);
+    }
+
+    //for each var check and print the current domain
+    for(int i=0;i<2;i++){
+        printf("%%%%%% var %d\n",i);
+        for(int j=_vars[i]->min();j<=_vars[i]->max();j++){
+            if(_vars[i]->contains(j)){
+                printf("%%%%%% var[%d] contains %d \n",i,j);
+            }
+        }
+        printf("\n");
+    }
+    printf("%%%%%% ---------------------------------------------- \n");
+    fflush(stdout);
+    updateTableGPU<<<gridDim,32,(64)*sizeof(unsigned int),streams[0]>>>(_supportsT_dev,_CT_mask_svs_dev+(2*currTableSize),_supportOffsetJmp_dev,_CT_mask_svs_dev,_currTable_size_dev,_vars_dev,doms_doms_before_dev,_tmpMasks, noTuples_dev);
     
     reduce<<<currTableSize,std::min((int)_s_val.size(),32),32*sizeof(int),streams[0]>>>(_CT_mask_svs_dev,_tmpMasks,_currTable_size_dev);
     
@@ -226,8 +228,15 @@ void TableGPU::propagate(){
     
     //copy back the mask to inteserct with the table calculated by the kernel
     cudaMemcpyAsync(_CT_mask_svs_host, _CT_mask_svs_dev, currTableSize*sizeof(unsigned int), cudaMemcpyDeviceToHost,streams[0]);
+
     filterDomainsGPU<<<noBlocksFilter,32,64*sizeof(unsigned int),streams[0]>>>(_CT_mask_svs_dev,_currTable_size_dev,_vars_dev,_supportOffsetJmp_dev,_supports_dev, _supportSize_dev);
     cudaStreamSynchronize(streams[0]);
+
+
+    printf("%%%%%% CT MASK\n");
+    for(int i=0;i<currTableSize;i++){
+        printf("%%%%%% CT[%d] %d\n",i,_CT_mask_svs_host[i]);
+    }
     cudaMemcpyAsync(_vars_to_remove_host, _vars_dev, sizeof(int)*((_supportSize/32)+1), cudaMemcpyDeviceToHost,streams[0]);
         
     //adding the retrieved mask
@@ -365,55 +374,69 @@ void TableGPU::dumpDomainsGPU2(){
 
 
 //32 threads will do a parallel reduction on the word considered (groups of 32 threads share the same position of the CT)
-__global__ void updateTableGPU(unsigned int* _supportsT_dev,unsigned int * _svSize_off_sval_dev, int *_supportOffsetJmp_dev, unsigned int * _CT_mask_dev,int* _currTable_dev_size, int* _vars_dev, int* doms_doms_before_dev,unsigned int* outputMasks){
+__global__ void updateTableGPU(unsigned int* _supportsT_dev,unsigned int * _svSize_off_sval_dev, int *_supportOffsetJmp_dev, unsigned int * _CT_mask_dev,int* _currTable_dev_size, int* _vars_dev, int* doms_doms_before_dev,unsigned int* outputMasks, int* noTuples_dev){
 
-    extern __shared__ unsigned int mask[]; //mask (128 ints)
+    extern __shared__ unsigned int mask[]; //mask (64 ints)
     
     //each thread clears the mask, MANDATORY
     mask[threadIdx.x]=0; 
 
+    
+    int noTuples=*noTuples_dev; //1 access
+
     //get the variable index to consider (we have a grid in which each row considers a different variable )
     int varIndex=_svSize_off_sval_dev[blockIdx.y+2]; //1 access
 
-    int ct_size=*_currTable_dev_size; //1 access
+    int ct_size = *_currTable_dev_size; //1 access
 
-    int doms=doms_doms_before_dev[2*varIndex]; //1 access
-    int loops=doms;
-    int skip=doms_doms_before_dev[2*varIndex+1]*ct_size; //the offset in the support table for the variable
-    int from = _supportOffsetJmp_dev[varIndex];
-    //printf("%%%%%% th %d, block %d, var %d, start checking from word %d, i will do %d loops \n",threadIdx.x,blockIdx.x,varIndex,skip,loops);
-    //printf("%%%%%% vars[%d]: %d",0,_vars_dev[0]);
-    
+    int doms = doms_doms_before_dev[2*varIndex]; //1 access
+    int loops = doms;
+    int skip = doms_doms_before_dev[2*varIndex+1]*ct_size+doms*blockIdx.x; //the offset in the support table for the variable
+    int from = _supportOffsetJmp_dev[varIndex]%32;
 
-    for(int i=0; i<=(doms)/32+1; i=i+32){
-        if(i*32+threadIdx.x>=doms/32+1){
+    int startingWordFrom=from+((from)/32)*32;
+    int maskWordIndex=0;
+    int domWordIndex=0;
+    //each thread does 1/32 of the domain of x
+    for(int i=0; i<=(doms)/32+1; i++){
+        
+        if(i*32+threadIdx.x>=doms){
+            printf("%%%%%% th %d block (x:%d y:%d) breaking \n",threadIdx.x,blockIdx.x,blockIdx.y); 
             break;
         }
-        int maxBit=(doms<i*32+threadIdx.x)?32:doms%32;
+
+        maskWordIndex=0;
         
-        for(int b=0; b<maxBit; b++){
-            
-            int wordIndex=(from+b+i*32)/32; 
-
-            unsigned int maskContains=1<<(31-b-from+wordIndex*32); //int containing a single bit set
-            
-            int domWord=_vars_dev[wordIndex];
-            int condition=((domWord & maskContains)!=0);
-
-            //load the support word without caching
-            unsigned support=__ldlu(_supportsT_dev+skip+b+threadIdx.x); 
-
-            //check if the value is in the domain, without an if statement
-
-            //add (bitwise AND) the proper part of the mask to the final mask 
-            mask[threadIdx.x]=mask[threadIdx.x] | (condition * support);
-
-            //printf("%%%%%% th %d (var %d) (i will checking %d value), _vars[%d] bit %d, loading supT[%d]: %d, condition: %d , mask %d \n",threadIdx.x,varIndex,b,wordIndex, maskContains,skip+b+threadIdx.x, condition * support,condition,mask[threadIdx.x]);
-
-            //increment by 32 for the last (unrolled iterations, look after the for loop)
-            
+        //for each word
+        int wordIndex=(from+i*32)/32; 
+        
+        if(startingWordFrom+threadIdx.x>31){
+            maskWordIndex=32;
         }
-        skip+=32;
+        unsigned int maskContains;
+
+        maskContains=1<<(31-threadIdx.x-from+maskWordIndex); //int containing a single bit set
+       
+        domWordIndex=(_supportOffsetJmp_dev[varIndex]+i*32+threadIdx.x)/32; //the index of the word in the domain
+        printf("%%%%%% th %d block (x:%d y:%d) (loop %d), var %d, checking vars[%d], supportsT[%d]=%d, mask %d\n",threadIdx.x,blockIdx.x,blockIdx.y,i,varIndex ,domWordIndex, skip+wordIndex*32+threadIdx.x,__ldlu(_supportsT_dev+skip+wordIndex*32+threadIdx.x), maskContains); 
+
+        int domWord=_vars_dev[domWordIndex];
+        int condition=((domWord & maskContains)!=0);
+
+        //load the support word without caching
+        unsigned support=__ldlu(_supportsT_dev+wordIndex*32+skip+threadIdx.x); 
+        
+        
+        //check if the value is in the domain, without an if statement
+
+        //add (bitwise AND) the proper part of the mask to the final mask 
+        mask[threadIdx.x]=mask[threadIdx.x] | (condition * support);
+
+        //printf("%%%%%%  print 2 th %d (i will do %d loops) (var %d) (i will checking %d value), _vars[%d] bit %d, loading supT[%d]: %d, condition: %d , mask %d \n",threadIdx.x,maxBit,varIndex,b,wordIndex, maskContains,skip+b+threadIdx.x, condition * support,condition,mask[threadIdx.x]);
+
+        //increment by 32 for the last (unrolled iterations, look after the for loop)
+            
+      
     }
     
     //unroll of the last iteration of the loop
@@ -423,7 +446,7 @@ __global__ void updateTableGPU(unsigned int* _supportsT_dev,unsigned int * _svSi
 
     if(threadIdx.x==0){
         //store the result in the proper position of the mask array
-        printf("%%%%%% th %d, block %d, var %d, writing %d in %d \n",threadIdx.x,blockIdx.x,varIndex,result, varIndex*ct_size+blockIdx.x);
+        printf("%%%%%% th %d, block (x: %d y: %d), var %d, writing %d in %d \n",threadIdx.x,blockIdx.x,blockIdx.y,varIndex,result, varIndex*ct_size+blockIdx.x);
         outputMasks[varIndex*ct_size+blockIdx.x]=result;
     }
 
