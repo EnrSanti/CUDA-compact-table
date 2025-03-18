@@ -342,7 +342,8 @@ __global__ void updateTableGPU(unsigned int* _supportsT_dev,unsigned int * _svSi
     int doms = doms_doms_before_dev[2*varIndex]; //1 access
     int loops = doms;
     int skip = doms_doms_before_dev[2*varIndex+1]*ct_size+doms*(blockIdx.x*4+threadIdx.x/32); //the offset in the support table for the variable
-    int from = _supportOffsetJmp_dev[varIndex]%32;
+    int suppVarJmp=_supportOffsetJmp_dev[varIndex];
+    int from = suppVarJmp%32;
 
     int startingWordFrom=from+((from)/32)*32;
     int maskWordIndex=0;
@@ -370,16 +371,17 @@ __global__ void updateTableGPU(unsigned int* _supportsT_dev,unsigned int * _svSi
 
             maskContains=1<<(31-(threadIdx.x%32)-from+maskWordIndex); //int containing a single bit set
         
-            domWordIndex=(_supportOffsetJmp_dev[varIndex]+i*32+(threadIdx.x%32))/32; //the index of the word in the domain
+            domWordIndex=(suppVarJmp+i*32+(threadIdx.x%32))/32; //the index of the word in the domain
     
             int domWord=_vars_dev[domWordIndex];
             int condition=((domWord & maskContains)!=0);
-            
+          
             //load the support word without caching
             unsigned support=__ldlu(_supportsT_dev+wordIndex*32+skip+(threadIdx.x%32)); 
 
             //add (bitwise AND) the proper part of the mask to the final mask 
-            mask[threadIdx.x]=mask[threadIdx.x] | (condition * support);
+            mask[threadIdx.x]=mask[threadIdx.x] | (support*condition);
+            
         }
     }
     
