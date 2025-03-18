@@ -37,12 +37,15 @@ class SmartTableGPU : public SmartTable {
 
         cudaStream_t* streams;
 
-        int *th_limits_dev;
+        int *doms_doms_before_dev;
         int internalIndex;
-        int *th_limits_host;
+        int *doms_doms_before_host;
 
         unsigned int* buffer; //just for the new dump
         
+        unsigned int* _supportsT_host;
+        unsigned int* _supportsT_dev;
+        int* noTuples_dev; 
 
     public:
         SmartTableGPU(vector<var<int>::Ptr> & vars,  vector<std::vector<int>> & tuples, vector<std::vector<int>> & signs);
