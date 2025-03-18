@@ -388,7 +388,7 @@ __global__ void updateTableGPU(unsigned int* _supportsT_dev,unsigned int * _svSi
 
     unsigned result = __reduce_or_sync(0xFFFFFFFF, mask[threadIdx.x]);
 
-    if(threadIdx.x%32==0){
+    if(threadIdx.x%32==0 && active){
         //store the result in the proper position of the mask array
         outputMasks[varIndex*ct_size+(blockIdx.x*4+threadIdx.x/32)]=result;
     }
