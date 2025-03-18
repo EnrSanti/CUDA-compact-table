@@ -359,11 +359,12 @@ __global__ void updateTableGPU(unsigned int* _supportsT_dev,unsigned int * _svSi
             maskWordIndex=0;
             
             //for each word
-            int wordIndex=(from+i*32)/32; 
+            int wordIndex=(from+i*32)/32;
+            //check if the value is in the domain, without an if statement 
             
-            if(startingWordFrom+(threadIdx.x%32)>31){
-                maskWordIndex=32;
-            }
+            
+            maskWordIndex=32*(startingWordFrom+(threadIdx.x%32)>31);
+            
 
             unsigned int maskContains;
 
@@ -373,21 +374,12 @@ __global__ void updateTableGPU(unsigned int* _supportsT_dev,unsigned int * _svSi
     
             int domWord=_vars_dev[domWordIndex];
             int condition=((domWord & maskContains)!=0);
-
+            
             //load the support word without caching
             unsigned support=__ldlu(_supportsT_dev+wordIndex*32+skip+(threadIdx.x%32)); 
-            
-            
-            //check if the value is in the domain, without an if statement
 
             //add (bitwise AND) the proper part of the mask to the final mask 
             mask[threadIdx.x]=mask[threadIdx.x] | (condition * support);
-
-            //printf("%%%%%%  print 2 th %d (i will do %d loops) (var %d) (i will checking %d value), _vars[%d] bit %d, loading supT[%d]: %d, condition: %d , mask %d \n",threadIdx.x,maxBit,varIndex,b,wordIndex, maskContains,skip+b+threadIdx.x, condition * support,condition,mask[threadIdx.x]);
-
-            //increment by 32 for the last (unrolled iterations, look after the for loop)
-                
-        
         }
     }
     
@@ -398,7 +390,7 @@ __global__ void updateTableGPU(unsigned int* _supportsT_dev,unsigned int * _svSi
 
     if(threadIdx.x%32==0){
         //store the result in the proper position of the mask array
-          outputMasks[varIndex*ct_size+(blockIdx.x*4+threadIdx.x/32)]=result;
+        outputMasks[varIndex*ct_size+(blockIdx.x*4+threadIdx.x/32)]=result;
     }
 
     
