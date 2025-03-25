@@ -3,23 +3,29 @@
 #include "chrono"
 SmartTableGPU::SmartTableGPU(vector<var<int>::Ptr> & vars,  vector<std::vector<int>> & tuples, vector<std::vector<int>> & signs) : SmartTable(vars,tuples,signs){
     
+    int noTuples=tuples.size();
+    noVars=vars.size();
+    currTableSize=(noTuples/32)+1; 
+    fflush(stdout);
     // Memory allocation:
     cudaMalloc((void**)&_noVars_dev, sizeof(int)); //the number of variables in the table
     //an array containing the CT (bitMap), a mask, an int containing the size of _s_val, one for the size of _s_sup and then the arrays s_val and s_sup
     cudaMalloc((void**)&_CT_mask_svs_dev, sizeof(unsigned int)*(2*currTableSize+2*noVars+2)); 
     //the support table (copied just once)
     cudaMalloc((void**)&_supports_dev, sizeof(unsigned int)*_supportSize*currTableSize);
+    cudaMalloc((void**)&_supportsT_dev, sizeof(unsigned int)*_supportSize*currTableSize);
     //the size of the support table
     cudaMalloc((void**)&_supportSize_dev, sizeof(int));
+    cudaMalloc((void**)&noTuples_dev, sizeof(int));
     //an array containing the offset (intial value) for each variable, i.e. var 30..50 v1; will contain 30
     cudaMalloc((void**)&_variablesOffsets_dev, sizeof(int)*noVars);
+
     //an array containing the offset of the supports for each variable
-    cudaMalloc((void**)&_supportOffsetJmp_dev, sizeof(int)*(noVars+1));
+    cudaMalloc((void**)&_supportOffsetJmp_dev, sizeof(int)*(noVars));
     //the size (words number, 32 bits) of the current table
     cudaMalloc((void**)&_currTable_size_dev, sizeof(int));
     //an array containing the domains of the variables on the device
     cudaMalloc((void**)&_vars_dev, sizeof(int)*((_supportSize/32)+1)); //matrix
-    
     //an array containing, for each varaible (depending on the domain size) the amount of work each thread would do in updating the table
     cudaMalloc((void**)&doms_doms_before_dev, sizeof(int)*2*noVars);
     //an list (size no. vars) of arrays of the same size as the CT. it will contain, for each var changed, the mask to add (bitwise AND) to the CT at the end of the update process 
@@ -33,9 +39,9 @@ SmartTableGPU::SmartTableGPU(vector<var<int>::Ptr> & vars,  vector<std::vector<i
     cudaMallocHost((void**)&_vars_to_remove_host, sizeof(unsigned int)*((_supportSize/32)+1)); //matrix
     cudaMallocHost((void**)&_supportsT_host, sizeof(unsigned int)*_supportSize*currTableSize);
 
-
     streams=(cudaStream_t*)malloc(sizeof(cudaStream_t)*noStreams);
     cudaError_t err = cudaStreamCreate(&streams[0]);
+    
     
     
     cudaMallocHost((void**)&doms_doms_before_host,sizeof(int)*2*noVars);
@@ -47,6 +53,7 @@ SmartTableGPU::SmartTableGPU(vector<var<int>::Ptr> & vars,  vector<std::vector<i
         doms_doms_before_host[2*i]=vars[i]->intialSize();
         doms_doms_before_host[2*i+1]=doms_doms_before_host[2*i-1]+vars[i-1]->intialSize();
     }
+
     cudaMemcpyAsync(doms_doms_before_dev, doms_doms_before_host, sizeof(int)*2*noVars, cudaMemcpyHostToDevice,streams[0]);
 
 
@@ -70,13 +77,6 @@ SmartTableGPU::SmartTableGPU(vector<var<int>::Ptr> & vars,  vector<std::vector<i
     }
     buffer=(unsigned int*)calloc(buffSize,sizeof(unsigned int));
 
-    
-
-    #ifdef RECORD_OUTPUT
-       auto end= std::chrono::high_resolution_clock::now();
-       auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-       printf("%%%%%% Time to init table (CUDA): %ld us\n",duration.count());
-    #endif
 }
 void SmartTableGPU::post(){
     propagate();
