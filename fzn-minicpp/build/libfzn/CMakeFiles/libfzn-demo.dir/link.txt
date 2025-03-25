@@ -1,0 +1,1 @@
+/usr/bin/c++ -O3 -DNDEBUG "CMakeFiles/libfzn-demo.dir/Demo.cpp.o" -o libfzn-demo  libfzn.a 

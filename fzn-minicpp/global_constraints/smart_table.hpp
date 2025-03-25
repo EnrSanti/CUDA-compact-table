@@ -14,7 +14,7 @@ class SmartTable : public Constraint {
         vector<std::vector<int>> _tuples;
         vector<std::vector<int>> _signs;
         
-
+        int noTuples;
         SparseBitSet _currTable; 
 
         int _supportSize; //the length (no of rows) of the supports bitset (CONSTANT)

@@ -6,7 +6,7 @@ SmartTable::SmartTable(vector<var<int>::Ptr> & vars,  vector<vector<int>> & tupl
     Constraint(vars[0]->getSolver()), _vars(vars), _tuples(tuples), _signs(signs), _currTable(SparseBitSet(vars[0]->getSolver()->getStateManager(),vars[0]->getSolver()->getStore(),tuples.size())){
 
     
-    int noTuples=tuples.size();
+    noTuples=tuples.size();
     int noVars=vars.size();
     
     _s_val= vector<int>();

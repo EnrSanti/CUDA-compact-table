@@ -15,6 +15,7 @@ class SmartTableGPU : public SmartTable {
 
     // Constraint private data structures
     private:
+        
         unsigned int *_supports_dev; //array of arrays linearized
         int * _currTable_size_dev; //just a pointer to a single element
         int * _supportSize_dev; //just a pointer to a single element
@@ -27,20 +28,24 @@ class SmartTableGPU : public SmartTable {
         int *_vars_host;
         unsigned int * _vars_to_remove_host;
         unsigned int * _tmpMasks;
-        
+
         unsigned int* _CT_mask_svs_host;
         unsigned int* _CT_mask_svs_dev;
+        
 
+        int noBlocksFilter;
         const int noStreams=1; //hardcoded, don't touch IN THIS BRANCH
 
         cudaStream_t* streams;
 
-        int *th_limits_dev;
-        int internalIndex;
-        int *th_limits_host;
+        int *doms_doms_before_dev;
+        int *doms_doms_before_host;
 
         unsigned int* buffer; //just for the new dump
         int buffSize;
+        unsigned int* _supportsT_host;
+        unsigned int* _supportsT_dev;
+        int* noTuples_dev; 
 
     public:
         SmartTableGPU(vector<var<int>::Ptr> & vars,  vector<std::vector<int>> & tuples, vector<std::vector<int>> & signs);

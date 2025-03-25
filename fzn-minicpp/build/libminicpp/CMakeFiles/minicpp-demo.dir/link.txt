@@ -1,0 +1,1 @@
+/usr/bin/c++ -O3 -DNDEBUG "CMakeFiles/minicpp-demo.dir/Demo.cpp.o" -o minicpp-demo  libminicpp.a 

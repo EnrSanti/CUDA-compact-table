@@ -14,6 +14,7 @@ class TableGPU : public Table{
 
     private:
 
+        
         unsigned int *_supports_dev; //array of arrays linearized
         int * _currTable_size_dev; //just a pointer to a single element
         int * _supportSize_dev; //just a pointer to a single element
@@ -31,16 +32,19 @@ class TableGPU : public Table{
         unsigned int* _CT_mask_svs_dev;
         
 
+        int noBlocksFilter;
         const int noStreams=1; //hardcoded, don't touch IN THIS BRANCH
 
         cudaStream_t* streams;
 
-        int *th_limits_dev;
-        int internalIndex;
-        int *th_limits_host;
+        int *doms_doms_before_dev;
+        int *doms_doms_before_host;
 
         unsigned int* buffer; //just for the new dump
         int buffSize;
+        unsigned int* _supportsT_host;
+        unsigned int* _supportsT_dev;
+        int* noTuples_dev; 
 
     public:
         TableGPU(vector<var<int>::Ptr> & vars,  vector<vector<int>> & tuples);
@@ -50,9 +54,9 @@ class TableGPU : public Table{
         void dumpDomainsGPU2();
 };
 
-__global__ void updateTableGPU(unsigned int* _supports_dev,unsigned int * _svSize_off_sval_dev, int *_supportOffsetJmp_dev, unsigned int * _currTable_dev,int* _currTable_dev_size, int* _vars_dev, int* offsetsAndLimits, unsigned int* _tmpMasks);
+__global__ void updateTableGPU(unsigned int* _supports_dev,unsigned int * _svSize_off_sval_dev, int *_supportOffsetJmp_dev, unsigned int * _currTable_dev,int* _currTable_dev_size, int* _vars_dev, int* offsetsAndLimits, unsigned int* _tmpMasks,int * noTuples);
 __global__ void reduce(unsigned int* _CT_mask_svs_dev,unsigned int* _tmpMasks,int* _currTable_size_dev);
-    
-void varOffsetLimit(int size,int * where);
+
+void transposeSupports(unsigned int* supports, unsigned int* supportsTransposed, int supportSize, int currTableSize, int noVars , int* _supportOffsetJmp_dev, vector<var<int>::Ptr> & vars);
 int bitsFromRight(int n);
 int bitsFromLeft(int n);

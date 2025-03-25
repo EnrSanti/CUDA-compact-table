@@ -5,33 +5,30 @@
 
 TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) : Table(vars,tuples){
 
-    //get the intial time
-    #ifdef RECORD_OUTPUT
-        auto start= std::chrono::high_resolution_clock::now();
-    #endif
     int noTuples=tuples.size();
     noVars=vars.size();
     
     currTableSize=(noTuples/32)+1; 
-    
-    // Memory allocation:
     cudaMalloc((void**)&_noVars_dev, sizeof(int)); //the number of variables in the table
     //an array containing the CT (bitMap), a mask, an int containing the size of _s_val, one for the size of _s_sup and then the arrays s_val and s_sup
     cudaMalloc((void**)&_CT_mask_svs_dev, sizeof(unsigned int)*(2*currTableSize+2*noVars+2)); 
     //the support table (copied just once)
     cudaMalloc((void**)&_supports_dev, sizeof(unsigned int)*_supportSize*currTableSize);
+    cudaMalloc((void**)&_supportsT_dev, sizeof(unsigned int)*_supportSize*currTableSize);
     //the size of the support table
     cudaMalloc((void**)&_supportSize_dev, sizeof(int));
+    cudaMalloc((void**)&noTuples_dev, sizeof(int));
     //an array containing the offset (intial value) for each variable, i.e. var 30..50 v1; will contain 30
     cudaMalloc((void**)&_variablesOffsets_dev, sizeof(int)*noVars);
+
     //an array containing the offset of the supports for each variable
-    cudaMalloc((void**)&_supportOffsetJmp_dev, sizeof(int)*(noVars+1));
+    cudaMalloc((void**)&_supportOffsetJmp_dev, sizeof(int)*(noVars));
     //the size (words number, 32 bits) of the current table
     cudaMalloc((void**)&_currTable_size_dev, sizeof(int));
     //an array containing the domains of the variables on the device
     cudaMalloc((void**)&_vars_dev, sizeof(int)*((_supportSize/32)+1)); //matrix
     //an array containing, for each varaible (depending on the domain size) the amount of work each thread would do in updating the table
-    cudaMalloc((void**)&th_limits_dev, sizeof(int)*64*noVars);
+    cudaMalloc((void**)&doms_doms_before_dev, sizeof(int)*2*noVars);
     //an list (size no. vars) of arrays of the same size as the CT. it will contain, for each var changed, the mask to add (bitwise AND) to the CT at the end of the update process 
     cudaMalloc((void**)&_tmpMasks, sizeof(unsigned int)*currTableSize*noVars);
 
@@ -41,20 +38,25 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     cudaMallocHost((void**)&_CT_mask_svs_host, sizeof(unsigned int)*2*(noVars+1+currTableSize));
     cudaMallocHost((void**)&_vars_host, sizeof(unsigned int)*((_supportSize/32)+1)); //matrix
     cudaMallocHost((void**)&_vars_to_remove_host, sizeof(unsigned int)*((_supportSize/32)+1)); //matrix
-
+    cudaMallocHost((void**)&_supportsT_host, sizeof(unsigned int)*_supportSize*currTableSize);
 
     streams=(cudaStream_t*)malloc(sizeof(cudaStream_t)*noStreams);
     cudaError_t err = cudaStreamCreate(&streams[0]);
     
     
-    cudaMallocHost((void**)&th_limits_host,sizeof(int)*64*noVars);
+    
+    cudaMallocHost((void**)&doms_doms_before_host,sizeof(int)*2*noVars);
     //calculating the amount of rows, for each variable, each thread would have to check
-    for(int i=0;i<noVars-1;i++){
-        varOffsetLimit(_supportOffsetJmp[i+1]-_supportOffsetJmp[i],th_limits_host+(i*64));
-    }
-    varOffsetLimit(_supportSize-_supportOffsetJmp[noVars-1],th_limits_host+((noVars-1)*64));
 
-    cudaMemcpyAsync(th_limits_dev, th_limits_host, sizeof(int)*64*noVars, cudaMemcpyHostToDevice,streams[0]);
+    doms_doms_before_host[0]=vars[0]->intialSize();
+    doms_doms_before_host[1]=0;
+    for(int i=1;i<noVars;i++){
+        doms_doms_before_host[2*i]=vars[i]->intialSize();
+        doms_doms_before_host[2*i+1]=doms_doms_before_host[2*i-1]+vars[i-1]->intialSize();
+    }
+
+    cudaMemcpyAsync(doms_doms_before_dev, doms_doms_before_host, sizeof(int)*2*noVars, cudaMemcpyHostToDevice,streams[0]);
+
 
     //copying the data ont he device
     cudaMemcpyAsync(_noVars_dev, &noVars, sizeof(int), cudaMemcpyHostToDevice,streams[0]);
@@ -62,8 +64,11 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     cudaMemcpyAsync(_supportSize_dev, &_supportSize, sizeof(int), cudaMemcpyHostToDevice,streams[0]);
     cudaMemcpyAsync(_variablesOffsets_dev, _variablesOffsets.data(), sizeof(int)*noVars, cudaMemcpyHostToDevice,streams[0]);
     cudaMemcpyAsync(_supportOffsetJmp_dev, _supportOffsetJmp.data(), sizeof(int)*noVars, cudaMemcpyHostToDevice,streams[0]);
-    cudaMemcpyAsync(&_supportOffsetJmp_dev[noVars], &_supportSize, sizeof(int), cudaMemcpyHostToDevice,streams[0]);
     cudaMemcpyAsync(_currTable_size_dev, &currTableSize, sizeof(int), cudaMemcpyHostToDevice,streams[0]);
+    cudaMemcpyAsync(noTuples_dev, &noTuples , sizeof(int), cudaMemcpyHostToDevice,streams[0]);
+    transposeSupports(_supports,_supportsT_host,_supportSize,currTableSize,noVars,_supportOffsetJmp.data(),vars);
+    cudaMemcpyAsync(_supportsT_dev, _supportsT_host, sizeof(unsigned int)*_supportSize*currTableSize, cudaMemcpyHostToDevice,streams[0]);
+
 
 
     //allocating a buffer of size the maximum number of words the domain of a variable could use 
@@ -73,13 +78,6 @@ TableGPU::TableGPU(vector<var<int>::Ptr> & vars, vector<vector<int>> & tuples) :
     }
     buffer=(unsigned int*)calloc(buffSize,sizeof(unsigned int));
 
-    
-
-    #ifdef RECORD_OUTPUT
-       auto end= std::chrono::high_resolution_clock::now();
-       auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-       printf("%%%%%% Time to init table (CUDA): %ld us\n",duration.count());
-    #endif
 }
 void TableGPU::post(){
     propagate();
@@ -151,7 +149,7 @@ void TableGPU::propagate(){
 
     //pass: the supports, the changed variables + how many, the indexes for the support, the table and the size, the domains,  and 32*vars ints which tells what range of the varialbe to check according to the index of the th (modifies CT with CT & mask)
     dim3 gridDim(currTableSize/4+1,_s_val.size());
-    updateTableGPU<<<gridDim,128,(256)*sizeof(unsigned int),streams[0]>>>(_supports_dev,_CT_mask_svs_dev+(2*currTableSize),_supportOffsetJmp_dev,_CT_mask_svs_dev,_currTable_size_dev,_vars_dev,th_limits_dev,_tmpMasks);
+    updateTableGPU<<<gridDim,128,(128)*sizeof(unsigned int),streams[0]>>>(_supportsT_dev,_CT_mask_svs_dev+(2*currTableSize),_supportOffsetJmp_dev,_CT_mask_svs_dev,_currTable_size_dev,_vars_dev,doms_doms_before_dev,_tmpMasks, noTuples_dev);
     reduce<<<currTableSize,std::min((int)_s_val.size(),32),32*sizeof(int),streams[0]>>>(_CT_mask_svs_dev,_tmpMasks,_currTable_size_dev);
     #ifdef RECORD_OUTPUT
         //syncToRemove
@@ -278,65 +276,80 @@ void TableGPU::dumpDomainsGPU2(){
 
 
 
-__global__ void updateTableGPU(unsigned int* _supports_dev,unsigned int * _svSize_off_sval_dev, int *_supportOffsetJmp_dev, unsigned int * _CT_mask_dev,int* _currTable_dev_size, int* _vars_dev, int* offsetsAndLimits,unsigned int* outputMasks){
+//32 threads will do a parallel reduction on the word considered (groups of 32 threads share the same position of the CT)
+__global__ void updateTableGPU(unsigned int* _supportsT_dev,unsigned int * _svSize_off_sval_dev, int *_supportOffsetJmp_dev, unsigned int * _CT_mask_dev,int* _currTable_dev_size, int* _vars_dev, int* doms_doms_before_dev,unsigned int* outputMasks, int* noTuples_dev){
 
-    extern __shared__ unsigned int mask[]; //mask (128 ints)
+    extern __shared__ unsigned int mask[]; //mask (64 ints)
     
     //each thread clears the mask, MANDATORY
-    mask[threadIdx.x]=0;
+    mask[threadIdx.x]=0; 
+
+    
+    int noTuples=*noTuples_dev; //1 access
 
     //get the variable index to consider (we have a grid in which each row considers a different variable )
     int varIndex=_svSize_off_sval_dev[blockIdx.y+2]; //1 access
 
-    //the starting point (row) of the supports for the var
-    int from=_supportOffsetJmp_dev[varIndex];
+    int ct_size = *_currTable_dev_size; //1 access
 
-    //the index of the array offsetsAndLimits which tells the thread how many iterations it will do over the current variable
-    int iterations32_th=varIndex*64+(threadIdx.x/4); //coalescent accesses (always 8 threads per row)
-    //the offset of the supports for the current variable for the current thread
-    int offset32_th=offsetsAndLimits[iterations32_th+32]; //coalescent accesses
+    int doms = doms_doms_before_dev[2*varIndex]; //1 access
+    int loops = doms;
+    int skip = doms_doms_before_dev[2*varIndex+1]*ct_size+doms*(blockIdx.x*4+threadIdx.x/32); //the offset in the support table for the variable
+    int suppVarJmp=_supportOffsetJmp_dev[varIndex];
+    int from = suppVarJmp%32;
+
+    int startingWordFrom=from+((from)/32)*32;
+    int maskWordIndex=0;
+    int domWordIndex=0;
+    //each thread does 1/32 of the domain of x
+    bool active=ct_size>(blockIdx.x*4+threadIdx.x/32);
+    if(active){
+        for(int i=0; i<=(doms)/32+1; i++){
+            
+            if(i*32+(threadIdx.x%32)>=doms){
+                break;
+            }
+
+            maskWordIndex=0;
+            
+            //for each word
+            int wordIndex=(from+i*32)/32;
+            //check if the value is in the domain, without an if statement 
+            
+            
+            maskWordIndex=32*(startingWordFrom+(threadIdx.x%32)>31);
+            
+
+            unsigned int maskContains;
+
+            maskContains=1<<(31-(threadIdx.x%32)-from+maskWordIndex); //int containing a single bit set
+        
+            domWordIndex=(suppVarJmp+i*32+(threadIdx.x%32))/32; //the index of the word in the domain
     
-    //store the number of iterations and the ct_size in registers
-    int iterations=offsetsAndLimits[iterations32_th];  //coalescent accesses
-    int ct_size=*_currTable_dev_size; //1 access
+            int domWord=_vars_dev[domWordIndex];
+            int condition=((domWord & maskContains)!=0);
+          
+            //load the support word without caching
+            unsigned support=__ldlu(_supportsT_dev+wordIndex*32+skip+(threadIdx.x%32)); 
 
-
-    bool active=ct_size>(blockIdx.x*4+threadIdx.x%4);
-
-    if(active && iterations!=0){
-
-        
-        //each thread does the same (+/-1) amount of iterations,
-        for(int j=0; j<iterations; j++){
-
-            //wordIndex is != for the threads
-            int wordIndex=(from+j+offset32_th)/32; //piece of row of supports, not the cell, the column slices, 4 threads share it
-            
-            unsigned int maskContains=1<<(31-j-from-offset32_th+wordIndex*32); //int containing a single bit set
-            
-            
-            //check if the value is in the domain, without an if statement
-            int condition=((_vars_dev[wordIndex] & maskContains)!=0);
-            //calculate the offset of the support word the thread has to (potentially) add to the mask
-
-            int off=(j+offset32_th)*(ct_size)+(from*ct_size)+blockIdx.x*4; 
-            //printf("%%%%%% th. %d, block %d, varIndex %d, condition %d, ctW %d, row %d, specific cell %d \n",threadIdx.x,blockIdx.x,varIndex,condition,blockIdx.x,(j+offset32_th)*(*_currTable_dev_size)+(_supportOffsetJmp_dev[varIndex]*(*_currTable_dev_size)), off);
-        
-
-            int support=__ldlu(_supports_dev+off+(threadIdx.x%4)); //load the support word without caching
-            mask[threadIdx.x]=mask[threadIdx.x] | (support*condition);    
-
+            //add (bitwise AND) the proper part of the mask to the final mask 
+            mask[threadIdx.x]=mask[threadIdx.x] | (support*condition);
             
         }
     }
     
-    __syncthreads();
-    mask[128+threadIdx.x] = __reduce_or_sync(0xFFFFFFFF, mask[threadIdx.x/32+4*(threadIdx.x%32)]);
-    __syncthreads();
-    
-    if(threadIdx.x<4 && active){
-        outputMasks[varIndex*ct_size+blockIdx.x*4+threadIdx.x]=mask[128+threadIdx.x*32];
+    //unroll of the last iteration of the loop
+
+
+    unsigned result = __reduce_or_sync(0xFFFFFFFF, mask[threadIdx.x]);
+
+    if(threadIdx.x%32==0 && active){
+        //store the result in the proper position of the mask array
+        outputMasks[varIndex*ct_size+(blockIdx.x*4+threadIdx.x/32)]=result;
     }
+
+    
+
 }
 
 
@@ -387,6 +400,71 @@ __global__ void reduce(unsigned int * _CT_mask_svs_dev,unsigned int* tmpMasks, i
 
 
 
+__global__ void  filterDomainsGPU(unsigned int * _CT_mask_svs_dev, int* _currTable_dev_size, int* _vars_dev, int *_supportOffsetJmp_dev, unsigned int* _supports_dev , int* supportSize_dev){
+    
+
+    extern __shared__ unsigned int partialRes[]; //mask (64 ints, the last 32 int which is used to store _vars_dev[blockIdx.x], so it's accessed just once)
+
+    //do it 32 times, so no ifs
+    partialRes[threadIdx.x+32]=_vars_dev[blockIdx.x]; //store the word of the domain in the last int of the shared memory
+    
+    //if the word is empty, no need to do anything, i can't remove any values
+    if(partialRes[32]==0){
+        return;
+    }
+    int ct_size=*_currTable_dev_size;
+
+    //for each bit in the word, each thread in the block will do 32 iterations
+    for(int i=0; i<32; i++){  
+        
+        int mask=1<<(31-i);
+        partialRes[threadIdx.x]=0;
+        
+        //if value in the domain then we intersect (either all thread are here or none is)
+        if((partialRes[32] & mask)!=0){
+            
+            
+            //the index of the support i look at, it doesn't depend on the thread just on the block, each thread will do a different piece of work on the CT
+            int index_x_a=blockIdx.x*32+i;
+            int index_ctSize=index_x_a*(ct_size);
+            int skip=0;
+
+            //the parallel reduction part
+            for(int ctW=0; ctW<=(ct_size)-32; ctW=ctW+32){
+                //we add to the partial result
+                //printf("%%%%%% INSIDE LOOP %d %d %d\n",index_x_a,ctW,threadIdx.x);
+                int support=__ldlu(_supports_dev+ index_ctSize+ctW+threadIdx.x); //load the support word without caching
+                partialRes[threadIdx.x]=partialRes[threadIdx.x] | (_CT_mask_svs_dev[ctW+threadIdx.x] & support);
+                //increment by 32 for the last (unrolled iterations, look after the for loop)
+                skip+=32;
+            }
+
+            //unroll of the last iteration of the loop, if the CT size is not a multiple of 32 then if(threadIdx.x<=(*_currTable_dev_size)%32) the threads considered will do one more iteration
+            int condition=(threadIdx.x<(ct_size)%32);
+            //printf("%%%%%% OUTSIDE LOOP, th %d condition %d\n",threadIdx.x,condition);
+            partialRes[threadIdx.x]=partialRes[threadIdx.x] | ( (condition) * (_CT_mask_svs_dev[skip+threadIdx.x] & _supports_dev[index_ctSize+skip+threadIdx.x]));
+           
+            //end of unrolled loop
+
+            //reduction among the 32 threads of the block // e questa è ok
+            unsigned result = __reduce_or_sync(0xFFFFFFFF, partialRes[threadIdx.x]);
+        
+            
+            //if a bit is set to 1 then the value specified by the position needs to be removed from the domain, otherwise not
+            //it's just a "complex" operation to avoid an if statement
+            partialRes[threadIdx.x+32] = (partialRes[32] & ~(1 << (31-i))) | ((result == 0) << (31-i));
+            //in the previous instruction we are only insterested in partialRes[33] but instead of doing an if and having a sync, we do 31 useless operation on the other threads (1 per thread)           
+        }
+    }
+    if(threadIdx.x==0){
+        //write back the result, one access in global memory
+        _vars_dev[blockIdx.x]=partialRes[32];
+    }   
+}
+
+
+
+
 
 
 int bitsFromRight(int n) {
@@ -397,51 +475,15 @@ int bitsFromLeft(int n) {
     return ~0 << (32 - n);
 }
 
-
-
-void varOffsetLimit(int size,int * where) {
-    
-    for (int i = 0; i < 32; ++i) {
-        where[i] = size / 32;              // Divide the size by the no of streams
+void transposeSupports(unsigned int* supports, unsigned int* supportsTransposed, int supportSize, int currTableSize, int noVars , int* _supportOffsetJmp_dev, vector<var<int>::Ptr> & vars){
+    unsigned int varOffset=0;
+    for(int v=0;v<noVars;v++){
+        int domainSize=vars[v]->intialSize();
+        for(int d=0;d<domainSize;d++){
+            for(int i=0;i<currTableSize;i++){
+                supportsTransposed[varOffset+(i)*domainSize+d]=supports[(_supportOffsetJmp_dev[v]+d)*currTableSize+i];
+            }
+        }
+        varOffset+=currTableSize*domainSize;
     }
-    int remainder = size % 32;           // Calculate the remainder
-
-    // Distribute the remainder across the first few parts
-    for (int i = 0; i < remainder; ++i) {
-        where[i]++;
-    }
-
-
-    where[32]=0;
-    where[33]=where[0];
-    where[34]=where[1]+where[33];
-    where[35]=where[2]+where[34];
-    where[36]=where[3]+where[35];
-    where[37]=where[4]+where[36];
-    where[38]=where[5]+where[37];
-    where[39]=where[6]+where[38];
-    where[40]=where[7]+where[39];
-    where[41]=where[8]+where[40];
-    where[42]=where[9]+where[41];
-    where[43]=where[10]+where[42];
-    where[44]=where[11]+where[43];
-    where[45]=where[12]+where[44];
-    where[46]=where[13]+where[45];
-    where[47]=where[14]+where[46];
-    where[48]=where[15]+where[47];
-    where[49]=where[16]+where[48];
-    where[50]=where[17]+where[49];
-    where[51]=where[18]+where[50];
-    where[52]=where[19]+where[51];
-    where[53]=where[20]+where[52];
-    where[54]=where[21]+where[53];
-    where[55]=where[22]+where[54];
-    where[56]=where[23]+where[55];
-    where[57]=where[24]+where[56];
-    where[58]=where[25]+where[57];
-    where[59]=where[26]+where[58];
-    where[60]=where[27]+where[59];
-    where[61]=where[28]+where[60];
-    where[62]=where[29]+where[61];
-    where[63]=where[30]+where[62];
-}   
+}
