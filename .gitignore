@@ -3,5 +3,4 @@
 .vscode
 fzn-minicpp/.vscode
 fzn-minicpp/build/*
-fzn-minicpp/tests/tableTests/SimpleTables/* 
 

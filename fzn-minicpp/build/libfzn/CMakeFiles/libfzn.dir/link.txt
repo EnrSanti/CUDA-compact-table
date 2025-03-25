@@ -1,0 +1,2 @@
+/usr/bin/ar qc libfzn.a CMakeFiles/libfzn.dir/Parser.cpp.o CMakeFiles/libfzn.dir/Printer.cpp.o
+/usr/bin/ranlib libfzn.a
