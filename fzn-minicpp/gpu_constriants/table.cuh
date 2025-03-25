@@ -37,7 +37,6 @@ class TableGPU : public Table{
         cudaStream_t* streams;
 
         int *doms_doms_before_dev;
-        int internalIndex;
         int *doms_doms_before_host;
 
         unsigned int* buffer; //just for the new dump
