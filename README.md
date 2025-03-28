@@ -19,4 +19,4 @@ The repository, has multiple branches, which implement the constraint either wit
 
 ### Installation:
 
-Follow the **Build** and **Installation** steps at: [fzn-minicpp](fzn-minicpphttps://bitbucket.org/constraint-programming/fzn-minicpp/src/main/)
+Follow the **Build** and **Installation** steps at: [fzn-minicpp](https://bitbucket.org/constraint-programming/fzn-minicpp/src/main/)
