@@ -1,6 +1,0 @@
-{
-    "files.associations": {
-        "*.mzn": "search-result",
-        "chrono": "cpp"
-    }
-}
